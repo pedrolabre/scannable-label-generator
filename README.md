@@ -1,0 +1,53 @@
+# scannable-label-generator
+
+SPA client-side para cadastro de produtos e geração de etiquetas com código 2D (Data Matrix/QR) machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Nome de produto: LabelForge.
+
+## Status
+
+Em desenvolvimento inicial.
+
+## Stack
+
+- React + Vite, JavaScript (sem TypeScript)
+- Tailwind CSS
+- Zustand (estado global)
+- Dexie.js sobre IndexedDB (persistência local)
+- Zod (validação de schemas)
+- PapaParse (CSV via Web Worker)
+- bwip-js (Data Matrix/QR)
+- PDFMake ou jsPDF (exportação em PDF)
+- vite-plugin-pwa
+
+## Escopo do MVP
+
+- Cadastro manual de produtos (criar, editar, remover, listar)
+- Importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00)
+- Geração de Data Matrix/QR contendo exclusivamente o código do produto
+- Layouts de etiqueta padronizados, múltiplos tamanhos, em milímetros reais
+- Motor de impressão: seleção de itens, montagem automática em folha A4, preview
+- Exportação em PDF vetorial com escala física 1:1
+- Persistência local em IndexedDB, com exportação e restauração total
+- PWA instalável e funcional offline
+
+## Estrutura do Projeto
+
+```text
+scannable-label-generator/
+  index.html
+  package.json
+  postcss.config.js
+  tailwind.config.js
+  vite.config.js
+  README.md
+  src/
+    main.jsx
+    App.jsx
+    components/
+      AppShell.jsx
+      AppHeader.jsx
+      LocalOnlyNotice.jsx
+    lib/
+      app-meta.js
+    styles/
+      global.css
+```
