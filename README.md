@@ -22,6 +22,7 @@ Em desenvolvimento inicial.
 - React e Vite, em JavaScript.
 - Tailwind CSS e PostCSS para estilização utilitária.
 - Lucide React para ícones da interface.
+- Zod na validação de contratos e schemas de dados.
 
 ## Comandos
 
@@ -49,8 +50,16 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+    domain/
+      schemas/
+        commonFields.js
+        productSchema.js
+        labelLayoutSchema.js
+        sheetLayoutSchema.js
+        printJobSchema.js
     lib/
       app-meta.js
+      currency.js
     styles/
       global.css
 ```
