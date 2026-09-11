@@ -52,6 +52,15 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+      product-form/
+        ProductForm.jsx
+        ProductFormFields.jsx
+        productFormValues.js
+        useProductForm.js
+      ui/
+        Button.jsx
+        Card.jsx
+        Field.jsx
     domain/
       schemas/
         commonFields.js
@@ -59,9 +68,12 @@ scannable-label-generator/
         labelLayoutSchema.js
         sheetLayoutSchema.js
         printJobSchema.js
+      services/
+        productService.js
     lib/
       app-meta.js
       currency.js
+      cx.js
     storage/
       indexed-db.js
       productRepository.js
