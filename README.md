@@ -46,8 +46,16 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+    domain/
+      schemas/
+        commonFields.js
+        productSchema.js
+        labelLayoutSchema.js
+        sheetLayoutSchema.js
+        printJobSchema.js
     lib/
       app-meta.js
+      currency.js
     styles/
       global.css
 ```
