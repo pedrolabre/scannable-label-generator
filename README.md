@@ -56,6 +56,11 @@ scannable-label-generator/
     lib/
       app-meta.js
       currency.js
+    storage/
+      indexed-db.js
+      productRepository.js
+    store/
+      useProductStore.js
     styles/
       global.css
 ```
