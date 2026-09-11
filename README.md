@@ -23,6 +23,8 @@ Em desenvolvimento inicial.
 - Tailwind CSS e PostCSS para estilização utilitária.
 - Lucide React para ícones da interface.
 - Zod na validação de contratos e schemas de dados.
+- Dexie sobre o IndexedDB para persistência local no navegador.
+- Zustand no gerenciamento de estado global.
 
 ## Comandos
 
@@ -60,6 +62,11 @@ scannable-label-generator/
     lib/
       app-meta.js
       currency.js
+    storage/
+      indexed-db.js
+      productRepository.js
+    store/
+      useProductStore.js
     styles/
       global.css
 ```
