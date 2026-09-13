@@ -20,7 +20,14 @@ export const ProductSchema = z
       .max(DESCRIPTION_MAX_LENGTH, `Descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres`)
       .optional(),
     priceInCentavos: z
-      .number({ invalid_type_error: 'Informe um preço válido. Ex.: 12,50' })
+      // As duas mensagens sao a mesma frase de proposito: quem le a etiqueta em
+      // branco nao distingue "o preco veio como texto" de "o preco nao veio", e
+      // as duas se resolvem digitando o valor. Sem a primeira, o campo ausente
+      // cairia na mensagem padrao da biblioteca, em ingles.
+      .number({
+        required_error: 'Informe um preço válido. Ex.: 12,50',
+        invalid_type_error: 'Informe um preço válido. Ex.: 12,50',
+      })
       .int('Informe um preço válido. Ex.: 12,50')
       .min(0, 'Informe um preço válido. Ex.: 12,50'),
     ean: z

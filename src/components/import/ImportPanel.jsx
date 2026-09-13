@@ -8,13 +8,18 @@ import InlineAlert from '../ui/InlineAlert.jsx';
 
 import ImportFilePicker from './ImportFilePicker.jsx';
 import ImportFileStatusList from './ImportFileStatusList.jsx';
+import ImportReviewPanel from './ImportReviewPanel.jsx';
 
 /**
  * Cartao da importacao em lote. Reune a escolha dos arquivos, o resumo do que
- * foi lido e o resultado de cada arquivo.
+ * foi lido, o resultado de cada arquivo e a revisao dos registros conferidos.
  *
  * A falha de um arquivo do lote e informacao da lista, nao deste nivel: o
  * aviso aqui cobre so a falha que impede o lote inteiro de comecar.
+ *
+ * O resumo deste cartao continua contando arquivos e registros lidos. Quantos
+ * registros estao prontos e assunto da revisao, logo abaixo, que e onde o
+ * numero pode ser lido junto do motivo de cada excecao.
  */
 function summaryText({ parsedFiles, rejectedFiles, recordCount }) {
   const records = recordCount === 1 ? '1 registro' : `${recordCount} registros`;
@@ -31,6 +36,7 @@ function summaryText({ parsedFiles, rejectedFiles, recordCount }) {
 
 export default function ImportPanel() {
   const isParsing = useImportStore((state) => state.isParsing);
+  const isChecking = useImportStore((state) => state.isChecking);
   const files = useImportStore((state) => state.files);
   const parseFiles = useImportStore((state) => state.parseFiles);
   const reset = useImportStore((state) => state.reset);
@@ -55,6 +61,8 @@ export default function ImportPanel() {
     reset();
   }, [reset]);
 
+  const isBusy = isParsing || isChecking;
+
   return (
     <Card className="space-y-4 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -66,14 +74,14 @@ export default function ImportPanel() {
           </p>
         </div>
 
-        {files.length > 0 && !isParsing ? (
+        {files.length > 0 && !isBusy ? (
           <Button type="button" onClick={handleClear}>
             Limpar
           </Button>
         ) : null}
       </div>
 
-      <ImportFilePicker isParsing={isParsing} onFilesSelected={handleFilesSelected} />
+      <ImportFilePicker isParsing={isBusy} onFilesSelected={handleFilesSelected} />
 
       {batchError ? <InlineAlert>{batchError}</InlineAlert> : null}
 
@@ -84,6 +92,8 @@ export default function ImportPanel() {
       ) : null}
 
       <ImportFileStatusList files={files} />
+
+      <ImportReviewPanel />
     </Card>
   );
 }

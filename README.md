@@ -49,9 +49,15 @@ scannable-label-generator/
       AppHeader.jsx
       LocalOnlyNotice.jsx
       import/
+        ImportDisplayNameField.jsx
         ImportFilePicker.jsx
         ImportFileStatusList.jsx
         ImportPanel.jsx
+        ImportRecordIssueList.jsx
+        ImportReviewPanel.jsx
+        ImportReviewRecord.jsx
+        ImportReviewSummary.jsx
+        importCounts.js
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -82,11 +88,16 @@ scannable-label-generator/
         printJobSchema.js
       services/
         csvParser.js
+        importCorrection.js
         importError.js
         importRecord.js
         importRecord.test.js
+        importReport.js
+        importReport.test.js
         importService.js
         importService.test.js
+        importValidation.js
+        importValidation.test.js
         jsonParser.js
         nfceParser.js
         nfceParser.test.js
