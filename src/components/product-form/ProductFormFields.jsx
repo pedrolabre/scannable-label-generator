@@ -120,7 +120,7 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
               {...control}
               value={values.category}
               onChange={handle('category')}
-              placeholder="Bebidas"
+              placeholder="Eletrodomesticos"
               autoComplete="off"
             />
           )}

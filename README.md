@@ -51,10 +51,21 @@ scannable-label-generator/
         ProductFormFields.jsx
         productFormValues.js
         useProductForm.js
+      product-list/
+        ProductCards.jsx
+        ProductItemActions.jsx
+        ProductList.jsx
+        ProductListStatus.jsx
+        ProductSearchField.jsx
+        ProductTable.jsx
+        ProductTableRow.jsx
       ui/
         Button.jsx
         Card.jsx
+        ConfirmModal.jsx
         Field.jsx
+        IconButton.jsx
+        ModalShell.jsx
     domain/
       schemas/
         commonFields.js
@@ -63,6 +74,7 @@ scannable-label-generator/
         sheetLayoutSchema.js
         printJobSchema.js
       services/
+        productSearch.js
         productService.js
     lib/
       app-meta.js

@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-import { createProduct, deleteProduct, listProducts } from '../storage/productRepository.js';
+import {
+  createProduct,
+  deleteProduct,
+  listProducts,
+  updateProduct as updateStoredProduct,
+} from '../storage/productRepository.js';
 
 // Leitura em andamento. Chamadas concorrentes reaproveitam a mesma promessa em
 // vez de disparar uma segunda varredura da tabela.
@@ -37,6 +42,16 @@ export const useProductStore = create((set, get) => ({
     const stored = await createProduct(product);
 
     set({ products: [...get().products, stored] });
+
+    return stored;
+  },
+
+  updateProduct: async (product) => {
+    const stored = await updateStoredProduct(product);
+
+    set({
+      products: get().products.map((current) => (current.id === stored.id ? stored : current)),
+    });
 
     return stored;
   },
