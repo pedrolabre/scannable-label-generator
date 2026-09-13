@@ -20,8 +20,8 @@ export const ProductSchema = z
       .max(DESCRIPTION_MAX_LENGTH, `Descricao deve ter no maximo ${DESCRIPTION_MAX_LENGTH} caracteres`)
       .optional(),
     priceInCentavos: z
-      .number({ invalid_type_error: 'Preco deve ser um valor em centavos' })
-      .int('Preco deve ser um valor inteiro em centavos')
+      .number({ invalid_type_error: 'Informe um preço válido. Ex.: 12,50' })
+      .int('Informe um preço válido. Ex.: 12,50')
       .min(0, 'Preco invalido'),
     ean: z
       .string()

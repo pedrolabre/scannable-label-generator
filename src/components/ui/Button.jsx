@@ -9,7 +9,9 @@ const BASE_CLASSES = cx(
 
 /**
  * `primary` carrega a cor de marca e fica reservada a acao principal de uma
- * tela. `secondary` e neutra e acompanha as acoes de apoio.
+ * tela. `secondary` e neutra e acompanha as acoes de apoio. `danger` marca a
+ * acao que remove dados: fundo suave e texto vermelho, para se distinguir da
+ * marca sem competir com ela.
  */
 const VARIANT_CLASSES = {
   primary: cx(
@@ -21,6 +23,11 @@ const VARIANT_CLASSES = {
     'border-slate-300 bg-white text-slate-700 hover:bg-slate-100',
     'focus-visible:outline-slate-400',
     'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+  ),
+  danger: cx(
+    'border-[#b93a20] bg-[#fff1ea] text-[#b93a20] hover:bg-[#ffe0d2]',
+    'focus-visible:outline-[#b93a20]',
+    'dark:border-[#ffb8a7] dark:bg-[#3b211b] dark:text-[#ffb8a7] dark:hover:bg-[#4e2b22]',
   ),
 };
 

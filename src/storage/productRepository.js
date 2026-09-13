@@ -25,6 +25,19 @@ export async function createProduct(product) {
   return validated;
 }
 
+/**
+ * Valida o produto e regrava o registro inteiro sobre o identificador que ele
+ * carrega. A substituicao do registro inteiro e o que faz um campo opcional
+ * esvaziado desaparecer de fato, em vez de sobreviver da versao anterior.
+ */
+export async function updateProduct(product) {
+  const validated = ProductSchema.parse(product);
+
+  await db.products.put(validated);
+
+  return validated;
+}
+
 export function deleteProduct(id) {
   return db.products.delete(id);
 }
