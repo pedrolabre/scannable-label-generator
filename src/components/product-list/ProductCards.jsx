@@ -25,7 +25,7 @@ export default function ProductCards({ products, onEdit, onRemove }) {
 
             <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
               <div className="flex gap-1.5">
-                <dt>Codigo</dt>
+                <dt>Código</dt>
                 <dd className="tabular-nums text-slate-700 dark:text-slate-200">
                   {product.systemCode}
                 </dd>
@@ -33,7 +33,7 @@ export default function ProductCards({ products, onEdit, onRemove }) {
 
               {product.ean ? (
                 <div className="flex gap-1.5">
-                  <dt>Cod. barras</dt>
+                  <dt>Cód. barras</dt>
                   <dd className="tabular-nums text-slate-700 dark:text-slate-200">{product.ean}</dd>
                 </div>
               ) : null}

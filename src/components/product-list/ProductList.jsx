@@ -87,7 +87,7 @@ export default function ProductList({ products, isLoading, onEdit, onRemove }) {
         <header className="space-y-1">
           <h2 className="text-lg font-semibold">Produtos cadastrados</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Tudo o que esta salvo neste dispositivo, pronto para virar etiqueta.
+            Tudo o que está salvo neste dispositivo, pronto para virar etiqueta.
           </p>
         </header>
 
@@ -112,10 +112,10 @@ export default function ProductList({ products, isLoading, onEdit, onRemove }) {
           onCancel={() => setProductToRemove(null)}
         >
           <p>
-            O produto sai da lista e do armazenamento deste dispositivo, junto com o codigo e o
-            preco cadastrados.
+            O produto sai da lista e do armazenamento deste dispositivo, junto com o código e o
+            preço cadastrados.
           </p>
-          <p>Para usa-lo de novo depois, sera preciso cadastra-lo outra vez.</p>
+          <p>Para usá-lo de novo depois, será preciso cadastrá-lo outra vez.</p>
         </ConfirmModal>
       ) : null}
     </Card>

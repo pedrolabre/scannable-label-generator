@@ -11,26 +11,26 @@ export const ProductSchema = z
     systemCode: z
       .string()
       .trim()
-      .min(1, 'Codigo do sistema obrigatorio')
-      .regex(/^[0-9A-Za-z-]+$/, 'Codigo do sistema aceita apenas letras, numeros e hifen'),
+      .min(1, 'Código do sistema obrigatório')
+      .regex(/^[0-9A-Za-z-]+$/, 'Código do sistema aceita apenas letras, números e hífen'),
     displayName: shortTextField('Nome da etiqueta', DISPLAY_NAME_MAX_LENGTH),
     description: z
       .string()
       .trim()
-      .max(DESCRIPTION_MAX_LENGTH, `Descricao deve ter no maximo ${DESCRIPTION_MAX_LENGTH} caracteres`)
+      .max(DESCRIPTION_MAX_LENGTH, `Descrição deve ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres`)
       .optional(),
     priceInCentavos: z
       .number({ invalid_type_error: 'Informe um preço válido. Ex.: 12,50' })
       .int('Informe um preço válido. Ex.: 12,50')
-      .min(0, 'Preco invalido'),
+      .min(0, 'Preço inválido'),
     ean: z
       .string()
       .trim()
-      .regex(/^(\d{8}|\d{12,14})$/, 'Codigo de barras deve ter 8, 12, 13 ou 14 digitos')
+      .regex(/^(\d{8}|\d{12,14})$/, 'Código de barras deve ter 8, 12, 13 ou 14 dígitos')
       .optional(),
-    category: z.string().trim().max(60, 'Categoria deve ter no maximo 60 caracteres').optional(),
-    notes: z.string().trim().max(500, 'Observacoes devem ter no maximo 500 caracteres').optional(),
-    createdAt: isoDateTimeField('Data de criacao'),
-    updatedAt: isoDateTimeField('Data de atualizacao'),
+    category: z.string().trim().max(60, 'Categoria deve ter no máximo 60 caracteres').optional(),
+    notes: z.string().trim().max(500, 'Observações devem ter no máximo 500 caracteres').optional(),
+    createdAt: isoDateTimeField('Data de criação'),
+    updatedAt: isoDateTimeField('Data de atualização'),
   })
   .strict();

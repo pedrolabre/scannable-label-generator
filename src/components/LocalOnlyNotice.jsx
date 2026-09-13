@@ -17,12 +17,12 @@ export default function LocalOnlyNotice() {
             O {APP_NAME} funciona localmente no navegador
           </h2>
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            Os produtos cadastrados e as etiquetas geradas ficam apenas neste dispositivo. Nada e
-            enviado para servidores e nenhuma conta e necessaria.
+            Os produtos cadastrados e as etiquetas geradas ficam apenas neste dispositivo. Nada é
+            enviado para servidores e nenhuma conta é necessária.
           </p>
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            A importacao em lote e a montagem das folhas de etiquetas ainda nao estao disponiveis
-            nesta versao.
+            A importação em lote e a montagem das folhas de etiquetas ainda não estão disponíveis
+            nesta versão.
           </p>
         </div>
       </div>

@@ -25,16 +25,16 @@ export default function ProductTable({ products, onEdit, onRemove }) {
             Produto
           </th>
           <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
-            Codigo
+            Código
           </th>
           <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
-            Cod. barras
+            Cód. barras
           </th>
           <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_PRICE, 'text-right')}>
-            Preco
+            Preço
           </th>
           <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
-            <span className="sr-only">Acoes</span>
+            <span className="sr-only">Ações</span>
           </th>
         </tr>
       </thead>
