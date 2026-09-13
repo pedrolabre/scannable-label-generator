@@ -22,7 +22,7 @@ export const ProductSchema = z
     priceInCentavos: z
       .number({ invalid_type_error: 'Informe um preço válido. Ex.: 12,50' })
       .int('Informe um preço válido. Ex.: 12,50')
-      .min(0, 'Preço inválido'),
+      .min(0, 'Informe um preço válido. Ex.: 12,50'),
     ean: z
       .string()
       .trim()

@@ -5,6 +5,7 @@ import {
   buildUpdatedProduct,
   validateProduct,
 } from '../../domain/services/productService.js';
+import { describeStorageError } from '../../storage/storageError.js';
 
 import {
   EMPTY_PRODUCT_FORM_VALUES,
@@ -45,6 +46,10 @@ function withoutError(errors, field) {
  *
  * `product` e lido uma unica vez, na montagem. Para trocar o produto em edicao,
  * o chamador remonta o formulario com uma `key` diferente.
+ *
+ * `submitError` guarda a gravacao que falhou, ja traduzida para o texto que o
+ * usuario le. Os valores digitados continuam nos campos, entao enviar de novo e
+ * a nova tentativa.
  */
 export function useProductForm({ product = null, onSubmit }) {
   const [values, setValues] = useState(() => toFormValues(product));
@@ -92,9 +97,7 @@ export function useProductForm({ product = null, onSubmit }) {
           setValues({ ...EMPTY_PRODUCT_FORM_VALUES });
         }
       } catch (error) {
-        setSubmitError(
-          error instanceof Error ? error.message : 'Não foi possível gravar o produto.',
-        );
+        setSubmitError(describeStorageError(error));
       } finally {
         setIsSubmitting(false);
       }

@@ -71,6 +71,7 @@ scannable-label-generator/
         ConfirmModal.jsx
         Field.jsx
         IconButton.jsx
+        InlineAlert.jsx
         ModalShell.jsx
     domain/
       schemas/
@@ -89,6 +90,7 @@ scannable-label-generator/
     storage/
       indexed-db.js
       productRepository.js
+      storageError.js
     store/
       useProductStore.js
     styles/

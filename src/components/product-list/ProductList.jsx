@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react';
 
 import { compareProductsByName, searchProducts } from '../../domain/services/productSearch.js';
+import { describeStorageError } from '../../storage/storageError.js';
 
 import Card from '../ui/Card.jsx';
 import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 import ProductCards from './ProductCards.jsx';
-import { EmptyCatalogStatus, LoadingStatus, NoMatchStatus } from './ProductListStatus.jsx';
+import {
+  EmptyCatalogStatus,
+  LoadFailureStatus,
+  LoadingStatus,
+  NoMatchStatus,
+} from './ProductListStatus.jsx';
 import ProductSearchField from './ProductSearchField.jsx';
 import ProductTable from './ProductTable.jsx';
 
@@ -25,29 +31,61 @@ function countHint(visible, total) {
  * O termo de busca vive aqui porque so esta tela o consome. A edicao sobe para
  * quem montou a listagem, que decide onde o formulario aparece; a remocao passa
  * antes por uma confirmacao que mostra qual produto sai.
+ *
+ * `loadError` cobre a leitura inicial que nao completou: enquanto nao houver
+ * nenhum produto para mostrar, o aviso e a nova tentativa ocupam o lugar da
+ * lista. Com produtos ja carregados, a ultima lista boa continua na tela.
  */
-export default function ProductList({ products, isLoading, onEdit, onRemove }) {
+export default function ProductList({
+  products,
+  isLoading,
+  loadError = null,
+  onRetryLoad,
+  onEdit,
+  onRemove,
+}) {
   const [query, setQuery] = useState('');
   const [productToRemove, setProductToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [removalError, setRemovalError] = useState(null);
 
   const visibleProducts = useMemo(
     () => [...searchProducts(products, query)].sort(compareProductsByName),
     [products, query],
   );
 
+  // A confirmacao que falha mantem o dialogo aberto: o produto continua na lista
+  // e no armazenamento, e e isso que a tela precisa dizer. Confirmar de novo e a
+  // nova tentativa; cancelar descarta.
   async function handleConfirmRemoval() {
     setIsRemoving(true);
+    setRemovalError(null);
 
     try {
       await onRemove(productToRemove.id);
       setProductToRemove(null);
+    } catch (error) {
+      setRemovalError(describeStorageError(error));
     } finally {
       setIsRemoving(false);
     }
   }
 
+  function handleCancelRemoval() {
+    setProductToRemove(null);
+    setRemovalError(null);
+  }
+
+  function handleStartRemoval(product) {
+    setProductToRemove(product);
+    setRemovalError(null);
+  }
+
   function renderBody() {
+    if (products.length === 0 && loadError) {
+      return <LoadFailureStatus message={loadError} onRetry={onRetryLoad} />;
+    }
+
     if (isLoading && products.length === 0) {
       return <LoadingStatus />;
     }
@@ -66,7 +104,7 @@ export default function ProductList({ products, isLoading, onEdit, onRemove }) {
           <ProductTable
             products={visibleProducts}
             onEdit={onEdit}
-            onRemove={setProductToRemove}
+            onRemove={handleStartRemoval}
           />
         </div>
 
@@ -74,7 +112,7 @@ export default function ProductList({ products, isLoading, onEdit, onRemove }) {
           <ProductCards
             products={visibleProducts}
             onEdit={onEdit}
-            onRemove={setProductToRemove}
+            onRemove={handleStartRemoval}
           />
         </div>
       </>
@@ -108,8 +146,9 @@ export default function ProductList({ products, isLoading, onEdit, onRemove }) {
           subtitle={productToRemove.displayName}
           confirmLabel="Remover produto"
           isConfirming={isRemoving}
+          error={removalError}
           onConfirm={handleConfirmRemoval}
-          onCancel={() => setProductToRemove(null)}
+          onCancel={handleCancelRemoval}
         >
           <p>
             O produto sai da lista e do armazenamento deste dispositivo, junto com o código e o
