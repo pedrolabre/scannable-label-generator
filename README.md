@@ -25,12 +25,15 @@ Em desenvolvimento inicial.
 - Zod na validação de contratos e schemas de dados.
 - Dexie sobre o IndexedDB para persistência local no navegador.
 - Zustand no gerenciamento de estado global.
+- PapaParse e fast-xml-parser para leitura de CSV, JSON e XML de NFC-e.
+- Vitest para testes automatizados unitários e de integração.
 
 ## Comandos
 
 ```bash
 npm install      # instala as dependências
 npm run dev      # servidor de desenvolvimento
+npm test         # suíte de testes
 npm run build    # build de produção em dist/
 npm run preview  # serve o build local
 ```
@@ -44,6 +47,7 @@ scannable-label-generator/
   postcss.config.js
   tailwind.config.js
   vite.config.js
+  vitest.config.js
   README.md
   src/
     main.jsx
@@ -52,6 +56,10 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+      import/
+        ImportFilePicker.jsx
+        ImportFileStatusList.jsx
+        ImportPanel.jsx
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -81,6 +89,15 @@ scannable-label-generator/
         sheetLayoutSchema.js
         printJobSchema.js
       services/
+        csvParser.js
+        importError.js
+        importRecord.js
+        importRecord.test.js
+        importService.js
+        importService.test.js
+        jsonParser.js
+        nfceParser.js
+        nfceParser.test.js
         productSearch.js
         productService.js
     lib/
@@ -92,6 +109,7 @@ scannable-label-generator/
       productRepository.js
       storageError.js
     store/
+      useImportStore.js
       useProductStore.js
     styles/
       global.css

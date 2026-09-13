@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import AppShell from './components/AppShell.jsx';
 import AppHeader from './components/AppHeader.jsx';
 import LocalOnlyNotice from './components/LocalOnlyNotice.jsx';
+import ImportPanel from './components/import/ImportPanel.jsx';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
 import { useProductStore } from './store/useProductStore.js';
@@ -62,6 +63,8 @@ export default function App() {
     <AppShell header={<AppHeader />}>
       <div className="w-full space-y-6">
         <LocalOnlyNotice />
+
+        <ImportPanel />
 
         <div ref={formRef}>
           <ProductForm
