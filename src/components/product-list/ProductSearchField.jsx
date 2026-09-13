@@ -35,7 +35,7 @@ export default function ProductSearchField({ value, onChange, hint }) {
             ref={inputRef}
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            placeholder="Nome, codigo do sistema ou codigo de barras"
+            placeholder="Nome, código do sistema ou código de barras"
             autoComplete="off"
             spellCheck={false}
             className={cx('pl-9', value ? 'pr-10' : null)}

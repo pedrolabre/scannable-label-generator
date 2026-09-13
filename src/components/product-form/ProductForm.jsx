@@ -38,8 +38,8 @@ export default function ProductForm({ product = null, onSubmit, onCancel }) {
             {isEditing ? 'Editar produto' : 'Cadastrar produto'}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            O nome da etiqueta e o preco sao o que aparece impresso. O codigo do sistema alimenta o
-            codigo 2D.
+            O nome da etiqueta e o preço são o que aparece impresso. O código do sistema alimenta o
+            código 2D.
           </p>
         </header>
 
@@ -66,7 +66,7 @@ export default function ProductForm({ product = null, onSubmit, onCancel }) {
           </Button>
           <Button type="submit" variant="primary" disabled={isSubmitting}>
             <Save className="h-4 w-4" aria-hidden="true" />
-            {isEditing ? 'Salvar alteracoes' : 'Cadastrar produto'}
+            {isEditing ? 'Salvar alterações' : 'Cadastrar produto'}
           </Button>
         </div>
       </form>

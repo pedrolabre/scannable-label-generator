@@ -45,7 +45,7 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
 
       <Field
         id={fieldId('description')}
-        label="Descricao completa"
+        label="Descrição completa"
         hint={counterHint(values.description, DESCRIPTION_MAX_LENGTH)}
         error={errors.description}
         optional
@@ -56,13 +56,13 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
             focus="brand"
             value={values.description}
             onChange={handle('description')}
-            placeholder="Descricao longa do produto, para consulta"
+            placeholder="Descrição longa do produto, para consulta"
           />
         )}
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id={fieldId('systemCode')} label="Codigo do sistema" error={errors.systemCode}>
+        <Field id={fieldId('systemCode')} label="Código do sistema" error={errors.systemCode}>
           {(control) => (
             <TextInput
               {...control}
@@ -77,7 +77,7 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
           )}
         </Field>
 
-        <Field id={fieldId('ean')} label="Codigo de barras" error={errors.ean} optional>
+        <Field id={fieldId('ean')} label="Código de barras" error={errors.ean} optional>
           {(control) => (
             <TextInput
               {...control}
@@ -96,7 +96,7 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           id={fieldId('price')}
-          label="Preco"
+          label="Preço"
           hint={formattedPrice ?? undefined}
           error={errors.price}
         >
@@ -120,20 +120,20 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
               {...control}
               value={values.category}
               onChange={handle('category')}
-              placeholder="Eletrodomesticos"
+              placeholder="Eletrodomésticos"
               autoComplete="off"
             />
           )}
         </Field>
       </div>
 
-      <Field id={fieldId('notes')} label="Observacoes" error={errors.notes} optional>
+      <Field id={fieldId('notes')} label="Observações" error={errors.notes} optional>
         {(control) => (
           <Textarea
             {...control}
             value={values.notes}
             onChange={handle('notes')}
-            placeholder="Anotacoes internas sobre o produto"
+            placeholder="Anotações internas sobre o produto"
           />
         )}
       </Field>

@@ -93,7 +93,7 @@ export function useProductForm({ product = null, onSubmit }) {
         }
       } catch (error) {
         setSubmitError(
-          error instanceof Error ? error.message : 'Nao foi possivel gravar o produto.',
+          error instanceof Error ? error.message : 'Não foi possível gravar o produto.',
         );
       } finally {
         setIsSubmitting(false);

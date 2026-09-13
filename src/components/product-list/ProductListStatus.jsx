@@ -29,7 +29,7 @@ export function LoadingStatus() {
       iconClassName="h-8 w-8 animate-spin text-slate-300 dark:text-slate-600"
       title="Carregando produtos"
     >
-      <p role="status">Lendo o que esta salvo neste dispositivo.</p>
+      <p role="status">Lendo o que está salvo neste dispositivo.</p>
     </StatusBlock>
   );
 }
@@ -37,7 +37,7 @@ export function LoadingStatus() {
 export function EmptyCatalogStatus() {
   return (
     <StatusBlock icon={PackageOpen} title="Nenhum produto cadastrado">
-      <p>Use o formulario acima para cadastrar o primeiro produto.</p>
+      <p>Use o formulário acima para cadastrar o primeiro produto.</p>
     </StatusBlock>
   );
 }
@@ -46,7 +46,7 @@ export function NoMatchStatus({ query, onClearSearch }) {
   return (
     <StatusBlock icon={SearchX} title="Nenhum produto encontrado">
       <p>
-        Nada corresponde a <span className="font-semibold">{query}</span> no nome nem nos codigos.
+        Nada corresponde a <span className="font-semibold">{query}</span> no nome nem nos códigos.
       </p>
       <Button type="button" onClick={onClearSearch} className="mt-3">
         Limpar busca
