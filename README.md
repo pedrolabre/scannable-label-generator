@@ -90,8 +90,13 @@ scannable-label-generator/
         jsonParser.js
         nfceParser.js
         nfceParser.test.js
+        nfceProductMapping.js
+        productCandidateIssue.js
+        productMapping.js
+        productMapping.test.js
         productSearch.js
         productService.js
+        tabularProductMapping.js
     lib/
       app-meta.js
       currency.js

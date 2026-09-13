@@ -8,6 +8,20 @@
  * esta mesma estrutura, de modo que a leitura do arquivo nunca descarte um
  * registro que o relatorio deveria explicar.
  *
+ * A traducao, em `productMapping.js`, acrescenta dois campos ao registro e nao
+ * altera nenhum dos que ja existem:
+ *
+ * - `candidate`       os campos do produto nos nomes do `ProductSchema`, so com
+ *                     os que o mapeamento conseguiu produzir;
+ * - `candidateIssues` o que nao coube no contrato e por que, com o texto cru do
+ *                     arquivo junto.
+ *
+ * `raw` sobrevive a traducao de proposito, e continua vivo ate o fim do lote: o
+ * motivo de uma recusa so e util ao lado do valor que a provocou. Ele vive na
+ * memoria do importador e nao chega a gravacao — o produto gravado e montado a
+ * partir de `candidate`, e o contrato do produto e estrito, entao uma chave
+ * alheia nao atravessaria a escrita nem por engano.
+ *
  * `source` carrega a procedencia completa do registro, que e o que permite
  * apontar a origem exata de um erro e distinguir dois registros iguais vindos
  * de arquivos diferentes:
