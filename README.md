@@ -13,6 +13,7 @@ Em desenvolvimento inicial.
 - Zustand (estado global)
 - Dexie.js sobre IndexedDB (persistência local)
 - Zod (validação de schemas)
+- Vitest (testes automatizados)
 - PapaParse (CSV via Web Worker)
 - bwip-js (Data Matrix/QR)
 - PDFMake ou jsPDF (exportação em PDF)
@@ -38,6 +39,7 @@ scannable-label-generator/
   postcss.config.js
   tailwind.config.js
   vite.config.js
+  vitest.config.js
   README.md
   src/
     main.jsx
@@ -46,6 +48,10 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+      import/
+        ImportFilePicker.jsx
+        ImportFileStatusList.jsx
+        ImportPanel.jsx
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -75,6 +81,15 @@ scannable-label-generator/
         sheetLayoutSchema.js
         printJobSchema.js
       services/
+        csvParser.js
+        importError.js
+        importRecord.js
+        importRecord.test.js
+        importService.js
+        importService.test.js
+        jsonParser.js
+        nfceParser.js
+        nfceParser.test.js
         productSearch.js
         productService.js
     lib/
@@ -86,6 +101,7 @@ scannable-label-generator/
       productRepository.js
       storageError.js
     store/
+      useImportStore.js
       useProductStore.js
     styles/
       global.css
