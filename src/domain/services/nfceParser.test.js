@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { ImportFormatError } from './importError.js';
+import { describeRecord } from './importReport.js';
+import { validateCandidate } from './importValidation.js';
 import { parseNfceDocument } from './nfceParser.js';
 import { attachProductCandidate } from './productMapping.js';
 
@@ -131,14 +133,32 @@ describe('parseNfceDocument', () => {
   });
 
   it('nao deixa passar dado de cliente, imposto, total nem assinatura', () => {
-    const records = parseNfceDocument(TWO_ITEM_NOTE, ORIGIN);
+    // O terceiro item existe para que a conferencia tenha o que dizer: o codigo
+    // de barras curto produz um aviso com o texto cru do arquivo, e e esse
+    // caminho — mensagem e valor original chegando ao relatorio — que precisa
+    // ser conferido junto dos outros dois.
+    const note = buildNfce({
+      items: [
+        { number: '1', code: 'ABC-1', barcode: '7890000000001', name: 'PRODUTO INVENTADO UM', price: '12.5000' },
+        { number: '2', code: 'ABC-2', barcode: 'SEM GTIN', name: 'PRODUTO INVENTADO DOIS', price: '3.9900' },
+        { number: '3', code: 'ABC-3', barcode: '123', name: 'PRODUTO INVENTADO TRES', price: '7.7700' },
+      ],
+    });
 
-    // As duas formas que o registro assume no fluxo: como saiu da leitura e
-    // como fica depois da traducao para os campos do produto. A garantia vale
-    // para as duas, e a segunda e a que segue para a validacao e a gravacao.
+    const records = parseNfceDocument(note, ORIGIN);
+    const translated = records.map(attachProductCandidate);
+
+    // As tres formas que o registro assume no fluxo: como saiu da leitura, como
+    // fica depois da traducao para os campos do produto, e como aparece no
+    // relatorio que o usuario le antes de gravar.
     const serializations = [
       JSON.stringify(records),
-      JSON.stringify(records.map(attachProductCandidate)),
+      JSON.stringify(translated),
+      JSON.stringify(
+        translated.map((record, index) =>
+          describeRecord(record, validateCandidate(record.candidate), index),
+        ),
+      ),
     ];
 
     for (const serialized of serializations) {

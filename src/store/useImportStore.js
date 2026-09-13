@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 
+import {
+  applyCorrection,
+  clearCorrection,
+  correctionFor,
+  resolveCandidate,
+} from '../domain/services/importCorrection.js';
+import {
+  createImportReport,
+  describeRecord,
+  pushRecordReport,
+  replaceRecordReport,
+} from '../domain/services/importReport.js';
 import { parseImportFiles } from '../domain/services/importService.js';
+import { validateCandidate, validateImportRecords } from '../domain/services/importValidation.js';
 
 /**
  * Estado do lote em leitura, separado do catalogo.
@@ -14,14 +27,35 @@ import { parseImportFiles } from '../domain/services/importService.js';
  *
  * `files` cresce conforme cada arquivo termina, e nao ao fim do lote, para que
  * a tela acompanhe o progresso de uma selecao grande.
+ *
+ * A conferencia vem logo depois da leitura, na mesma acao: o relatorio comeca
+ * por uma contagem, e contagem nao existe sem ter conferido tudo. Durante a
+ * varredura so `checkedCount` e publicado; o relatorio inteiro entra no estado
+ * uma vez, ao fim, porque publicar a cada fatia redesenharia a tela cem vezes
+ * sem ter o que mostrar ainda.
+ *
+ * A correcao do usuario nao volta ao registro: ela mora em `corrections`, e a
+ * reconferencia atinge um registro so — o corrigido —, nunca o lote.
  */
 export const useImportStore = create((set, get) => ({
   isParsing: false,
+  isChecking: false,
+  checkedCount: 0,
   files: [],
   records: [],
+  report: null,
+  corrections: {},
 
   reset: () => {
-    set({ isParsing: false, files: [], records: [] });
+    set({
+      isParsing: false,
+      isChecking: false,
+      checkedCount: 0,
+      files: [],
+      records: [],
+      report: null,
+      corrections: {},
+    });
   },
 
   parseFiles: async (selectedFiles) => {
@@ -31,7 +65,15 @@ export const useImportStore = create((set, get) => ({
       return { records: [], files: [] };
     }
 
-    set({ isParsing: true, files: [], records: [] });
+    set({
+      isParsing: true,
+      isChecking: false,
+      checkedCount: 0,
+      files: [],
+      records: [],
+      report: null,
+      corrections: {},
+    });
 
     try {
       const result = await parseImportFiles(selected, {
@@ -40,11 +82,67 @@ export const useImportStore = create((set, get) => ({
         },
       });
 
-      set({ records: result.records, files: result.files });
+      set({
+        records: result.records,
+        files: result.files,
+        isParsing: false,
+        isChecking: true,
+        checkedCount: 0,
+      });
+
+      const report = createImportReport();
+
+      await validateImportRecords(result.records, {
+        onRecord: (record, validation, index) => {
+          pushRecordReport(report, describeRecord(record, validation, index));
+        },
+        onProgress: (checked) => {
+          set({ checkedCount: checked });
+        },
+      });
+
+      set({ report });
 
       return result;
     } finally {
-      set({ isParsing: false });
+      set({ isParsing: false, isChecking: false });
     }
+  },
+
+  correctRecord: (recordId, field, value) => {
+    const { records, corrections, report } = get();
+    const entry = report?.entries.get(recordId);
+
+    if (!entry) {
+      return;
+    }
+
+    const record = records[entry.index];
+    const nextCorrections = applyCorrection(corrections, record, field, value);
+    const correction = correctionFor(nextCorrections, recordId);
+    const validation = validateCandidate(resolveCandidate(record, correction));
+
+    set({
+      corrections: nextCorrections,
+      report: replaceRecordReport(report, describeRecord(record, validation, entry.index, correction)),
+    });
+  },
+
+  revertRecord: (recordId) => {
+    const { records, corrections, report } = get();
+    const entry = report?.entries.get(recordId);
+
+    if (!entry || !corrections[recordId]) {
+      return;
+    }
+
+    const record = records[entry.index];
+    const nextCorrections = clearCorrection(corrections, recordId);
+    const validation = validateCandidate(record.candidate);
+
+    set({
+      corrections: nextCorrections,
+      report: replaceRecordReport(report, describeRecord(record, validation, entry.index)),
+    });
   },
 }));
