@@ -50,6 +50,26 @@ describe('parseImportFiles', () => {
     expect(records.map((record) => record.source.format)).toEqual(['csv', 'csv', 'json', 'xml']);
   });
 
+  it('entrega cada registro ja traduzido para os campos do produto', async () => {
+    const { records } = await parseImportFiles([
+      fileFrom('planilha.csv', CSV_CONTENT),
+      fileFrom('nota.xml', VALID_NOTE),
+    ]);
+
+    expect(records[0].candidate).toEqual({
+      systemCode: 'INV-1',
+      displayName: 'Produto inventado um',
+      priceInCentavos: 1250,
+    });
+    expect(records[2].candidate).toEqual({
+      systemCode: 'INV-1',
+      displayName: 'PRODUTO INVENTADO',
+      description: 'PRODUTO INVENTADO',
+      priceInCentavos: 990,
+    });
+    expect(records.every((record) => Array.isArray(record.candidateIssues))).toBe(true);
+  });
+
   it('mantem as chaves do cabecalho do CSV mesmo em linha curta', async () => {
     const { records } = await parseImportFiles([
       fileFrom('planilha.csv', ['a,b,c', '1,2'].join('\n')),

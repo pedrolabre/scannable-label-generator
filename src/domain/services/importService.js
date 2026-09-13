@@ -3,16 +3,22 @@ import { ImportFormatError, describeImportFileError } from './importError.js';
 import { IMPORT_FORMAT_CSV, IMPORT_FORMAT_JSON, IMPORT_FORMAT_XML } from './importRecord.js';
 import { parseJsonText } from './jsonParser.js';
 import { parseNfceDocument } from './nfceParser.js';
+import { attachProductCandidate } from './productMapping.js';
 
 /**
  * Entrada do importador: recebe os arquivos escolhidos, encaminha cada um ao
- * leitor do seu formato e devolve uma lista unica de registros intermediarios
- * junto do resultado por arquivo.
+ * leitor do seu formato, traduz cada registro lido para os campos do produto e
+ * devolve uma lista unica de registros junto do resultado por arquivo.
  *
  * Um arquivo recusado nao interrompe o lote — a falha vira o motivo daquele
  * arquivo e a leitura segue no proximo. E os arquivos sao lidos em sequencia,
  * com uma cessao de turno entre eles, para que o progresso apareca conforme o
  * lote avanca em vez de tudo de uma vez no fim.
+ *
+ * A traducao acontece aqui, num lugar so, logo apos a leitura: e o que permite
+ * que a recusa por conteudo, mais adiante, receba os tres formatos na mesma
+ * forma. Ela nunca recusa registro — um registro que nao pode ser traduzido
+ * inteiro segue com os campos que deu, e o motivo do que faltou vai junto.
  */
 
 export const ACCEPTED_FILE_EXTENSIONS = ['.csv', '.json', '.xml'];
@@ -80,7 +86,7 @@ export async function parseImportFiles(files, { onFileSettled } = {}) {
       // planilha de centenas de milhares de linhas ultrapassa o limite de
       // argumentos de uma chamada e derrubaria o lote inteiro.
       for (const record of parsed) {
-        records.push(record);
+        records.push(attachProductCandidate(record));
       }
 
       result = { ...base, status: IMPORT_FILE_PARSED, recordCount: parsed.length, error: null };

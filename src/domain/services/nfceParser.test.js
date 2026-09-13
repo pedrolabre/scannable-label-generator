@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ImportFormatError } from './importError.js';
 import { parseNfceDocument } from './nfceParser.js';
+import { attachProductCandidate } from './productMapping.js';
 
 /**
  * Toda nota usada aqui e escrita a mao, com valores inventados. Os marcadores
@@ -130,23 +131,48 @@ describe('parseNfceDocument', () => {
   });
 
   it('nao deixa passar dado de cliente, imposto, total nem assinatura', () => {
-    const serialized = JSON.stringify(parseNfceDocument(TWO_ITEM_NOTE, ORIGIN));
+    const records = parseNfceDocument(TWO_ITEM_NOTE, ORIGIN);
 
-    for (const leak of [
-      FAKE_CUSTOMER_NAME,
-      FAKE_CUSTOMER_DOCUMENT,
-      FAKE_CUSTOMER_ADDRESS,
-      FAKE_SIGNATURE,
-      FAKE_TAX_VALUE,
-      'EMPRESA INVENTADA LTDA',
-      'contato@inventado.invalido',
-    ]) {
-      expect(serialized).not.toContain(leak);
-    }
+    // As duas formas que o registro assume no fluxo: como saiu da leitura e
+    // como fica depois da traducao para os campos do produto. A garantia vale
+    // para as duas, e a segunda e a que segue para a validacao e a gravacao.
+    const serializations = [
+      JSON.stringify(records),
+      JSON.stringify(records.map(attachProductCandidate)),
+    ];
 
-    for (const tag of ['dest', 'emit', 'imposto', 'total', 'Signature', 'infRespTec', 'CPF']) {
-      expect(serialized).not.toContain(tag);
+    for (const serialized of serializations) {
+      for (const leak of [
+        FAKE_CUSTOMER_NAME,
+        FAKE_CUSTOMER_DOCUMENT,
+        FAKE_CUSTOMER_ADDRESS,
+        FAKE_SIGNATURE,
+        FAKE_TAX_VALUE,
+        'EMPRESA INVENTADA LTDA',
+        'contato@inventado.invalido',
+      ]) {
+        expect(serialized).not.toContain(leak);
+      }
+
+      for (const tag of ['dest', 'emit', 'imposto', 'total', 'Signature', 'infRespTec', 'CPF']) {
+        expect(serialized).not.toContain(tag);
+      }
     }
+  });
+
+  it('reduz o registro traduzido aos campos do produto, sem chave alheia ao contrato', () => {
+    const [first, second] = parseNfceDocument(TWO_ITEM_NOTE, ORIGIN).map(attachProductCandidate);
+
+    expect(Object.keys(first)).toEqual(['recordId', 'source', 'raw', 'candidate', 'candidateIssues']);
+    expect(Object.keys(first.candidate).sort()).toEqual([
+      'description',
+      'displayName',
+      'ean',
+      'priceInCentavos',
+      'systemCode',
+    ]);
+    expect(first.candidate.priceInCentavos).toBe(1250);
+    expect(second.candidate).not.toHaveProperty('ean');
   });
 
   it('aceita nota sem namespace declarado', () => {
