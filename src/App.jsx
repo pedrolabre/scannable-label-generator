@@ -10,6 +10,8 @@ import { useProductStore } from './store/useProductStore.js';
 export default function App() {
   const products = useProductStore((state) => state.products);
   const isLoading = useProductStore((state) => state.isLoading);
+  const loadError = useProductStore((state) => state.loadError);
+  const loadProducts = useProductStore((state) => state.loadProducts);
   const addProduct = useProductStore((state) => state.addProduct);
   const updateProduct = useProductStore((state) => state.updateProduct);
   const removeProduct = useProductStore((state) => state.removeProduct);
@@ -24,6 +26,11 @@ export default function App() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
+  // As tres acoes deixam a falha subir para quem as chamou: o formulario e o
+  // dialogo de remocao sao os dois lugares onde o usuario ve o que aconteceu e
+  // tenta de novo. O que vem depois do `await` so roda quando a gravacao entrou
+  // no armazenamento, entao uma falha nao limpa o formulario nem encerra a
+  // edicao em andamento.
   const handleSubmit = useCallback(
     async (product) => {
       if (editingProduct) {
@@ -45,6 +52,12 @@ export default function App() {
     [removeProduct],
   );
 
+  // O motivo da falha ja fica em `loadError`, e a listagem o exibe junto da
+  // propria acao de tentar de novo.
+  const handleRetryLoad = useCallback(() => {
+    loadProducts().catch(() => {});
+  }, [loadProducts]);
+
   return (
     <AppShell header={<AppHeader />}>
       <div className="w-full space-y-6">
@@ -62,6 +75,8 @@ export default function App() {
         <ProductList
           products={products}
           isLoading={isLoading}
+          loadError={loadError}
+          onRetryLoad={handleRetryLoad}
           onEdit={handleEdit}
           onRemove={handleRemove}
         />

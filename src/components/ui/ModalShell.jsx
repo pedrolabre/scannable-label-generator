@@ -3,30 +3,109 @@ import { X } from 'lucide-react';
 
 import { cx } from '../../lib/cx.js';
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+// Um elemento desabilitado no meio do caminho ou escondido por `hidden` nao
+// recebe foco; `getClientRects()` vazio e o sinal de que ele nao esta na tela.
+function focusableElementsOf(container) {
+  if (!container) {
+    return [];
+  }
+
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (element) => element.getClientRects().length > 0,
+  );
+}
+
 /**
  * Estrutura compartilhada dos dialogos da aplicacao: sobreposicao escura,
  * painel de canto reto, cabecalho na cor de marca, corpo rolavel e rodape de
  * acoes.
  *
- * O dialogo fecha com `Esc` e com clique fora do painel, e o foco vai para o
- * botao de fechar assim que ele aparece. O titulo nomeia o dialogo para
- * leitores de tela.
+ * Enquanto o dialogo esta aberto ele e o unico alvo do teclado: `Tab` circula
+ * entre os controles do painel sem escapar para a pagina atras, `Esc` fecha,
+ * clique iniciado na sobreposicao fecha, e o documento por baixo para de rolar.
+ * O foco entra no botao de fechar quando o dialogo aparece e volta para o
+ * elemento que o abriu quando ele sai, de modo que quem navega por teclado
+ * retoma de onde parou. O titulo nomeia o dialogo para leitores de tela.
  *
  * `footer` recebe os botoes de acao ja montados, para que cada dialogo decida o
  * proprio conjunto sem que esta estrutura precise conhece-lo.
  */
 export default function ModalShell({ title, subtitle, onClose, footer, children }) {
+  const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const titleId = useId();
 
   useEffect(() => {
+    const previouslyFocused = document.activeElement;
+
     closeButtonRef.current?.focus();
+
+    return () => {
+      if (previouslyFocused instanceof HTMLElement) {
+        previouslyFocused.focus();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const { style } = document.body;
+    const previousOverflow = style.overflow;
+
+    style.overflow = 'hidden';
+
+    return () => {
+      style.overflow = previousOverflow;
+    };
   }, []);
 
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const panel = panelRef.current;
+      const focusable = focusableElementsOf(panel);
+
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      // O foco pode estar fora do painel quando o usuario volta da barra do
+      // navegador com `Tab`: nesse caso ele reentra pelo primeiro controle.
+      if (!panel?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+
+      if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
@@ -51,6 +130,7 @@ export default function ModalShell({ title, subtitle, onClose, footer, children 
       onMouseDown={handleOverlayMouseDown}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

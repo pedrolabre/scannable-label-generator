@@ -1,7 +1,8 @@
-import { AlertTriangle, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
+import InlineAlert from '../ui/InlineAlert.jsx';
 
 import ProductFormFields from './ProductFormFields.jsx';
 import { useProductForm } from './useProductForm.js';
@@ -50,15 +51,7 @@ export default function ProductForm({ product = null, onSubmit, onCancel }) {
           onChange={handleChange}
         />
 
-        {submitError ? (
-          <p
-            role="alert"
-            className="flex items-start gap-2 rounded-[3px] border border-[#b93a20] bg-[#fff1ea] p-3 text-sm text-[#b93a20] dark:bg-[#3b211b] dark:text-[#ffb8a7]"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            {submitError}
-          </p>
-        ) : null}
+        {submitError ? <InlineAlert>{submitError}</InlineAlert> : null}
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" onClick={onCancel ?? reset} disabled={isSubmitting}>

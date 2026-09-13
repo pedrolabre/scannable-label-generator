@@ -1,10 +1,10 @@
-import { Loader2, PackageOpen, SearchX } from 'lucide-react';
+import { AlertTriangle, Loader2, PackageOpen, SearchX } from 'lucide-react';
 
 import Button from '../ui/Button.jsx';
 
 /**
- * Os tres estados em que a listagem nao tem linhas para mostrar. Cada um diz o
- * que esta acontecendo e, quando ha uma saida, oferece a acao que resolve.
+ * Os quatro estados em que a listagem nao tem linhas para mostrar. Cada um diz
+ * o que esta acontecendo e, quando ha uma saida, oferece a acao que resolve.
  */
 function StatusBlock({ icon: Icon, iconClassName, title, children }) {
   return (
@@ -50,6 +50,26 @@ export function NoMatchStatus({ query, onClearSearch }) {
       </p>
       <Button type="button" onClick={onClearSearch} className="mt-3">
         Limpar busca
+      </Button>
+    </StatusBlock>
+  );
+}
+
+/**
+ * Distingue a leitura que falhou de um catalogo realmente vazio. Sem este
+ * estado as duas situacoes apareceriam como a mesma tela, e o usuario seria
+ * convidado a cadastrar um produto num armazenamento que nao respondeu.
+ */
+export function LoadFailureStatus({ message, onRetry }) {
+  return (
+    <StatusBlock
+      icon={AlertTriangle}
+      iconClassName="h-8 w-8 text-[#b93a20] dark:text-[#ffb8a7]"
+      title="Falha ao ler os produtos salvos"
+    >
+      <p role="alert">{message}</p>
+      <Button type="button" onClick={onRetry} className="mt-3">
+        Tentar de novo
       </Button>
     </StatusBlock>
   );
