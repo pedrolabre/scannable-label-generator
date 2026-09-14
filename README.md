@@ -63,6 +63,11 @@ scannable-label-generator/
         ImportWriteResult.jsx
         conflictLabels.js
         importCounts.js
+      label/
+        LabelSurface.jsx
+        ProductLabel.jsx
+        ProductLabel.test.jsx
+        useProductSymbol.js
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -110,6 +115,12 @@ scannable-label-generator/
         importWriter.js
         importWriter.test.js
         jsonParser.js
+        labelGeometry.js
+        labelGeometry.test.js
+        labelLayoutCatalog.js
+        labelLayoutCatalog.test.js
+        labelText.js
+        labelText.test.js
         nfceParser.js
         nfceParser.test.js
         nfceProductMapping.js
