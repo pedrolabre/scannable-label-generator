@@ -1,6 +1,6 @@
 # LabelForge
 
-SPA client-side para cadastro de produtos e geração de etiquetas com código 2D (Data Matrix/QR) machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Tudo roda no navegador: sem servidor, sem conta, sem rede depois da primeira visita.
+SPA client-side para cadastro de produtos e geração de etiquetas com QR Code machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Tudo roda no navegador: sem servidor, sem conta, sem rede depois da primeira visita.
 
 ## Status
 
@@ -26,6 +26,7 @@ Em desenvolvimento inicial.
 - Dexie sobre o IndexedDB para persistência local no navegador.
 - Zustand no gerenciamento de estado global.
 - PapaParse e fast-xml-parser para leitura de CSV, JSON e XML de NFC-e.
+- bwip-js para geração de código 2D / QR Code no navegador.
 - Vitest para testes automatizados unitários e de integração.
 
 ## Comandos
@@ -129,6 +130,18 @@ scannable-label-generator/
         tabularProductMapping.js
     lib/
       app-meta.js
+      barcode.js
+      barcode.test.js
+      barcodeCache.js
+      barcodeCache.test.js
+      barcodeEngine.js
+      barcodeError.js
+      barcodeSizing.js
+      barcodeSizing.test.js
+      barcodeSvg.js
+      barcodeSvg.test.js
+      barcodeSymbology.js
+      barcodeSymbology.test.js
       currency.js
       cx.js
     storage/
