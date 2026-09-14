@@ -41,3 +41,19 @@ export async function updateProduct(product) {
 export function deleteProduct(id) {
   return db.products.delete(id);
 }
+
+/**
+ * Roda um conjunto de escritas numa transacao unica da tabela de produtos.
+ *
+ * Existe para que a gravacao em lote possa fechar um grupo de registros de uma
+ * vez: ou o grupo inteiro entra, ou nenhum registro dele entra. Com isso, "o que
+ * foi gravado" continua sendo um trecho inicial exato do lote mesmo quando uma
+ * escrita falha no meio, e a retomada nao precisa adivinhar onde parou.
+ *
+ * A funcao mora aqui, e nao no servico que orquestra a gravacao, porque este e o
+ * unico modulo que conhece o banco. Quem chama entrega as escritas e nao
+ * enxerga a biblioteca de persistencia.
+ */
+export function runProductsTransaction(write) {
+  return db.transaction('rw', db.products, write);
+}

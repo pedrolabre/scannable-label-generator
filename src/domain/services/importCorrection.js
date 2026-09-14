@@ -35,6 +35,16 @@ export function resolveCandidate(record, correction) {
 }
 
 /**
+ * Campos do produto de um registro, com a correcao que houver, buscada pelo
+ * mapa. Atalho para os dois passos que sempre andam juntos — a deteccao de
+ * conflito e a gravacao em lote chegam ao candidato por aqui, e nenhum dos dois
+ * refaz a mistura.
+ */
+export function candidateForRecord(record, corrections) {
+  return resolveCandidate(record, correctionFor(corrections, record.recordId));
+}
+
+/**
  * Mapa de correcoes com um campo alterado.
  *
  * Valor igual ao original deixa de ser correcao e some do mapa — inclusive

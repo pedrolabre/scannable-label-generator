@@ -1,14 +1,22 @@
+import {
+  CONFLICT_KIND_BATCH,
+  CONFLICT_KIND_CATALOG,
+  CONFLICT_KIND_IDENTICAL,
+  isConflictPending,
+} from './importConflict.js';
 import { ISSUE_SEVERITY_NOTICE } from './productCandidateIssue.js';
 
 /**
  * Relatorio do lote: o que cada registro tem a dizer antes de virar produto.
  *
- * Tres estados, e so um deles impede a gravacao:
+ * Quatro estados, e dois deles impedem a gravacao:
  *
  * - `ready`     passou no contrato e nao tem aviso nenhum;
  * - `attention` passou no contrato, mas o caminho ate aqui deixou alguma
  *               observacao — nome encurtado, campo do arquivo que ficou de
  *               fora, ou uma correcao do proprio usuario. Grava;
+ * - `pending`   tem codigo repetido e espera a decisao do usuario. Nao grava
+ *               ainda, e passa a gravar no instante em que a decisao existe;
  * - `refused`   o contrato recusou. Nao grava.
  *
  * A severidade do aviso **nao** decide o estado. Quem decide e o contrato: um
@@ -33,12 +41,31 @@ import { ISSUE_SEVERITY_NOTICE } from './productCandidateIssue.js';
  * Cada entrada carrega a lista de motivos que a tiraram de `ready`. A tela
  * mostra tudo o que tem motivo, sem saber quais motivos existem, e o conjunto
  * de motivos que impedem a gravacao esta em `BLOCKING_REASONS`. E assim que a
- * resolucao de codigo repetido cabe nesta mesma lista, mais tarde, sem que a
- * lista precise ser reescrita.
+ * resolucao de codigo repetido cabe nesta mesma lista sem que a lista precise
+ * ser reescrita: o codigo repetido acrescenta motivo, e o registro pronto que
+ * colide sobe para a lista de revisao na mesma linha em que ja estaria.
+ *
+ * ## O conflito entra como motivo, e nao como linha de campo
+ *
+ * Codigo repetido nao e campo recusado: e uma pergunta cuja resposta e um
+ * verbo — substituir, pular, gravar como novo. Por isso a entrada carrega o
+ * conflito inteiro em `conflict`, e a tela monta o controle a partir dele, em
+ * vez de receber uma frase pronta entre as linhas de campo.
+ *
+ * Enquanto a resposta nao existe, o motivo `conflictPending` esta na lista e
+ * impede a gravacao daquele registro — so daquele. Tomada a decisao, o motivo
+ * do conflito continua (ele descreve algo que e verdade), e apenas o
+ * `conflictPending` deixa de ser produzido, de modo que `blocksWriting(entry)`
+ * segue sendo a unica pergunta antes de gravar.
+ *
+ * O relatorio como colecao — as entradas do lote, as contagens e a lista da
+ * revisao — fica em `importReportIndex.js`. Aqui e o que **um** registro diz.
  */
 
 export const RECORD_STATUS_READY = 'ready';
 export const RECORD_STATUS_ATTENTION = 'attention';
+/** Depende de uma decisao do usuario para poder seguir. Nao grava ainda. */
+export const RECORD_STATUS_PENDING = 'pending';
 export const RECORD_STATUS_REFUSED = 'refused';
 
 /** O contrato do produto recusou o registro. */
@@ -49,8 +76,25 @@ export const REPORT_REASON_REVIEW = 'review';
 export const REPORT_REASON_DROPPED = 'dropped';
 /** O usuario corrigiu algum campo do registro na revisao. */
 export const REPORT_REASON_CORRECTED = 'corrected';
+/** Outro registro do mesmo lote carrega este codigo. */
+export const REPORT_REASON_DUPLICATE_IN_BATCH = 'duplicateInBatch';
+/** O codigo do registro ja existe no catalogo, com conteudo diferente. */
+export const REPORT_REASON_DUPLICATE_IN_CATALOG = 'duplicateInCatalog';
+/** O codigo ja existe no catalogo e o conteudo e o mesmo. Nada a decidir. */
+export const REPORT_REASON_DUPLICATE_IDENTICAL = 'duplicateIdentical';
+/** Outro registro do lote, ou um produto gravado, leva este mesmo nome. */
+export const REPORT_REASON_DUPLICATE_NAME = 'duplicateName';
+/** Ha conflito de codigo e o usuario ainda nao disse o que fazer. */
+export const REPORT_REASON_CONFLICT_PENDING = 'conflictPending';
 
-export const BLOCKING_REASONS = new Set([REPORT_REASON_INVALID]);
+/**
+ * O que impede a gravacao. A recusa do contrato e o veredito do produto; o
+ * conflito pendente e a ausencia de uma decisao que so o usuario pode tomar, e
+ * ele sai deste conjunto no instante em que a decisao existe — nao pela remocao
+ * do motivo do conflito, que continua sendo verdade, mas porque o proprio
+ * `conflictPending` deixa de ser produzido.
+ */
+export const BLOCKING_REASONS = new Set([REPORT_REASON_INVALID, REPORT_REASON_CONFLICT_PENDING]);
 
 /**
  * Ordem de leitura das linhas, a mesma em que os campos aparecem no contrato e
@@ -106,6 +150,40 @@ function reasonForSeverity(severity) {
   return severity === ISSUE_SEVERITY_NOTICE ? REPORT_REASON_REVIEW : REPORT_REASON_DROPPED;
 }
 
+const REASON_BY_CONFLICT_KIND = new Map([
+  [CONFLICT_KIND_BATCH, REPORT_REASON_DUPLICATE_IN_BATCH],
+  [CONFLICT_KIND_CATALOG, REPORT_REASON_DUPLICATE_IN_CATALOG],
+  [CONFLICT_KIND_IDENTICAL, REPORT_REASON_DUPLICATE_IDENTICAL],
+]);
+
+/**
+ * Motivos que o conflito acrescenta. O conflito nao produz linha de campo: ele
+ * nao e um campo recusado, e sim uma pergunta com resposta em botao. A entrada
+ * carrega o conflito inteiro, e a tela monta o controle a partir dele.
+ */
+function conflictReasons(conflict) {
+  if (!conflict) {
+    return [];
+  }
+
+  const reasons = [];
+  const kindReason = REASON_BY_CONFLICT_KIND.get(conflict.code?.kind);
+
+  if (kindReason) {
+    reasons.push(kindReason);
+  }
+
+  if (conflict.name) {
+    reasons.push(REPORT_REASON_DUPLICATE_NAME);
+  }
+
+  if (isConflictPending(conflict)) {
+    reasons.push(REPORT_REASON_CONFLICT_PENDING);
+  }
+
+  return reasons;
+}
+
 /**
  * Entrada do relatorio para um registro.
  *
@@ -118,7 +196,7 @@ function reasonForSeverity(severity) {
  * recusa do contrato, essa continua — ela fala do valor corrigido, porque a
  * conferencia ja rodou sobre ele.
  */
-export function describeRecord(record, validation, index, correction = null) {
+export function describeRecord(record, validation, index, correction = null, conflict = null) {
   const { fieldErrors } = validation;
   const issuesByField = groupIssuesByField(record.candidateIssues ?? []);
   const corrected = Boolean(correction && Object.keys(correction).length > 0);
@@ -170,6 +248,10 @@ export function describeRecord(record, validation, index, correction = null) {
     addReason(REPORT_REASON_CORRECTED);
   }
 
+  for (const reason of conflictReasons(conflict)) {
+    addReason(reason);
+  }
+
   return {
     recordId: record.recordId,
     index,
@@ -177,12 +259,27 @@ export function describeRecord(record, validation, index, correction = null) {
     reasons,
     corrected,
     lines,
+    conflict,
   };
 }
 
+/**
+ * O estado do registro sai dos motivos, e a ordem das perguntas e a ordem da
+ * gravidade: a recusa do contrato nao se resolve nesta tela, a decisao de
+ * conflito se resolve, e o aviso nao precisa de acao nenhuma.
+ *
+ * `pending` existe como estado proprio, e nao como um `attention` qualquer,
+ * porque as contagens do relatorio respondem "quantos registros seguiriam para o
+ * catalogo": um conflito sem decisao nao segue, e chamar isso de `attention`
+ * faria a conta mentir.
+ */
 function recordStatus(reasons) {
   if (reasons.includes(REPORT_REASON_INVALID)) {
     return RECORD_STATUS_REFUSED;
+  }
+
+  if (reasons.includes(REPORT_REASON_CONFLICT_PENDING)) {
+    return RECORD_STATUS_PENDING;
   }
 
   return reasons.length > 0 ? RECORD_STATUS_ATTENTION : RECORD_STATUS_READY;
@@ -190,111 +287,4 @@ function recordStatus(reasons) {
 
 export function blocksWriting(entry) {
   return entry.reasons.some((reason) => BLOCKING_REASONS.has(reason));
-}
-
-export function createImportReport() {
-  return {
-    entries: new Map(),
-    reviewIds: [],
-    readyCount: 0,
-    attentionCount: 0,
-    refusedCount: 0,
-  };
-}
-
-function countKeyFor(status) {
-  if (status === RECORD_STATUS_REFUSED) {
-    return 'refusedCount';
-  }
-
-  return status === RECORD_STATUS_ATTENTION ? 'attentionCount' : 'readyCount';
-}
-
-/**
- * Acrescenta a entrada ao relatorio em construcao. Altera o objeto recebido de
- * proposito: e a montagem do lote inteiro, antes de qualquer leitura, e copiar
- * o relatorio a cada registro custaria uma copia por registro.
- */
-export function pushRecordReport(report, entry) {
-  report.entries.set(entry.recordId, entry);
-  report[countKeyFor(entry.status)] += 1;
-
-  if (entry.status !== RECORD_STATUS_READY) {
-    report.reviewIds.push(entry.recordId);
-  }
-
-  return report;
-}
-
-function insertReviewId(report, entry) {
-  const next = [...report.reviewIds];
-  const position = next.findIndex((id) => (report.entries.get(id)?.index ?? -1) > entry.index);
-
-  if (position === -1) {
-    next.push(entry.recordId);
-  } else {
-    next.splice(position, 0, entry.recordId);
-  }
-
-  return next;
-}
-
-/**
- * Relatorio com uma entrada trocada, depois de uma correcao do usuario.
- *
- * O mapa de entradas e alterado no lugar e o relatorio volta como objeto novo:
- * copiar centenas de milhares de entradas a cada tecla digitada travaria a
- * edicao, e quem le sempre chega pelo relatorio devolvido aqui.
- *
- * A lista de revisao mantem a ordem do lote, inclusive quando um registro entra
- * nela agora — o que acontece quando a correcao passa a ser recusada pelo
- * contrato, e e justamente a hora em que a linha precisa continuar a vista.
- */
-export function replaceRecordReport(report, entry) {
-  const previous = report.entries.get(entry.recordId);
-
-  report.entries.set(entry.recordId, entry);
-
-  const next = { ...report, entries: report.entries };
-
-  if (previous) {
-    next[countKeyFor(previous.status)] -= 1;
-  }
-
-  next[countKeyFor(entry.status)] += 1;
-
-  const wasInReview = Boolean(previous) && previous.status !== RECORD_STATUS_READY;
-  const isInReview = entry.status !== RECORD_STATUS_READY;
-
-  if (wasInReview && !isInReview) {
-    next.reviewIds = report.reviewIds.filter((id) => id !== entry.recordId);
-  } else if (!wasInReview && isInReview) {
-    next.reviewIds = insertReviewId(report, entry);
-  }
-
-  return next;
-}
-
-export function getRecordReport(report, recordId) {
-  return report.entries.get(recordId) ?? null;
-}
-
-/**
- * Registros que a revisao mostra: os que tem motivo, na ordem do lote, ate o
- * limite pedido. O limite existe porque um lote inteiro pode ser recusado de
- * uma vez — uma planilha com os nomes de coluna errados recusa tudo — e ai a
- * lista de motivos tem o tamanho do lote.
- */
-export function takeReviewEntries(report, limit) {
-  const ids = report.reviewIds.slice(0, limit);
-
-  return ids.map((id) => report.entries.get(id)).filter(Boolean);
-}
-
-/**
- * Quantos registros seguiriam para o catalogo: os prontos e os que so pedem
- * conferencia. Recusa do contrato fica de fora.
- */
-export function writableCount(report) {
-  return report.readyCount + report.attentionCount;
 }

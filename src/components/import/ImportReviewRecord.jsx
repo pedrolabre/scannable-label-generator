@@ -1,9 +1,13 @@
 import { describeImportOrigin } from '../../domain/services/importRecord.js';
-import { RECORD_STATUS_REFUSED } from '../../domain/services/importReport.js';
+import {
+  RECORD_STATUS_PENDING,
+  RECORD_STATUS_REFUSED,
+} from '../../domain/services/importReport.js';
 import { ISSUE_DISPLAY_NAME_TRUNCATED } from '../../domain/services/productCandidateIssue.js';
 import { formatCentavosAsBRL } from '../../lib/currency.js';
 import { cx } from '../../lib/cx.js';
 
+import ImportConflictNotice from './ImportConflictNotice.jsx';
 import ImportDisplayNameField from './ImportDisplayNameField.jsx';
 import ImportRecordIssueList from './ImportRecordIssueList.jsx';
 
@@ -18,6 +22,17 @@ import ImportRecordIssueList from './ImportRecordIssueList.jsx';
  * campo: e nele que esta a diferenca entre duas variantes do mesmo produto, e
  * sem ele o corte nao tem como ser conferido.
  */
+/**
+ * Tres rotulos, duas cores: o vermelho suave e a recusa, que nao se resolve nesta
+ * tela, e o ambar cobre o que ainda depende de alguem — decidir o codigo repetido
+ * e conferir um aviso. A diferenca entre esses dois esta no rotulo e no bloco de
+ * decisao logo abaixo, e nao numa terceira cor inventada para a ocasiao.
+ */
+const BADGE_LABEL = new Map([
+  [RECORD_STATUS_REFUSED, 'Recusado'],
+  [RECORD_STATUS_PENDING, 'Decidir'],
+]);
+
 function StatusBadge({ status }) {
   const refused = status === RECORD_STATUS_REFUSED;
 
@@ -30,7 +45,7 @@ function StatusBadge({ status }) {
           : 'border-[#8a5a00] bg-[#fdf6e3] text-[#8a5a00] dark:border-[#f4c95f] dark:bg-[#3a2f16] dark:text-[#f4c95f]',
       )}
     >
-      {refused ? 'Recusado' : 'Conferir'}
+      {BADGE_LABEL.get(status) ?? 'Conferir'}
     </span>
   );
 }
@@ -45,7 +60,14 @@ function displayNameError(entry) {
   return line ? line.message : null;
 }
 
-export default function ImportReviewRecord({ record, entry, correction, onCorrect, onRevert }) {
+export default function ImportReviewRecord({
+  record,
+  entry,
+  correction,
+  onCorrect,
+  onRevert,
+  onDecide,
+}) {
   const nameError = displayNameError(entry);
   const currentName = correction?.displayName ?? record.candidate.displayName ?? '';
   const price = record.candidate.priceInCentavos;
@@ -95,6 +117,11 @@ export default function ImportReviewRecord({ record, entry, correction, onCorrec
       ) : null}
 
       <ImportRecordIssueList lines={lines} />
+
+      <ImportConflictNotice
+        conflict={entry.conflict}
+        onDecide={(decision) => onDecide(record.recordId, decision)}
+      />
     </li>
   );
 }

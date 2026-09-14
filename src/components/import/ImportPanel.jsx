@@ -69,8 +69,9 @@ export default function ImportPanel() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">Importação em lote</h2>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Leia planilhas e notas fiscais de uma vez. Nesta versão os arquivos são lidos e
-            conferidos; nada é gravado no catálogo ainda.
+            Leia planilhas e notas fiscais de uma vez, confira o que veio e grave no catálogo deste
+            dispositivo. Código repetido é apresentado para você decidir, e nada é sobrescrito sem
+            a sua escolha.
           </p>
         </div>
 
