@@ -7,11 +7,11 @@ import { pluralize } from './importCounts.js';
  * qualquer tamanho: com 200 mil registros e tres recusados, o numero e a
  * resposta, e as tres linhas abaixo dela sao o detalhe.
  */
-function reviewSentence({ readyCount, attentionCount, refusedCount }) {
-  const total = readyCount + attentionCount + refusedCount;
+function reviewSentence({ readyCount, attentionCount, pendingCount, refusedCount }) {
+  const total = readyCount + attentionCount + pendingCount + refusedCount;
   const head = pluralize(total, 'registro conferido', 'registros conferidos');
 
-  if (attentionCount === 0 && refusedCount === 0) {
+  if (attentionCount === 0 && pendingCount === 0 && refusedCount === 0) {
     return `${head}: todos prontos.`;
   }
 
@@ -23,6 +23,10 @@ function reviewSentence({ readyCount, attentionCount, refusedCount }) {
 
   if (attentionCount > 0) {
     parts.push(`${pluralize(attentionCount, 'registro', 'registros')} para conferir`);
+  }
+
+  if (pendingCount > 0) {
+    parts.push(`${pluralize(pendingCount, 'esperando', 'esperando')} decisão`);
   }
 
   if (refusedCount > 0) {

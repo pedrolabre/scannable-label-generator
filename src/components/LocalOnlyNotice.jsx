@@ -21,8 +21,7 @@ export default function LocalOnlyNotice() {
             enviado para servidores e nenhuma conta é necessária.
           </p>
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            A importação em lote e a montagem das folhas de etiquetas ainda não estão disponíveis
-            nesta versão.
+            A montagem das folhas de etiquetas ainda não está disponível nesta versão.
           </p>
         </div>
       </div>

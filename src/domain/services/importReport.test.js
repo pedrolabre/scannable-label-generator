@@ -13,13 +13,15 @@ import {
   REPORT_REASON_INVALID,
   REPORT_REASON_REVIEW,
   blocksWriting,
-  createImportReport,
   describeRecord,
+} from './importReport.js';
+import {
+  createImportReport,
   pushRecordReport,
   replaceRecordReport,
   takeReviewEntries,
   writableCount,
-} from './importReport.js';
+} from './importReportIndex.js';
 import { validateCandidate } from './importValidation.js';
 import { attachProductCandidate } from './productMapping.js';
 

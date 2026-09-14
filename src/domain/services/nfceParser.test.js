@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { ProductSchema } from '../schemas/productSchema.js';
+
 import { ImportFormatError } from './importError.js';
 import { describeRecord } from './importReport.js';
+import { createImportReport, pushRecordReport } from './importReportIndex.js';
 import { validateCandidate } from './importValidation.js';
+import { writeImportBatch } from './importWriter.js';
 import { parseNfceDocument } from './nfceParser.js';
 import { attachProductCandidate } from './productMapping.js';
 
@@ -132,7 +136,7 @@ describe('parseNfceDocument', () => {
     ]);
   });
 
-  it('nao deixa passar dado de cliente, imposto, total nem assinatura', () => {
+  it('nao deixa passar dado de cliente, imposto, total nem assinatura', async () => {
     // O terceiro item existe para que a conferencia tenha o que dizer: o codigo
     // de barras curto produz um aviso com o texto cru do arquivo, e e esse
     // caminho — mensagem e valor original chegando ao relatorio — que precisa
@@ -148,17 +152,44 @@ describe('parseNfceDocument', () => {
     const records = parseNfceDocument(note, ORIGIN);
     const translated = records.map(attachProductCandidate);
 
-    // As tres formas que o registro assume no fluxo: como saiu da leitura, como
-    // fica depois da traducao para os campos do produto, e como aparece no
-    // relatorio que o usuario le antes de gravar.
+    // O relatorio que o usuario le antes de gravar, montado uma vez e usado
+    // tanto na conferencia do vazamento quanto na gravacao logo abaixo.
+    const report = createImportReport();
+
+    translated.forEach((record, index) => {
+      pushRecordReport(
+        report,
+        describeRecord(record, validateCandidate(record.candidate), index),
+      );
+    });
+
+    // O produto entregue a escrita: o ultimo ponto do fluxo, e o unico cujo
+    // conteudo sobrevive ao fim do lote.
+    const written = [];
+
+    await writeImportBatch(translated, {
+      report,
+      repository: {
+        runProductsTransaction: (write) => write(),
+        createProduct: async (product) => {
+          written.push(ProductSchema.parse(product));
+
+          return product;
+        },
+        updateProduct: async (product) => product,
+      },
+    });
+
+    expect(written).toHaveLength(3);
+
+    // As quatro formas que o registro assume no fluxo: como saiu da leitura, como
+    // fica depois da traducao para os campos do produto, como aparece no
+    // relatorio, e como chega ao armazenamento.
     const serializations = [
       JSON.stringify(records),
       JSON.stringify(translated),
-      JSON.stringify(
-        translated.map((record, index) =>
-          describeRecord(record, validateCandidate(record.candidate), index),
-        ),
-      ),
+      JSON.stringify([...report.entries.values()]),
+      JSON.stringify(written),
     ];
 
     for (const serialized of serializations) {

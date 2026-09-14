@@ -49,6 +49,8 @@ scannable-label-generator/
       AppHeader.jsx
       LocalOnlyNotice.jsx
       import/
+        ImportConflictBulkActions.jsx
+        ImportConflictNotice.jsx
         ImportDisplayNameField.jsx
         ImportFilePicker.jsx
         ImportFileStatusList.jsx
@@ -57,6 +59,9 @@ scannable-label-generator/
         ImportReviewPanel.jsx
         ImportReviewRecord.jsx
         ImportReviewSummary.jsx
+        ImportWritePanel.jsx
+        ImportWriteResult.jsx
+        conflictLabels.js
         importCounts.js
       product-form/
         ProductForm.jsx
@@ -88,16 +93,22 @@ scannable-label-generator/
         printJobSchema.js
       services/
         csvParser.js
+        importConflict.js
+        importConflict.test.js
+        importConflictIndex.js
         importCorrection.js
         importError.js
         importRecord.js
         importRecord.test.js
         importReport.js
         importReport.test.js
+        importReportIndex.js
         importService.js
         importService.test.js
         importValidation.js
         importValidation.test.js
+        importWriter.js
+        importWriter.test.js
         jsonParser.js
         nfceParser.js
         nfceParser.test.js
