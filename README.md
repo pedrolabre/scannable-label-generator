@@ -1,6 +1,6 @@
 # scannable-label-generator
 
-SPA client-side para cadastro de produtos e geração de etiquetas com código 2D (Data Matrix/QR) machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Nome de produto: LabelForge.
+SPA client-side para cadastro de produtos e geração de etiquetas com QR Code machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Nome de produto: LabelForge.
 
 ## Status
 
@@ -15,7 +15,7 @@ Em desenvolvimento inicial.
 - Zod (validação de schemas)
 - Vitest (testes automatizados)
 - PapaParse (CSV via Web Worker)
-- bwip-js (Data Matrix/QR)
+- bwip-js (QR Code)
 - PDFMake ou jsPDF (exportação em PDF)
 - vite-plugin-pwa
 
@@ -23,7 +23,7 @@ Em desenvolvimento inicial.
 
 - Cadastro manual de produtos (criar, editar, remover, listar)
 - Importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00)
-- Geração de Data Matrix/QR contendo exclusivamente o código do produto
+- Geração de QR Code contendo exclusivamente o código do produto
 - Layouts de etiqueta padronizados, múltiplos tamanhos, em milímetros reais
 - Motor de impressão: seleção de itens, montagem automática em folha A4, preview
 - Exportação em PDF vetorial com escala física 1:1
@@ -121,6 +121,18 @@ scannable-label-generator/
         tabularProductMapping.js
     lib/
       app-meta.js
+      barcode.js
+      barcode.test.js
+      barcodeCache.js
+      barcodeCache.test.js
+      barcodeEngine.js
+      barcodeError.js
+      barcodeSizing.js
+      barcodeSizing.test.js
+      barcodeSvg.js
+      barcodeSvg.test.js
+      barcodeSymbology.js
+      barcodeSymbology.test.js
       currency.js
       cx.js
     storage/
