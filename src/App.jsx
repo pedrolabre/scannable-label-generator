@@ -6,8 +6,11 @@ import LocalOnlyNotice from './components/LocalOnlyNotice.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
 import LabelPreviewPanel from './components/label/LabelPreviewPanel.jsx';
 import { resolveSelectedProduct } from './components/label/previewSelection.js';
+import PrintJobPanel from './components/print/PrintJobPanel.jsx';
+import { selectedPrintIds } from './components/print/printSelection.js';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
+import { usePrintJobStore } from './store/usePrintJobStore.js';
 import { useProductStore } from './store/useProductStore.js';
 
 export default function App() {
@@ -18,6 +21,9 @@ export default function App() {
   const addProduct = useProductStore((state) => state.addProduct);
   const updateProduct = useProductStore((state) => state.updateProduct);
   const removeProduct = useProductStore((state) => state.removeProduct);
+
+  const printSelection = usePrintJobStore((state) => state.selection);
+  const togglePrintProduct = usePrintJobStore((state) => state.toggleProduct);
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
@@ -31,6 +37,10 @@ export default function App() {
     () => resolveSelectedProduct(products, selectedProductId),
     [products, selectedProductId],
   );
+
+  // A listagem consulta item a item se aquele produto vai para a folha, entao
+  // recebe um conjunto em vez da lista ordenada que o painel da folha consome.
+  const printSelectionIds = useMemo(() => selectedPrintIds(printSelection), [printSelection]);
 
   // A listagem fica abaixo do formulario: escolher um produto para editar leva
   // a pagina de volta ao formulario ja preenchido.
@@ -103,11 +113,15 @@ export default function App() {
           isLoading={isLoading}
           loadError={loadError}
           selectedProductId={selectedProductId}
+          printSelection={printSelectionIds}
+          onTogglePrint={togglePrintProduct}
           onRetryLoad={handleRetryLoad}
           onEdit={handleEdit}
           onPreview={handlePreview}
           onRemove={handleRemove}
         />
+
+        <PrintJobPanel products={products} />
       </div>
     </AppShell>
   );

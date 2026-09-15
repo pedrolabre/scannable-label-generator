@@ -12,8 +12,20 @@ import SegmentedControl from '../ui/SegmentedControl.jsx';
  * O rotulo de cada opcao e o proprio nome do modelo, que ja carrega a medida
  * ("Tag grande (100 x 70 mm)"). Repetir a medida ao lado imprimiria o mesmo
  * numero duas vezes.
+ *
+ * `name` e `legend` tem padrao porque a tela da previa e a primeira chamadora e
+ * nao precisa declarar nenhum dos dois. Uma segunda escolha de modelo na mesma
+ * pagina precisa: o agrupamento dos botoes de radio e feito por `name`, entao
+ * dois grupos com o mesmo nome se moveriam juntos, e dois titulos iguais nao
+ * diriam qual deles governa o que sai impresso.
  */
-export default function LabelLayoutPicker({ value, onChange, className }) {
+export default function LabelLayoutPicker({
+  value,
+  onChange,
+  legend = 'Modelo',
+  name = 'modelo-etiqueta',
+  className,
+}) {
   const options = listLabelLayouts().map((layout) => ({
     value: layout.id,
     label: layout.name,
@@ -21,8 +33,8 @@ export default function LabelLayoutPicker({ value, onChange, className }) {
 
   return (
     <SegmentedControl
-      legend="Modelo"
-      name="modelo-etiqueta"
+      legend={legend}
+      name={name}
       options={options}
       value={value}
       onChange={onChange}

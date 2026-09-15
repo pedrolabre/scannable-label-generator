@@ -1,15 +1,22 @@
 import { formatCentavosAsBRL } from '../../lib/currency.js';
 
+import Checkbox from '../ui/Checkbox.jsx';
+
 import ProductItemActions from './ProductItemActions.jsx';
 
 /**
  * Superficie da listagem abaixo de `sm:`, onde as cinco colunas da tabela nao
  * cabem lado a lado. Cada produto vira um bloco com o nome em destaque, os
  * codigos empilhados e o preco alinhado com as acoes.
+ *
+ * A caixa de marcacao abre o cartao, no mesmo lugar em que abre a linha da
+ * tabela: e a primeira decisao sobre o produto, e nao uma acao entre as outras.
  */
 export default function ProductCards({
   products,
   selectedProductId = null,
+  printSelection,
+  onTogglePrint,
   onEdit,
   onPreview,
   onRemove,
@@ -18,6 +25,13 @@ export default function ProductCards({
     <ul className="divide-y divide-slate-200 dark:divide-slate-800">
       {products.map((product) => (
         <li key={product.id} className="flex items-start gap-3 px-4 py-3">
+          <Checkbox
+            label={`Imprimir etiqueta de ${product.displayName}`}
+            checked={printSelection.has(product.id)}
+            onChange={() => onTogglePrint(product.id)}
+            className="mt-1"
+          />
+
           <div className="min-w-0 flex-1 space-y-1">
             <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
               {product.displayName}

@@ -1,6 +1,8 @@
 import { cx } from '../../lib/cx.js';
 import { formatCentavosAsBRL } from '../../lib/currency.js';
 
+import Checkbox from '../ui/Checkbox.jsx';
+
 import ProductItemActions from './ProductItemActions.jsx';
 
 // Marca de campo sem valor preenchido, para que a celula continue legivel como
@@ -13,16 +15,30 @@ const CELL_BASE = 'border-b border-slate-200 px-3 py-2.5 align-middle dark:borde
  * Uma linha da tabela de produtos. O nome carrega a categoria numa segunda
  * linha muda, os dois codigos ficam em tom neutro e o preco leva o tom de venda
  * alinhado a direita.
+ *
+ * A caixa de marcacao da primeira celula decide se o produto entra na folha de
+ * etiquetas. Ela e independente da acao de ver a etiqueta: uma responde "o que
+ * vai ser impresso", a outra responde "qual estou olhando agora".
  */
 export default function ProductTableRow({
   product,
   isSelected = false,
+  isSelectedForPrint = false,
+  onTogglePrint,
   onEdit,
   onPreview,
   onRemove,
 }) {
   return (
     <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
+      <td className={cx(CELL_BASE, 'w-px text-center')}>
+        <Checkbox
+          label={`Imprimir etiqueta de ${product.displayName}`}
+          checked={isSelectedForPrint}
+          onChange={() => onTogglePrint(product.id)}
+        />
+      </td>
+
       <td className={cx(CELL_BASE, 'max-w-[15rem]')}>
         <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
           {product.displayName}
