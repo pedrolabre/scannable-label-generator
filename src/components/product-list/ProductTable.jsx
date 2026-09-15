@@ -16,7 +16,13 @@ const HEAD_PRICE = 'bg-[#23824a]';
  * fundo: o unico realce e o do ponteiro sobre a linha, para que a tabela leia
  * como planilha parada ate alguem interagir com ela.
  */
-export default function ProductTable({ products, onEdit, onRemove }) {
+export default function ProductTable({
+  products,
+  selectedProductId = null,
+  onEdit,
+  onPreview,
+  onRemove,
+}) {
   return (
     <table className="w-full border-collapse text-sm">
       <thead>
@@ -44,7 +50,9 @@ export default function ProductTable({ products, onEdit, onRemove }) {
           <ProductTableRow
             key={product.id}
             product={product}
+            isSelected={product.id === selectedProductId}
             onEdit={onEdit}
+            onPreview={onPreview}
             onRemove={onRemove}
           />
         ))}

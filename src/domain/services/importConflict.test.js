@@ -372,6 +372,11 @@ describe('retrato dos conflitos', () => {
 });
 
 describe('lote grande', () => {
+  // O limite de tempo e ampliado so aqui: montar duzentos mil registros e
+  // varre-los em fatias ja passou de tres segundos com a maquina ocupada, e o
+  // limite padrao nao deixa margem suficiente para o momento em que a suite
+  // roda inteira. E o unico teste do arquivo que e longo por natureza, entao o
+  // limite padrao continua valendo para todos os outros.
   it('agrupa centenas de milhares de registros em fatias e guarda so o grupo repetido', async () => {
     const total = 200_000;
     const records = new Array(total);
@@ -406,5 +411,5 @@ describe('lote grande', () => {
     expect(index.nameGroups.size).toBe(0);
     expect([...conflicts.keys()]).toEqual(['0:7', '0:199999']);
     expect(conflicts.get('0:7').code.batchCount).toBe(2);
-  });
+  }, 30_000);
 });

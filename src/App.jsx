@@ -1,9 +1,11 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import AppShell from './components/AppShell.jsx';
 import AppHeader from './components/AppHeader.jsx';
 import LocalOnlyNotice from './components/LocalOnlyNotice.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
+import LabelPreviewPanel from './components/label/LabelPreviewPanel.jsx';
+import { resolveSelectedProduct } from './components/label/previewSelection.js';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
 import { useProductStore } from './store/useProductStore.js';
@@ -18,13 +20,30 @@ export default function App() {
   const removeProduct = useProductStore((state) => state.removeProduct);
 
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
   const formRef = useRef(null);
+  const previewRef = useRef(null);
+
+  // A previa e guardada por identificador, e o produto desenhado sai da lista
+  // atual. Assim o produto editado aparece ja atualizado, o produto removido
+  // some da previa, e uma releitura da listagem nao derruba a escolha.
+  const selectedProduct = useMemo(
+    () => resolveSelectedProduct(products, selectedProductId),
+    [products, selectedProductId],
+  );
 
   // A listagem fica abaixo do formulario: escolher um produto para editar leva
   // a pagina de volta ao formulario ja preenchido.
   const handleEdit = useCallback((product) => {
     setEditingProduct(product);
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // Escolher a etiqueta segue o mesmo caminho da edicao: a acao acontece na
+  // listagem e a pagina leva ate o painel que respondeu a ela.
+  const handlePreview = useCallback((product) => {
+    setSelectedProductId(product.id);
+    previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   // As tres acoes deixam a falha subir para quem as chamou: o formulario e o
@@ -75,12 +94,18 @@ export default function App() {
           />
         </div>
 
+        <div ref={previewRef}>
+          <LabelPreviewPanel product={selectedProduct} hasProducts={products.length > 0} />
+        </div>
+
         <ProductList
           products={products}
           isLoading={isLoading}
           loadError={loadError}
+          selectedProductId={selectedProductId}
           onRetryLoad={handleRetryLoad}
           onEdit={handleEdit}
+          onPreview={handlePreview}
           onRemove={handleRemove}
         />
       </div>

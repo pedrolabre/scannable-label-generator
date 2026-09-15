@@ -40,8 +40,10 @@ export default function ProductList({
   products,
   isLoading,
   loadError = null,
+  selectedProductId = null,
   onRetryLoad,
   onEdit,
+  onPreview,
   onRemove,
 }) {
   const [query, setQuery] = useState('');
@@ -103,7 +105,9 @@ export default function ProductList({
         <div className="hidden sm:block">
           <ProductTable
             products={visibleProducts}
+            selectedProductId={selectedProductId}
             onEdit={onEdit}
+            onPreview={onPreview}
             onRemove={handleStartRemoval}
           />
         </div>
@@ -111,7 +115,9 @@ export default function ProductList({
         <div className="sm:hidden">
           <ProductCards
             products={visibleProducts}
+            selectedProductId={selectedProductId}
             onEdit={onEdit}
+            onPreview={onPreview}
             onRemove={handleStartRemoval}
           />
         </div>

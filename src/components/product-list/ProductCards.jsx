@@ -7,7 +7,13 @@ import ProductItemActions from './ProductItemActions.jsx';
  * cabem lado a lado. Cada produto vira um bloco com o nome em destaque, os
  * codigos empilhados e o preco alinhado com as acoes.
  */
-export default function ProductCards({ products, onEdit, onRemove }) {
+export default function ProductCards({
+  products,
+  selectedProductId = null,
+  onEdit,
+  onPreview,
+  onRemove,
+}) {
   return (
     <ul className="divide-y divide-slate-200 dark:divide-slate-800">
       {products.map((product) => (
@@ -45,7 +51,13 @@ export default function ProductCards({ products, onEdit, onRemove }) {
               {formatCentavosAsBRL(product.priceInCentavos)}
             </p>
 
-            <ProductItemActions product={product} onEdit={onEdit} onRemove={onRemove} />
+            <ProductItemActions
+              product={product}
+              isSelected={product.id === selectedProductId}
+              onEdit={onEdit}
+              onPreview={onPreview}
+              onRemove={onRemove}
+            />
           </div>
         </li>
       ))}
