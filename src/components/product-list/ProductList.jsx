@@ -35,12 +35,18 @@ function countHint(visible, total) {
  * `loadError` cobre a leitura inicial que nao completou: enquanto nao houver
  * nenhum produto para mostrar, o aviso e a nova tentativa ocupam o lugar da
  * lista. Com produtos ja carregados, a ultima lista boa continua na tela.
+ *
+ * A marcacao para a folha de etiquetas so atravessa esta tela: o conjunto do que
+ * esta marcado e o alternador chegam prontos e descem para as duas superficies.
+ * A listagem nao guarda essa escolha, porque quem a consome e o painel da folha.
  */
 export default function ProductList({
   products,
   isLoading,
   loadError = null,
   selectedProductId = null,
+  printSelection,
+  onTogglePrint,
   onRetryLoad,
   onEdit,
   onPreview,
@@ -106,6 +112,8 @@ export default function ProductList({
           <ProductTable
             products={visibleProducts}
             selectedProductId={selectedProductId}
+            printSelection={printSelection}
+            onTogglePrint={onTogglePrint}
             onEdit={onEdit}
             onPreview={onPreview}
             onRemove={handleStartRemoval}
@@ -116,6 +124,8 @@ export default function ProductList({
           <ProductCards
             products={visibleProducts}
             selectedProductId={selectedProductId}
+            printSelection={printSelection}
+            onTogglePrint={onTogglePrint}
             onEdit={onEdit}
             onPreview={onPreview}
             onRemove={handleStartRemoval}

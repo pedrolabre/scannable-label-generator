@@ -15,10 +15,16 @@ const HEAD_PRICE = 'bg-[#23824a]';
  * Tabela da listagem, usada a partir de `sm:`. As linhas nao alternam cor de
  * fundo: o unico realce e o do ponteiro sobre a linha, para que a tabela leia
  * como planilha parada ate alguem interagir com ela.
+ *
+ * A primeira coluna marca o produto para a folha de etiquetas. Ela nao tem
+ * marcar-todos: sobre uma lista filtrada pela busca, "todos" significaria ora o
+ * catalogo inteiro ora so o que esta visivel, e as duas leituras sao defensaveis.
  */
 export default function ProductTable({
   products,
   selectedProductId = null,
+  printSelection,
+  onTogglePrint,
   onEdit,
   onPreview,
   onRemove,
@@ -27,6 +33,9 @@ export default function ProductTable({
     <table className="w-full border-collapse text-sm">
       <thead>
         <tr>
+          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL, 'w-px whitespace-nowrap')}>
+            Imprimir
+          </th>
           <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
             Produto
           </th>
@@ -51,6 +60,8 @@ export default function ProductTable({
             key={product.id}
             product={product}
             isSelected={product.id === selectedProductId}
+            isSelectedForPrint={printSelection.has(product.id)}
+            onTogglePrint={onTogglePrint}
             onEdit={onEdit}
             onPreview={onPreview}
             onRemove={onRemove}

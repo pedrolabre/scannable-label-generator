@@ -74,6 +74,16 @@ scannable-label-generator/
         previewSelection.js
         previewSelection.test.js
         useProductSymbol.js
+      print/
+        PrintJobItemRow.jsx
+        PrintJobPanel.jsx
+        PrintJobPanel.test.jsx
+        SheetLayoutPicker.jsx
+        SheetMarginFields.jsx
+        printInputs.js
+        printInputs.test.js
+        printSelection.js
+        printSelection.test.js
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -90,6 +100,7 @@ scannable-label-generator/
       ui/
         Button.jsx
         Card.jsx
+        Checkbox.jsx
         ConfirmModal.jsx
         Field.jsx
         IconButton.jsx
@@ -131,11 +142,14 @@ scannable-label-generator/
         nfceParser.js
         nfceParser.test.js
         nfceProductMapping.js
+        printJobBuilder.js
+        printJobBuilder.test.js
         productCandidateIssue.js
         productMapping.js
         productMapping.test.js
         productSearch.js
         productService.js
+        sheetLayoutCatalog.js
         tabularProductMapping.js
     lib/
       app-meta.js
@@ -159,6 +173,7 @@ scannable-label-generator/
       storageError.js
     store/
       useImportStore.js
+      usePrintJobStore.js
       useProductStore.js
     styles/
       global.css
