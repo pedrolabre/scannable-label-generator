@@ -73,9 +73,15 @@ scannable-label-generator/
         conflictLabels.js
         importCounts.js
       label/
+        LabelLayoutPicker.jsx
+        LabelPreviewPanel.jsx
+        LabelPreviewPanel.test.jsx
+        LabelScalePicker.jsx
         LabelSurface.jsx
         ProductLabel.jsx
         ProductLabel.test.jsx
+        previewSelection.js
+        previewSelection.test.js
         useProductSymbol.js
       product-form/
         ProductForm.jsx
@@ -98,6 +104,7 @@ scannable-label-generator/
         IconButton.jsx
         InlineAlert.jsx
         ModalShell.jsx
+        SegmentedControl.jsx
     domain/
       schemas/
         commonFields.js

@@ -14,7 +14,13 @@ const CELL_BASE = 'border-b border-slate-200 px-3 py-2.5 align-middle dark:borde
  * linha muda, os dois codigos ficam em tom neutro e o preco leva o tom de venda
  * alinhado a direita.
  */
-export default function ProductTableRow({ product, onEdit, onRemove }) {
+export default function ProductTableRow({
+  product,
+  isSelected = false,
+  onEdit,
+  onPreview,
+  onRemove,
+}) {
   return (
     <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
       <td className={cx(CELL_BASE, 'max-w-[15rem]')}>
@@ -45,7 +51,13 @@ export default function ProductTableRow({ product, onEdit, onRemove }) {
       </td>
 
       <td className={cx(CELL_BASE, 'w-px whitespace-nowrap')}>
-        <ProductItemActions product={product} onEdit={onEdit} onRemove={onRemove} />
+        <ProductItemActions
+          product={product}
+          isSelected={isSelected}
+          onEdit={onEdit}
+          onPreview={onPreview}
+          onRemove={onRemove}
+        />
       </td>
     </tr>
   );
