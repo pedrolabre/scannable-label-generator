@@ -2,12 +2,26 @@
 
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MAX_NUMERIC_LENGTH } from '../../lib/barcodeSymbology.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import PrintJobPanel from './PrintJobPanel.jsx';
+
+// O painel pronto desenha a folha, e a folha pede os simbolos. O duble responde
+// na hora e deixa a biblioteca do simbolo fora deste arquivo.
+const generateSymbol = vi.hoisted(() =>
+  vi.fn(async (systemCode) => ({
+    systemCode,
+    moduleCount: 21,
+    quietZoneModules: 4,
+    totalModules: 29,
+    svg: '<svg viewBox="0 0 58 58"></svg>',
+  })),
+);
+
+vi.mock('../../lib/barcode.js', () => ({ generateSymbol }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -192,6 +206,62 @@ describe('produto sem simbolo', () => {
     expect(container.querySelector('[data-symbol-warning]').textContent).toContain(
       '1 produto selecionado não gera símbolo',
     );
+    expect(status().dataset.printStatus).toBe('ready');
+  });
+});
+
+describe('previa da folha', () => {
+  it('aparece quando a configuracao esta pronta e some quando ela e recusada', async () => {
+    await render(<PrintJobPanel products={[ARMARIO]} />);
+
+    expect(container.querySelector('[data-sheet-preview]')).toBeNull();
+
+    await select(ARMARIO.id);
+
+    expect(container.querySelector('[data-sheet-preview]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-sheet-cell]')).toHaveLength(1);
+
+    await type(`#copias-${ARMARIO.id}`, '0');
+
+    expect(container.querySelector('[data-sheet-preview]')).toBeNull();
+  });
+
+  it('acompanha a margem digitada e o modelo escolhido', async () => {
+    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await select(ARMARIO.id);
+
+    await type('#folha-marginLeftMm', '25,5');
+
+    expect(container.querySelector('[data-sheet-cell="0"]').style.left).toBe('25.5mm');
+    expect(container.querySelector('[data-sheet-usable-area]').style.left).toBe('25.5mm');
+
+    const pequena = container.querySelector(
+      'input[name="modelo-etiqueta-impressao"][value="etiqueta-pequena"]',
+    );
+
+    await act(async () => {
+      pequena.click();
+    });
+
+    // Largura util 210 - 25,5 - 10 = 174,5: tres colunas de 50 com 3 de espaco.
+    expect(container.querySelector('[data-sheet-count]').textContent).toBe(
+      '1 etiqueta numa folha que comporta 24 etiquetas.',
+    );
+  });
+
+  it('avisa quantas folhas a selecao ocupa', async () => {
+    await render(<PrintJobPanel products={[ARMARIO, GELADEIRA]} />);
+    await select(ARMARIO.id);
+    await select(GELADEIRA.id);
+
+    // Tag grande em A4 retrato: 3 por folha; 4 + 3 = 7 etiquetas, 3 folhas.
+    await type(`#copias-${ARMARIO.id}`, '4');
+    await type(`#copias-${GELADEIRA.id}`, '3');
+
+    const count = container.querySelector('[data-sheet-count]');
+
+    expect(count.dataset.sheetCount).toBe('3');
+    expect(count.textContent).toBe('A seleção ocupa 3 folhas: 7 etiquetas, 3 por folha.');
     expect(status().dataset.printStatus).toBe('ready');
   });
 });

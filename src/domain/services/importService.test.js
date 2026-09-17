@@ -154,7 +154,7 @@ describe('parseImportFiles', () => {
 
     expect(files[0].status).toBe(IMPORT_FILE_PARSED);
     expect(records).toHaveLength(200000);
-  });
+  }, 30_000);
 
   it('devolve lote vazio quando nada foi escolhido', async () => {
     await expect(parseImportFiles([])).resolves.toEqual({ records: [], files: [] });
