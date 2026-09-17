@@ -21,8 +21,8 @@ export default function LocalOnlyNotice() {
             enviado para servidores e nenhuma conta é necessária.
           </p>
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            A visualização da etiqueta individual já está disponível; a montagem das folhas de
-            etiquetas, ainda não.
+            A etiqueta individual e a folha de etiquetas já podem ser conferidas na tela; a
+            exportação em PDF ainda não está disponível.
           </p>
         </div>
       </div>

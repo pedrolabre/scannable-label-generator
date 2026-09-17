@@ -1,9 +1,11 @@
 import { canEncodeSystemCode } from '../../lib/barcodeSymbology.js';
+import { findLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
 import {
   buildPrintJob,
   buildSheetLayout,
   countCopies,
 } from '../../domain/services/printJobBuilder.js';
+import { computeSheetGrid, describeEmptyGrid } from '../../domain/services/sheetGrid.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import LabelLayoutPicker from '../label/LabelLayoutPicker.jsx';
@@ -14,6 +16,7 @@ import InlineAlert from '../ui/InlineAlert.jsx';
 import PrintJobItemRow from './PrintJobItemRow.jsx';
 import SheetLayoutPicker from './SheetLayoutPicker.jsx';
 import SheetMarginFields from './SheetMarginFields.jsx';
+import SheetPreview from './SheetPreview.jsx';
 import { SHEET_FIELDS, parseCopies, parseMillimeters } from './printInputs.js';
 import { resolvePrintItems } from './printSelection.js';
 
@@ -24,6 +27,10 @@ import { resolvePrintItems } from './printSelection.js';
  * Ele fecha a pagina porque e o passo terminal do fluxo: importar, cadastrar,
  * conferir uma etiqueta, listar, montar a folha. O desenho da folha e a
  * exportacao crescem daqui sem remexer o restante da tela.
+ *
+ * A folha so e desenhada quando a configuracao inteira vale. Etiqueta que nao
+ * cabe na area util bloqueia o trabalho como qualquer outra recusa, e o motivo
+ * aparece no mesmo aviso ao pe do painel.
  *
  * O modelo de etiqueta daqui e proprio, e nao o da previa individual. O da
  * previa e ajuste de quem esta olhando agora; amarrar a tiragem a ele faria
@@ -103,8 +110,15 @@ export default function PrintJobPanel({ products = [] }) {
   const firstJobError =
     Object.values(jobErrors.fields)[0] ?? jobErrors.general[0] ?? null;
 
-  const blockingMessage = firstSheetError ?? firstCopiesError ?? firstJobError ?? null;
-  const isReady = Boolean(sheet) && Boolean(job) && !blockingMessage;
+  const configMessage = firstSheetError ?? firstCopiesError ?? firstJobError ?? null;
+  const canDraw = Boolean(sheet) && Boolean(job) && !configMessage;
+
+  const labelLayout = findLabelLayout(labelLayoutId);
+  const grid = canDraw && labelLayout ? computeSheetGrid(sheet, labelLayout) : null;
+  const capacityMessage = grid && grid.perSheet === 0 ? describeEmptyGrid(grid, labelLayout) : null;
+
+  const blockingMessage = configMessage ?? capacityMessage;
+  const isReady = canDraw && Boolean(grid) && !blockingMessage;
 
   const missingSymbolCount = items.filter((entry) => !entry.hasSymbol).length;
   const totalCopies = countCopies(jobItems);
@@ -190,6 +204,16 @@ export default function PrintJobPanel({ products = [] }) {
             } ${jobItems.length === 1 ? 'produto' : 'produtos'}.`}
           </p>
         )}
+
+        {grid ? (
+          <SheetPreview
+            job={job}
+            sheet={sheet}
+            labelLayout={labelLayout}
+            grid={grid}
+            products={products}
+          />
+        ) : null}
       </>
     );
   }

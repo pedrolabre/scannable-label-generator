@@ -87,12 +87,20 @@ scannable-label-generator/
         PrintJobItemRow.jsx
         PrintJobPanel.jsx
         PrintJobPanel.test.jsx
+        SheetCanvas.jsx
         SheetLayoutPicker.jsx
         SheetMarginFields.jsx
+        SheetNavigation.jsx
+        SheetPreview.jsx
+        SheetPreview.test.jsx
+        SheetScalePicker.jsx
         printInputs.js
         printInputs.test.js
         printSelection.js
         printSelection.test.js
+        sheetSlots.js
+        sheetSlots.test.js
+        useSheetSymbols.js
       product-form/
         ProductForm.jsx
         ProductFormFields.jsx
@@ -158,7 +166,11 @@ scannable-label-generator/
         productMapping.test.js
         productSearch.js
         productService.js
+        sheetGrid.js
+        sheetGrid.test.js
         sheetLayoutCatalog.js
+        sheetPagination.js
+        sheetPagination.test.js
         tabularProductMapping.js
     lib/
       app-meta.js
