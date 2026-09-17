@@ -16,7 +16,7 @@ Em desenvolvimento inicial.
 - Vitest (testes automatizados)
 - PapaParse (CSV via Web Worker)
 - bwip-js (QR Code)
-- PDFMake ou jsPDF (exportação em PDF)
+- jsPDF (exportação em PDF)
 - vite-plugin-pwa
 
 ## Escopo do MVP
@@ -75,6 +75,9 @@ scannable-label-generator/
         previewSelection.test.js
         useProductSymbol.js
       print/
+        PrintExportButton.jsx
+        PrintExportControls.jsx
+        PrintExportControls.test.jsx
         PrintJobItemRow.jsx
         PrintJobPanel.jsx
         PrintJobPanel.test.jsx
@@ -91,6 +94,7 @@ scannable-label-generator/
         printSelection.test.js
         sheetSlots.js
         sheetSlots.test.js
+        usePrintExport.js
         useSheetSymbols.js
       product-form/
         ProductForm.jsx
@@ -150,8 +154,14 @@ scannable-label-generator/
         nfceParser.js
         nfceParser.test.js
         nfceProductMapping.js
+        printDocument.js
+        printDocument.test.js
+        printExport.js
+        printExport.test.js
         printJobBuilder.js
         printJobBuilder.test.js
+        printText.js
+        printText.test.js
         productCandidateIssue.js
         productMapping.js
         productMapping.test.js
@@ -179,6 +189,13 @@ scannable-label-generator/
       barcodeSymbology.test.js
       currency.js
       cx.js
+      download.js
+      download.test.js
+      pdf.js
+      pdf.test.js
+      pdfEngine.js
+      symbolPath.js
+      symbolPath.test.js
     storage/
       indexed-db.js
       productRepository.js

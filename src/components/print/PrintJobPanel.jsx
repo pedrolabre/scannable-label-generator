@@ -13,6 +13,7 @@ import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import InlineAlert from '../ui/InlineAlert.jsx';
 
+import PrintExportControls from './PrintExportControls.jsx';
 import PrintJobItemRow from './PrintJobItemRow.jsx';
 import SheetLayoutPicker from './SheetLayoutPicker.jsx';
 import SheetMarginFields from './SheetMarginFields.jsx';
@@ -194,16 +195,19 @@ export default function PrintJobPanel({ products = [] }) {
           <div data-print-status="blocked">
             <InlineAlert>{blockingMessage}</InlineAlert>
           </div>
-        ) : (
-          <p
-            data-print-status="ready"
-            className="text-sm text-slate-600 dark:text-slate-300"
-          >
-            {`Configuração pronta: ${totalCopies} ${totalCopies === 1 ? 'etiqueta' : 'etiquetas'} em ${
-              jobItems.length
-            } ${jobItems.length === 1 ? 'produto' : 'produtos'}.`}
-          </p>
-        )}
+        ) : isReady ? (
+          <PrintExportControls
+            job={job}
+            sheet={sheet}
+            labelLayout={labelLayout}
+            grid={grid}
+            products={products}
+            canExport={isReady && jobItems.length > 0}
+            readyMessage={`Configuração pronta: ${totalCopies} ${
+              totalCopies === 1 ? 'etiqueta' : 'etiquetas'
+            } em ${jobItems.length} ${jobItems.length === 1 ? 'produto' : 'produtos'}.`}
+          />
+        ) : null}
 
         {grid ? (
           <SheetPreview

@@ -265,3 +265,21 @@ describe('previa da folha', () => {
     expect(status().dataset.printStatus).toBe('ready');
   });
 });
+
+describe('exportacao em PDF', () => {
+  it('oferece a acao de exportar quando a configuracao vale, e a recolhe quando ela e recusada', async () => {
+    await render(<PrintJobPanel products={[ARMARIO]} />);
+
+    expect(container.querySelector('[data-export-button]')).toBeNull();
+
+    await select(ARMARIO.id);
+
+    expect(container.querySelector('[data-export-button]').textContent).toBe('Exportar PDF');
+    expect(container.querySelector('[data-export-button]').disabled).toBe(false);
+
+    await type('#folha-marginLeftMm', '80');
+
+    expect(container.querySelector('[data-export-button]')).toBeNull();
+    expect(status().dataset.printStatus).toBe('blocked');
+  });
+});
