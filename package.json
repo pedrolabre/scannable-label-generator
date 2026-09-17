@@ -12,6 +12,7 @@
   "dependencies": {
     "bwip-js": "^4.11.4",
     "dexie": "^4.4.6",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.469.0",
     "papaparse": "^5.7.0",
     "react": "^19.0.0",
