@@ -28,6 +28,7 @@ Em desenvolvimento inicial.
 - PapaParse e fast-xml-parser para leitura de CSV, JSON e XML de NFC-e.
 - bwip-js para geração de código 2D / QR Code no navegador.
 - jsPDF para renderização e exportação de PDF vetorial em escala física 1:1.
+- vite-plugin-pwa para suporte a PWA instalável e operação offline.
 - Vitest para testes automatizados unitários e de integração.
 
 ## Comandos
@@ -51,6 +52,13 @@ scannable-label-generator/
   vite.config.js
   vitest.config.js
   README.md
+  public/
+    icons/
+      apple-touch-icon-180.png
+      icon-192.png
+      icon-512.png
+      icon-maskable-512.png
+      icon.svg
   src/
     main.jsx
     App.jsx
@@ -119,6 +127,9 @@ scannable-label-generator/
         ProductSearchField.jsx
         ProductTable.jsx
         ProductTableRow.jsx
+      pwa/
+        UpdateNotice.jsx
+        UpdateNotice.test.jsx
       ui/
         Button.jsx
         Card.jsx
@@ -206,6 +217,12 @@ scannable-label-generator/
       pdfEngine.js
       symbolPath.js
       symbolPath.test.js
+    pwa/
+      manifest.js
+      manifest.test.js
+      registerServiceWorker.js
+      updateState.js
+      updateState.test.js
     storage/
       indexed-db.js
       productRepository.js
