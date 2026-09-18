@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+
+import { appManifest } from './src/pwa/manifest.js';
 
 /**
  * Dois ajustes de empacotamento, ambos sobre o que sai em `dist/assets`.
@@ -15,8 +18,42 @@ import react from '@vitejs/plugin-react';
  */
 const UNUSED_PDF_MODULES = ['html2canvas', 'dompurify', 'canvg'];
 
+/**
+ * A aplicacao instalada guarda tudo o que a build produziu, e nao so a primeira
+ * tela: os dois motores carregados sob demanda tambem entram. Quem instalou o
+ * aplicativo, nunca exportou um PDF e depois ficou sem rede continuaria com o
+ * cadastro e a previa funcionando, mas veria a exportacao falhar no `import()`
+ * — e a promessa e que nenhuma funcao essencial dependa de rede.
+ *
+ * Nenhum recurso externo e guardado porque nao existe nenhum: depois de
+ * carregada, a aplicacao nao faz chamada de rede.
+ *
+ * O arquivo de metadados e os icones entram na lista uma vez so. O primeiro e
+ * inscrito pelo proprio plugin, entao fica fora do varredor de arquivos; os
+ * segundos vem do varredor, entao a inscricao automatica deles fica desligada.
+ *
+ * A troca de versao nao e automatica, e o registro fica com o codigo-fonte:
+ * `src/pwa/registerServiceWorker.js` chama o registro gerado e acende o aviso
+ * na tela, em vez de recarregar a pagina por conta propria.
+ */
+const PWA_OPTIONS = {
+  registerType: 'prompt',
+  injectRegister: null,
+  manifest: appManifest,
+  manifestFilename: 'manifest.webmanifest',
+  includeManifestIcons: false,
+  workbox: {
+    globPatterns: ['**/*.{js,css,html,svg,png}'],
+    navigateFallback: 'index.html',
+    cleanupOutdatedCaches: true,
+  },
+  devOptions: {
+    enabled: false,
+  },
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), VitePWA(PWA_OPTIONS)],
   build: {
     rollupOptions: {
       external: UNUSED_PDF_MODULES,

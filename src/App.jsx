@@ -10,6 +10,7 @@ import PrintJobPanel from './components/print/PrintJobPanel.jsx';
 import { selectedPrintIds } from './components/print/printSelection.js';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
+import UpdateNotice from './components/pwa/UpdateNotice.jsx';
 import { usePrintJobStore } from './store/usePrintJobStore.js';
 import { useProductStore } from './store/useProductStore.js';
 
@@ -91,6 +92,8 @@ export default function App() {
   return (
     <AppShell header={<AppHeader />}>
       <div className="w-full space-y-6">
+        <UpdateNotice />
+
         <LocalOnlyNotice />
 
         <ImportPanel />

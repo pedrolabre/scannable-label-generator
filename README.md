@@ -30,6 +30,25 @@ Em desenvolvimento inicial.
 - Persistência local em IndexedDB, com exportação e restauração total
 - PWA instalável e funcional offline
 
+## Instalação como aplicativo
+
+O LabelForge é uma PWA: pode ser instalado como aplicativo e usado sem conexão.
+
+1. Gere a versão de produção e sirva-a localmente:
+
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+2. Abra o endereço indicado no terminal. No Chrome ou no Edge, use o ícone de instalação na barra
+   de endereço, ou o menu do navegador, e confirme a instalação.
+3. Na primeira visita o aplicativo guarda tudo o que precisa para funcionar sem rede: a interface,
+   o gerador do código 2D e o gerador do PDF. A partir daí, cadastro, importação, prévia e
+   exportação em PDF continuam disponíveis com a rede desligada.
+4. Quando uma versão nova é publicada, um aviso aparece no topo da página com a ação de atualizar.
+   A troca só acontece quando você clica: a folha em preparo não sobrevive ao recarregamento.
+
 ## Estrutura do Projeto
 
 ```text
@@ -41,6 +60,13 @@ scannable-label-generator/
   vite.config.js
   vitest.config.js
   README.md
+  public/
+    icons/
+      apple-touch-icon-180.png
+      icon-192.png
+      icon-512.png
+      icon-maskable-512.png
+      icon.svg
   src/
     main.jsx
     App.jsx
@@ -109,6 +135,9 @@ scannable-label-generator/
         ProductSearchField.jsx
         ProductTable.jsx
         ProductTableRow.jsx
+      pwa/
+        UpdateNotice.jsx
+        UpdateNotice.test.jsx
       ui/
         Button.jsx
         Card.jsx
@@ -196,6 +225,12 @@ scannable-label-generator/
       pdfEngine.js
       symbolPath.js
       symbolPath.test.js
+    pwa/
+      manifest.js
+      manifest.test.js
+      registerServiceWorker.js
+      updateState.js
+      updateState.test.js
     storage/
       indexed-db.js
       productRepository.js

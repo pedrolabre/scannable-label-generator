@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App.jsx';
+import { registerServiceWorker } from './pwa/registerServiceWorker.js';
 import { useProductStore } from './store/useProductStore.js';
 import './styles/global.css';
 
@@ -15,6 +16,11 @@ useProductStore
   .catch((error) => {
     console.error('Falha ao carregar os produtos salvos no dispositivo.', error);
   });
+
+// O registro guarda a aplicacao inteira para o uso sem rede e fica de olho na
+// versao nova. Ele corre fora da arvore de componentes porque nao depende de
+// tela nenhuma, e o que a tela precisa saber chega pelo estado de atualizacao.
+registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
