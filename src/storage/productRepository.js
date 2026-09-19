@@ -5,7 +5,8 @@ import { db } from './indexed-db.js';
 /**
  * Unico caminho de leitura e escrita da tabela de produtos. Toda gravacao passa
  * pelo `ProductSchema`, entao nenhum registro fora do contrato chega ao
- * IndexedDB, venha ele do formulario ou de uma importacao em lote.
+ * IndexedDB, venha ele do formulario, de uma importacao em lote ou de um arquivo
+ * de backup.
  */
 
 export function listProducts() {
@@ -56,4 +57,29 @@ export function deleteProduct(id) {
  */
 export function runProductsTransaction(write) {
   return db.transaction('rw', db.products, write);
+}
+
+/**
+ * Troca o conteudo inteiro da tabela pelo conjunto recebido, numa transacao so.
+ *
+ * A validacao acontece antes de a transacao abrir, e nao dentro dela: um
+ * registro fora do contrato precisa impedir a limpeza, e nao interrompe-la pela
+ * metade. Depois disso, limpar e regravar e uma operacao unica para o banco —
+ * uma falha no meio desfaz as duas pontas e devolve a tabela ao estado anterior.
+ *
+ * `bulkAdd` grava o conjunto numa chamada, sem ceder o turno, entao a transacao
+ * nao fecha sozinha no meio do caminho por mais longo que o conjunto seja.
+ */
+export async function replaceAllProducts(products) {
+  const validated = products.map((product) => ProductSchema.parse(product));
+
+  await runProductsTransaction(async () => {
+    await db.products.clear();
+
+    if (validated.length > 0) {
+      await db.products.bulkAdd(validated);
+    }
+  });
+
+  return validated.length;
 }

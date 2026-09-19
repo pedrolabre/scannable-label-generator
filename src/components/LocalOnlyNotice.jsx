@@ -24,6 +24,10 @@ export default function LocalOnlyNotice() {
             A etiqueta individual e a folha de etiquetas podem ser conferidas na tela, e a folha
             pode ser exportada em PDF para impressão em escala real.
           </p>
+          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            Como tudo fica aqui, o conteúdo só sai daqui por sua conta: o arquivo de backup, no fim
+            da página, guarda uma cópia dele e reconstrói o mesmo ambiente em outro dispositivo.
+          </p>
         </div>
       </div>
     </Card>

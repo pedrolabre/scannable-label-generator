@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import AppShell from './components/AppShell.jsx';
 import AppHeader from './components/AppHeader.jsx';
 import LocalOnlyNotice from './components/LocalOnlyNotice.jsx';
+import BackupPanel from './components/backup/BackupPanel.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
 import LabelPreviewPanel from './components/label/LabelPreviewPanel.jsx';
 import { resolveSelectedProduct } from './components/label/previewSelection.js';
@@ -25,6 +26,7 @@ export default function App() {
 
   const printSelection = usePrintJobStore((state) => state.selection);
   const togglePrintProduct = usePrintJobStore((state) => state.toggleProduct);
+  const clearPrintSelection = usePrintJobStore((state) => state.clearSelection);
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
@@ -89,6 +91,21 @@ export default function App() {
     loadProducts().catch(() => {});
   }, [loadProducts]);
 
+  // A restauracao troca o catalogo inteiro, entao tudo o que a tela guardava por
+  // identificador deixa de valer: a edicao em andamento, a etiqueta escolhida
+  // para a previa e a selecao da folha podem apontar para produtos que nao
+  // existem mais. Os tres sao zerados antes da releitura.
+  //
+  // A releitura falhando nao derruba a restauracao, que ja terminou: o motivo
+  // fica em `loadError` e a listagem o exibe junto da acao de tentar de novo.
+  const handleRestored = useCallback(async () => {
+    setEditingProduct(null);
+    setSelectedProductId(null);
+    clearPrintSelection();
+
+    await loadProducts().catch(() => {});
+  }, [clearPrintSelection, loadProducts]);
+
   return (
     <AppShell header={<AppHeader />}>
       <div className="w-full space-y-6">
@@ -125,6 +142,8 @@ export default function App() {
         />
 
         <PrintJobPanel products={products} />
+
+        <BackupPanel productCount={products.length} onRestored={handleRestored} />
       </div>
     </AppShell>
   );
