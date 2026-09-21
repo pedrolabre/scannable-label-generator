@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 
 import { cx } from '../../lib/cx.js';
 
+import { FOCUS_OUTLINE, FOCUS_OUTLINE_COLORS } from './focusClasses.js';
+
 const FOCUSABLE_SELECTOR = [
   'a[href]',
   'button:not([disabled])',
@@ -156,8 +158,8 @@ export default function ModalShell({ title, subtitle, onClose, footer, children 
             className={cx(
               'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-none',
               'border border-white/40 text-white transition-colors hover:bg-white/15',
-              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
-              'focus-visible:outline-white',
+              FOCUS_OUTLINE,
+              FOCUS_OUTLINE_COLORS.inverse,
             )}
           >
             <X className="h-4 w-4" aria-hidden="true" />

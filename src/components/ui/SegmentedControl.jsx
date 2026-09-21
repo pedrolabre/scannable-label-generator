@@ -1,19 +1,21 @@
 import { cx } from '../../lib/cx.js';
 
+import { PEER_FOCUS_OUTLINE, PEER_FOCUS_OUTLINE_COLORS } from './focusClasses.js';
+
 const OPTION_BASE = cx(
   'inline-flex cursor-pointer items-center justify-center rounded-[3px] border px-3 py-1.5',
   'text-xs font-semibold transition-colors',
-  'peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2',
+  PEER_FOCUS_OUTLINE,
 );
 
 const OPTION_SELECTED = cx(
   'border-[#cf1026] bg-[#cf1026] text-white',
-  'peer-focus-visible:outline-[#cf1026]',
+  PEER_FOCUS_OUTLINE_COLORS.brand,
 );
 
 const OPTION_IDLE = cx(
   'border-slate-300 bg-white text-slate-700 hover:bg-slate-100',
-  'peer-focus-visible:outline-slate-400',
+  PEER_FOCUS_OUTLINE_COLORS.neutral,
   'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
 );
 

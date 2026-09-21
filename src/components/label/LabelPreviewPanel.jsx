@@ -7,6 +7,7 @@ import {
 } from '../../domain/services/labelLayoutCatalog.js';
 
 import Card from '../ui/Card.jsx';
+import ScrollRegion from '../ui/ScrollRegion.jsx';
 
 import LabelLayoutPicker from './LabelLayoutPicker.jsx';
 import LabelScalePicker, { DEFAULT_SCALE } from './LabelScalePicker.jsx';
@@ -30,6 +31,8 @@ import ProductLabel from './ProductLabel.jsx';
  * A etiqueta nao encolhe em janela estreita: o contrato visual proibe reflow, e
  * o modelo maior tem 100 mm de largura. Entao a area do desenho rola na
  * horizontal dentro do proprio painel, e o corpo da pagina continua parado.
+ * A area que rola tem nome e recebe foco, para que o teclado tambem alcance a
+ * parte do desenho que esta fora da vista.
  */
 
 function PreviewPlaceholder({ state, children }) {
@@ -68,14 +71,18 @@ export default function LabelPreviewPanel({ product = null, hasProducts = false 
         </div>
 
         {product ? (
-          <div data-preview-state="product" className="overflow-x-auto pb-1">
+          <ScrollRegion
+            label="Desenho da etiqueta, rolagem horizontal"
+            data-preview-state="product"
+            className="pb-1"
+          >
             <ProductLabel
               product={product}
               layout={layout}
               scaleFactor={scaleFactor}
               className="w-max"
             />
-          </div>
+          </ScrollRegion>
         ) : (
           <PreviewPlaceholder state="no-selection">
             Escolha um produto na listagem para ver a etiqueta dele.

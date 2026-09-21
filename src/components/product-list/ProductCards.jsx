@@ -1,8 +1,12 @@
+import { cx } from '../../lib/cx.js';
 import { formatCentavosAsBRL } from '../../lib/currency.js';
 
 import Checkbox from '../ui/Checkbox.jsx';
 
 import ProductItemActions from './ProductItemActions.jsx';
+
+// Mesmo tom de venda da linha da tabela, pelo mesmo motivo de contraste.
+const PRICE_TEXT = 'text-[#0f7a3d] dark:text-[#4bd486]';
 
 /**
  * Superficie da listagem abaixo de `sm:`, onde as cinco colunas da tabela nao
@@ -61,7 +65,7 @@ export default function ProductCards({
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <p className="font-semibold tabular-nums text-[#0f8a45] dark:text-[#4bd486]">
+            <p className={cx('font-semibold tabular-nums', PRICE_TEXT)}>
               {formatCentavosAsBRL(product.priceInCentavos)}
             </p>
 

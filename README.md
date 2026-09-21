@@ -64,6 +64,7 @@ scannable-label-generator/
     App.jsx
     components/
       AppShell.jsx
+      AppShell.test.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
       backup/
@@ -148,7 +149,10 @@ scannable-label-generator/
         IconButton.jsx
         InlineAlert.jsx
         ModalShell.jsx
+        ScrollRegion.jsx
+        ScrollRegion.test.jsx
         SegmentedControl.jsx
+        focusClasses.js
     domain/
       schemas/
         backupFileSchema.js
@@ -225,6 +229,8 @@ scannable-label-generator/
       barcodeSvg.test.js
       barcodeSymbology.js
       barcodeSymbology.test.js
+      contrast.js
+      contrast.test.js
       currency.js
       cx.js
       download.js

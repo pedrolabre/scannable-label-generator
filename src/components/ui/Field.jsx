@@ -1,10 +1,13 @@
 import { cx } from '../../lib/cx.js';
 
+// O texto de marcador do campo e texto como qualquer outro, e o tom 400 sobre
+// branco fica em 2,56 para 1 — bem abaixo do minimo. O tom 500 resolve os dois
+// temas: 4,76 sobre o fundo claro e 6,96 no escuro, invertendo os tons.
 const CONTROL_BASE_CLASSES = cx(
   'w-full rounded-[3px] border px-3 py-2 text-sm shadow-none outline-none transition-colors',
-  'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400',
-  'focus:ring-2',
-  'dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500',
+  'border-slate-300 bg-white text-slate-900 placeholder:text-slate-500',
+  'focus-visible:ring-2',
+  'dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400',
 );
 
 /**
@@ -13,13 +16,22 @@ const CONTROL_BASE_CLASSES = cx(
  * alimentam a leitura por maquina, verde para valores de venda.
  */
 const FOCUS_CLASSES = {
-  neutral: 'focus:border-slate-400 focus:ring-slate-300/60 dark:focus:border-slate-500',
-  brand: 'focus:border-[#cf1026] focus:ring-[#cf1026]/25',
-  code: 'focus:border-[#8a5a00] focus:ring-[#8a5a00]/25 dark:focus:border-[#f4c95f]',
-  price: 'focus:border-[#159447] focus:ring-[#159447]/25',
+  neutral: cx(
+    'focus-visible:border-slate-400 focus-visible:ring-slate-300/60',
+    'dark:focus-visible:border-slate-500',
+  ),
+  brand: 'focus-visible:border-[#cf1026] focus-visible:ring-[#cf1026]/25',
+  code: cx(
+    'focus-visible:border-[#8a5a00] focus-visible:ring-[#8a5a00]/25',
+    'dark:focus-visible:border-[#f4c95f]',
+  ),
+  price: 'focus-visible:border-[#159447] focus-visible:ring-[#159447]/25',
 };
 
-const INVALID_CLASSES = 'border-[#b93a20] focus:border-[#b93a20] focus:ring-[#b93a20]/25';
+const INVALID_CLASSES = cx(
+  'border-[#b93a20]',
+  'focus-visible:border-[#b93a20] focus-visible:ring-[#b93a20]/25',
+);
 
 function controlClasses({ focus, invalid, className }) {
   return cx(
@@ -71,13 +83,13 @@ export default function Field({ id, label, error, hint, optional = false, childr
         <span>
           {label}
           {optional ? (
-            <span className="ml-1.5 font-normal text-slate-400 dark:text-slate-500">opcional</span>
+            <span className="ml-1.5 font-normal text-slate-500 dark:text-slate-400">opcional</span>
           ) : null}
         </span>
         {hint ? (
           <span
             id={hintId}
-            className="font-normal tabular-nums text-slate-400 dark:text-slate-500"
+            className="font-normal tabular-nums text-slate-500 dark:text-slate-400"
           >
             {hint}
           </span>
