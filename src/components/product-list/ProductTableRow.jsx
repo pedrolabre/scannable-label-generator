@@ -11,6 +11,11 @@ const NO_VALUE = '-';
 
 const CELL_BASE = 'border-b border-slate-200 px-3 py-2.5 align-middle dark:border-slate-800';
 
+// Tom de venda do texto. O verde mais claro da paleta fica em 4,43 para 1 sobre
+// o fundo branco, logo abaixo do minimo para texto; este e o tom vizinho, ja
+// nomeado pelo padrao visual, e fecha em 5,42.
+const PRICE_TEXT = 'text-[#0f7a3d] dark:text-[#4bd486]';
+
 /**
  * Uma linha da tabela de produtos. O nome carrega a categoria numa segunda
  * linha muda, os dois codigos ficam em tom neutro e o preco leva o tom de venda
@@ -60,7 +65,7 @@ export default function ProductTableRow({
         className={cx(
           CELL_BASE,
           'whitespace-nowrap text-right font-semibold tabular-nums',
-          'text-[#0f8a45] dark:text-[#4bd486]',
+          PRICE_TEXT,
         )}
       >
         {formatCentavosAsBRL(product.priceInCentavos)}

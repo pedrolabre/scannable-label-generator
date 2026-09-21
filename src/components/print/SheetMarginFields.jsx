@@ -14,10 +14,14 @@ const STEP_HINT = `passo de ${String(MILLIMETER_STEP).replace('.', ',')} mm`;
  *
  * O erro de cada campo chega pronto de quem montou a tela. Este componente nao
  * le numero nem valida: ele desenha o campo e devolve o texto digitado.
+ *
+ * Sao seis campos de rotulo longo com uma dica ao lado. A partir de 768 px os
+ * tres por linha cabem; a partir de 640 px cabem dois; abaixo disso a coluna
+ * unica e a unica forma de o rotulo e a dica nao brigarem pela mesma linha.
  */
 export default function SheetMarginFields({ values, errors = {}, onChange }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
       {SHEET_FIELDS.map((field) => (
         <Field
           key={field.key}

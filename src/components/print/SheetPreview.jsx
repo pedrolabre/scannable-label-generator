@@ -6,6 +6,8 @@ import {
   paginateLabels,
 } from '../../domain/services/sheetPagination.js';
 
+import ScrollRegion from '../ui/ScrollRegion.jsx';
+
 import SheetCanvas from './SheetCanvas.jsx';
 import SheetNavigation from './SheetNavigation.jsx';
 import SheetScalePicker, { DEFAULT_SHEET_SCALE } from './SheetScalePicker.jsx';
@@ -27,7 +29,9 @@ import { useSheetSymbols } from './useSheetSymbols.js';
  * contem.
  *
  * A folha escolhida e o tamanho do desenho sao ajustes de quem esta olhando, e
- * vivem aqui.
+ * vivem aqui. A folha tambem nao encolhe em janela estreita: a medida em
+ * milimetro e a do papel, entao o desenho rola na horizontal dentro do painel,
+ * numa area com nome e alcancavel pelo teclado.
  */
 
 function SheetPlaceholder({ state, children }) {
@@ -95,7 +99,11 @@ export default function SheetPreview({ job, sheet, labelLayout, grid, products }
           />
         ) : null}
 
-        <div data-sheet-state="drawn" className="overflow-x-auto pb-1">
+        <ScrollRegion
+          label="Desenho da folha, rolagem horizontal"
+          data-sheet-state="drawn"
+          className="pb-1"
+        >
           <SheetCanvas
             sheet={sheet}
             labelLayout={labelLayout}
@@ -103,7 +111,7 @@ export default function SheetPreview({ job, sheet, labelLayout, grid, products }
             symbols={symbols}
             scaleFactor={scaleFactor}
           />
-        </div>
+        </ScrollRegion>
       </>
     );
   }

@@ -1,9 +1,13 @@
 import { cx } from '../../lib/cx.js';
 
+import { FOCUS_OUTLINE, FOCUS_OUTLINE_COLORS } from './focusClasses.js';
+
+// Oito por oito ja passa do menor lado aceitavel para um alvo de ponteiro, e e
+// por isso que este botao nao precisa de area extra como a caixa de marcacao.
 const BASE_CLASSES = cx(
   'inline-flex h-8 w-8 items-center justify-center rounded-[2px]',
   'border border-transparent bg-transparent shadow-none transition-colors',
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+  FOCUS_OUTLINE,
   'disabled:cursor-not-allowed disabled:opacity-60',
 );
 
@@ -14,12 +18,12 @@ const BASE_CLASSES = cx(
 const TONE_CLASSES = {
   plain: cx(
     'text-slate-500 hover:bg-slate-100 hover:text-slate-800',
-    'focus-visible:outline-slate-400',
+    FOCUS_OUTLINE_COLORS.neutral,
     'dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
   ),
   danger: cx(
     'text-[#b93a20] hover:bg-[#fff1ea]',
-    'focus-visible:outline-[#b93a20]',
+    FOCUS_OUTLINE_COLORS.danger,
     'dark:text-[#ffb8a7] dark:hover:bg-[#3b211b]',
   ),
 };
