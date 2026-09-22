@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ProductSchema } from '../domain/schemas/productSchema.js';

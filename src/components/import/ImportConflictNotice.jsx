@@ -13,15 +13,15 @@ import {
  * O codigo repetido de um registro, e a resposta do usuario.
  *
  * O conflito nao aparece entre as linhas de campo porque nao e um campo
- * recusado: e uma pergunta, e a resposta e um verbo. Por isso ele tem bloco
- * proprio, com o produto gravado a vista — sem ver o que ja esta no catalogo nao
+ * recusado: e uma pergunta, e a resposta e um verbo. Por isso ele tem area
+ * propria, com o produto gravado a vista — sem ver o que ja esta no catalogo nao
  * ha como escolher entre substituir e manter.
  *
  * Enquanto nao ha resposta, este registro nao grava. Nenhum outro e afetado: o
  * resto do lote segue para o catalogo normalmente, e e isso que permite decidir
  * tres conflitos com calma num lote de duzentos mil registros.
  *
- * A colisao de nome fica no mesmo bloco, sem botao nenhum, porque e aviso: o nome
+ * A colisao de nome fica na mesma area, sem botao nenhum, porque e aviso: o nome
  * nao identifica produto, e o texto completo que resolve a duvida ja esta logo
  * acima, na propria linha.
  */

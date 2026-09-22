@@ -30,7 +30,7 @@ import { normalizeSearchText } from './productSearch.js';
  * reais mostrou que se repete. Ela e aviso, e nao pergunta: `displayName` nao
  * identifica produto, dois produtos podem legitimamente levar o mesmo nome na
  * etiqueta, e o que resolve a duvida — o texto completo do produto — ja esta na
- * linha desde o bloco anterior.
+ * linha, ao lado do nome encurtado.
  *
  * O indice em que estas perguntas sao respondidas, e as passagens que o montam,
  * ficam em `importConflictIndex.js`. Aqui e o vocabulario e a leitura de **um**

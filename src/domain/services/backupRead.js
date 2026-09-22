@@ -9,8 +9,8 @@ import {
  *
  * Nada aqui grava. A funcao devolve ou o arquivo inteiro conferido, ou a lista
  * do que ha de errado nele — e a gravacao so e chamada no primeiro caso. E essa
- * separacao que sustenta a promessa do bloco: um arquivo invalido e recusado sem
- * que uma unica linha do armazenamento tenha sido tocada.
+ * separacao que sustenta a garantia da restauracao: um arquivo invalido e recusado
+ * sem que uma unica linha do armazenamento tenha sido tocada.
  *
  * ## Por que o arquivo inteiro cai por um registro so
  *

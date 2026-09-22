@@ -35,7 +35,7 @@ import { useProductStore } from './useProductStore.js';
  * Estado do lote em leitura, separado do catalogo.
  *
  * O resultado do parsing precisa sobreviver entre a escolha dos arquivos, a
- * revisao do que foi lido e a decisao sobre o que gravar — etapas que nao
+ * revisao do que foi lido e a decisao sobre o que gravar — momentos que nao
  * cabem num unico componente. E o catalogo em `useProductStore` continua sendo
  * so o catalogo: produtos ja gravados, leitura e as tres escritas unitarias.
  * Os dois se encontram no fim do fluxo, quando o lote aprovado passa pelo

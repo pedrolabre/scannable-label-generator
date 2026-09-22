@@ -10,7 +10,7 @@ const PRICE_TEXT = 'text-[#0f7a3d] dark:text-[#4bd486]';
 
 /**
  * Superficie da listagem abaixo de `sm:`, onde as cinco colunas da tabela nao
- * cabem lado a lado. Cada produto vira um bloco com o nome em destaque, os
+ * cabem lado a lado. Cada produto vira um cartao com o nome em destaque, os
  * codigos empilhados e o preco alinhado com as acoes.
  *
  * A caixa de marcacao abre o cartao, no mesmo lugar em que abre a linha da

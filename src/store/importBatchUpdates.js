@@ -54,7 +54,7 @@ export function entryFor(record, index, corrections, conflict) {
  *
  * Quando a leitura do catalogo falha, a deteccao segue valendo para o proprio
  * lote, mas `catalogError` fica preenchido e a gravacao nao e oferecida: gravar
- * sem saber o que ja existe no catalogo e exatamente o que este bloco evita.
+ * sem saber o que ja existe no catalogo e exatamente o que esta deteccao evita.
  */
 export async function detectConflicts(set, get, records, report) {
   let catalog = EMPTY_CATALOG;

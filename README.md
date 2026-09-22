@@ -4,18 +4,18 @@ SPA client-side para cadastro de produtos e geração de etiquetas com QR Code m
 
 ## Status
 
-Em desenvolvimento inicial.
+MVP funcional.
 
 ## Funcionamento
 
-- Cadastro manual de produtos (criar, editar, remover e listar).
-- Importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
-- Geração de código 2D com os dados da etiqueta, sem dependência de rede ou servidor.
-- Layouts de etiqueta padronizados em milímetros reais, com diagramação automática e escala 1:1.
-- Montagem automática em grade de folha A4 com controle de margens e prévia interativa.
+- Cadastro manual de produtos e importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
+- Geração de QR Code com os dados da etiqueta, legíveis por leitor óptico sem necessidade de conexão.
+- Layouts de etiqueta padronizados em milímetros reais, com diagramação e prévia instantâneas.
+- Montagem automática em grade de folha A4 com ajuste de margens e aproveitamento de papel.
 - Exportação em PDF vetorial com escala física 1:1.
+- Interface em janela única com modais dedicados e tokens de marca, sem rolagem global.
 - Persistência local no IndexedDB com exportação e restauração total de backup.
-- PWA instalável e funcional offline.
+- PWA instalável e utilizável offline.
 
 ## Stack
 
@@ -161,6 +161,7 @@ scannable-label-generator/
         productSchema.js
         labelLayoutSchema.js
         sheetLayoutSchema.js
+        sheetLayoutSchema.test.js
         printJobSchema.js
       services/
         backupFile.js
@@ -237,6 +238,7 @@ scannable-label-generator/
       download.test.js
       pdf.js
       pdf.test.js
+      pdfBytes.js
       pdfEngine.js
       symbolPath.js
       symbolPath.test.js

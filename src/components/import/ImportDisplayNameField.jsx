@@ -7,7 +7,7 @@ import IconButton from '../ui/IconButton.jsx';
 /**
  * O nome da etiqueta de um registro do lote, editavel na propria linha.
  *
- * Ele chega sugerido — encurtado a partir do texto do produto quando esse texto
+ * Ele chega ja preenchido — encurtado a partir do texto do produto quando esse texto
  * passa do limite — e e o unico campo que a revisao precisa corrigir para que o
  * registro possa seguir. Editar no lugar mantem a correcao ao lado do motivo
  * que a pediu e do texto completo, que e o que permite decidir o corte.

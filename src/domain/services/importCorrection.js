@@ -17,7 +17,7 @@
 
 /**
  * Campos que a revisao do lote deixa editar. O nome da etiqueta e o campo que
- * chega sugerido, e o unico que a revisao precisa corrigir para que o lote
+ * chega ja preenchido, e o unico que a revisao precisa corrigir para que o lote
  * possa seguir.
  */
 export const CORRECTABLE_FIELDS = ['displayName'];
