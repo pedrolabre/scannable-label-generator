@@ -20,13 +20,14 @@ MVP funcional.
 ## Stack
 
 - React e Vite, em JavaScript.
-- Tailwind CSS e PostCSS para estilização utilitária.
+- Tailwind CSS, com paleta de marca em tokens e acabamento em `tailwind.config.js` e `src/styles/global.css`.
+- IBM Plex Sans e Space Grotesk servidas localmente em `public/fonts/`.
 - Lucide React para ícones da interface.
 - Zod na validação de contratos e schemas de dados.
 - Dexie sobre o IndexedDB para persistência local no navegador.
 - Zustand no gerenciamento de estado global.
 - PapaParse e fast-xml-parser para leitura de CSV, JSON e XML de NFC-e.
-- bwip-js para geração de código 2D / QR Code no navegador.
+- bwip-js para geração de QR Code no padrão `LF1`.
 - jsPDF para renderização e exportação de PDF vetorial em escala física 1:1.
 - vite-plugin-pwa para suporte a PWA instalável e operação offline.
 - Vitest para testes automatizados unitários e de integração.
@@ -53,6 +54,11 @@ scannable-label-generator/
   vitest.config.js
   README.md
   public/
+    fonts/
+      ibm-plex-sans-latin-ext.woff2
+      ibm-plex-sans-latin.woff2
+      space-grotesk-latin-ext.woff2
+      space-grotesk-latin.woff2
     icons/
       apple-touch-icon-180.png
       icon-192.png
@@ -62,11 +68,11 @@ scannable-label-generator/
   src/
     main.jsx
     App.jsx
+    App.test.jsx
     components/
       AppShell.jsx
       AppShell.test.jsx
       AppHeader.jsx
-      LocalOnlyNotice.jsx
       backup/
         BackupExportSection.jsx
         BackupFilePicker.jsx
@@ -93,6 +99,7 @@ scannable-label-generator/
         importCounts.js
       label/
         LabelLayoutPicker.jsx
+        LabelPreviewDialog.jsx
         LabelPreviewPanel.jsx
         LabelPreviewPanel.test.jsx
         LabelScalePicker.jsx
@@ -102,6 +109,10 @@ scannable-label-generator/
         previewSelection.js
         previewSelection.test.js
         useProductSymbol.js
+      layout/
+        ShellColumn.jsx
+        ShellColumn.test.jsx
+        StatusBar.jsx
       print/
         PrintExportButton.jsx
         PrintExportControls.jsx
@@ -149,6 +160,7 @@ scannable-label-generator/
         IconButton.jsx
         InlineAlert.jsx
         ModalShell.jsx
+        ModalShell.test.jsx
         ScrollRegion.jsx
         ScrollRegion.test.jsx
         SegmentedControl.jsx

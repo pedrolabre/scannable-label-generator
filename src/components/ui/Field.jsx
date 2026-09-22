@@ -1,36 +1,26 @@
 import { cx } from '../../lib/cx.js';
 
-// O texto de marcador do campo e texto como qualquer outro, e o tom 400 sobre
-// branco fica em 2,56 para 1 — bem abaixo do minimo. O tom 500 resolve os dois
-// temas: 4,76 sobre o fundo claro e 6,96 no escuro, invertendo os tons.
 const CONTROL_BASE_CLASSES = cx(
-  'w-full rounded-[3px] border px-3 py-2 text-sm shadow-none outline-none transition-colors',
-  'border-slate-300 bg-white text-slate-900 placeholder:text-slate-500',
-  'focus-visible:ring-2',
-  'dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400',
+  'w-full rounded border px-3 text-sm shadow-none outline-none transition-colors',
+  'border-neutro-bordaForte bg-neutro-branco text-neutro-tinta',
+  'placeholder:text-neutro-tintaFraca focus-visible:ring-2',
 );
 
 /**
  * Cor de foco por tipo de campo, no mesmo codigo semantico usado no restante da
- * interface: marca para o texto que sai impresso, ambar para os codigos que
- * alimentam a leitura por maquina, verde para valores de venda.
+ * interface: marca para o texto que sai impresso, aviso para os codigos que
+ * alimentam a leitura por maquina, confirmacao para valores de venda.
  */
 const FOCUS_CLASSES = {
-  neutral: cx(
-    'focus-visible:border-slate-400 focus-visible:ring-slate-300/60',
-    'dark:focus-visible:border-slate-500',
-  ),
-  brand: 'focus-visible:border-[#cf1026] focus-visible:ring-[#cf1026]/25',
-  code: cx(
-    'focus-visible:border-[#8a5a00] focus-visible:ring-[#8a5a00]/25',
-    'dark:focus-visible:border-[#f4c95f]',
-  ),
-  price: 'focus-visible:border-[#159447] focus-visible:ring-[#159447]/25',
+  neutral: 'focus-visible:border-neutro-tintaFraca focus-visible:ring-neutro-superficie',
+  brand: 'focus-visible:border-marca-vermelho focus-visible:ring-marca-vermelhoTenue',
+  code: 'focus-visible:border-marca-amareloTexto focus-visible:ring-marca-amareloTenue',
+  price: 'focus-visible:border-marca-verde focus-visible:ring-marca-verdeTenue',
 };
 
 const INVALID_CLASSES = cx(
-  'border-[#b93a20]',
-  'focus-visible:border-[#b93a20] focus-visible:ring-[#b93a20]/25',
+  'border-marca-vermelhoTexto',
+  'focus-visible:border-marca-vermelhoTexto focus-visible:ring-marca-vermelhoTenue',
 );
 
 function controlClasses({ focus, invalid, className }) {
@@ -47,7 +37,7 @@ export function TextInput({ focus = 'neutral', invalid = false, className, ...re
     <input
       type="text"
       aria-invalid={invalid || undefined}
-      className={controlClasses({ focus, invalid, className })}
+      className={cx(controlClasses({ focus, invalid, className }), 'h-11')}
       {...rest}
     />
   );
@@ -58,7 +48,7 @@ export function Textarea({ focus = 'neutral', invalid = false, rows = 3, classNa
     <textarea
       rows={rows}
       aria-invalid={invalid || undefined}
-      className={cx(controlClasses({ focus, invalid, className }), 'resize-y')}
+      className={cx(controlClasses({ focus, invalid, className }), 'resize-y py-2.5')}
       {...rest}
     />
   );
@@ -78,19 +68,16 @@ export default function Field({ id, label, error, hint, optional = false, childr
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="flex items-baseline justify-between gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200"
+        className="flex items-baseline justify-between gap-2 text-[13px] font-semibold text-neutro-tinta"
       >
         <span>
           {label}
           {optional ? (
-            <span className="ml-1.5 font-normal text-slate-500 dark:text-slate-400">opcional</span>
+            <span className="ml-1.5 font-normal text-neutro-tintaFraca">opcional</span>
           ) : null}
         </span>
         {hint ? (
-          <span
-            id={hintId}
-            className="font-normal tabular-nums text-slate-500 dark:text-slate-400"
-          >
+          <span id={hintId} className="font-normal tabular-nums text-neutro-tintaFraca">
             {hint}
           </span>
         ) : null}
@@ -103,7 +90,7 @@ export default function Field({ id, label, error, hint, optional = false, childr
       })}
 
       {error ? (
-        <p id={errorId} className="text-xs text-[#b93a20] dark:text-[#ffb8a7]">
+        <p id={errorId} className="text-xs text-marca-vermelhoTexto">
           {error}
         </p>
       ) : null}

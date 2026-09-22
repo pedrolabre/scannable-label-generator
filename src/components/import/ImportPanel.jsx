@@ -3,23 +3,32 @@ import { useCallback, useMemo, useState } from 'react';
 import { summarizeImportFiles } from '../../domain/services/importService.js';
 import { useImportStore } from '../../store/useImportStore.js';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import InlineAlert from '../ui/InlineAlert.jsx';
+import ModalShell from '../ui/ModalShell.jsx';
 
 import ImportFilePicker from './ImportFilePicker.jsx';
 import ImportFileStatusList from './ImportFileStatusList.jsx';
 import ImportReviewPanel from './ImportReviewPanel.jsx';
 
 /**
- * Cartao da importacao em lote. Reune a escolha dos arquivos, o resumo do que
+ * Dialogo da importacao em lote. Reune a escolha dos arquivos, o resumo do que
  * foi lido, o resultado de cada arquivo e a revisao dos registros conferidos.
+ *
+ * Ele nao fecha no clique fora, e essa e a unica regra que o separa do dialogo
+ * de cadastro: aqui ha arquivo ja lido e conferido, e um clique de menos
+ * descartaria a leitura inteira.
+ *
+ * Fechar o dialogo tambem nao zera o lote. Quem decide isso e o fluxo da
+ * importacao, pelo botao de limpar, e nao a janela que o mostra: reabrir e
+ * encontrar o mesmo lote de volta e o comportamento certo para quem fechou sem
+ * querer.
  *
  * A falha de um arquivo do lote e informacao da lista, nao deste nivel: o
  * aviso aqui cobre so a falha que impede o lote inteiro de comecar.
  *
- * O resumo deste cartao continua contando arquivos e registros lidos. Quantos
- * registros estao prontos e assunto da revisao, logo abaixo, que e onde o
- * numero pode ser lido junto do motivo de cada excecao.
+ * O resumo continua contando arquivos e registros lidos. Quantos registros
+ * estao prontos e assunto da revisao, logo abaixo, que e onde o numero pode ser
+ * lido junto do motivo de cada excecao.
  */
 function summaryText({ parsedFiles, rejectedFiles, recordCount }) {
   const records = recordCount === 1 ? '1 registro' : `${recordCount} registros`;
@@ -34,7 +43,7 @@ function summaryText({ parsedFiles, rejectedFiles, recordCount }) {
   return `${records} de ${accepted}. ${rejected}.`;
 }
 
-export default function ImportPanel() {
+export default function ImportPanel({ onClose }) {
   const isParsing = useImportStore((state) => state.isParsing);
   const isChecking = useImportStore((state) => state.isChecking);
   const files = useImportStore((state) => state.files);
@@ -64,37 +73,46 @@ export default function ImportPanel() {
   const isBusy = isParsing || isChecking;
 
   return (
-    <Card className="space-y-4 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Importação em lote</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Leia planilhas e notas fiscais de uma vez, confira o que veio e grave no catálogo deste
-            dispositivo. Código repetido é apresentado para você decidir, e nada é sobrescrito sem
-            a sua escolha.
-          </p>
-        </div>
-
-        {files.length > 0 && !isBusy ? (
-          <Button type="button" onClick={handleClear}>
-            Limpar
+    <ModalShell
+      title="Importar produtos"
+      subtitle="Arquivo conferido inteiro antes de qualquer gravação."
+      width={680}
+      closeOnBackdrop={false}
+      onClose={onClose}
+      footer={
+        <>
+          {files.length > 0 && !isBusy ? (
+            <Button type="button" onClick={handleClear}>
+              Limpar lote
+            </Button>
+          ) : null}
+          <Button type="button" onClick={onClose} disabled={isBusy}>
+            Fechar
           </Button>
-        ) : null}
-      </div>
-
-      <ImportFilePicker isParsing={isBusy} onFilesSelected={handleFilesSelected} />
-
-      {batchError ? <InlineAlert>{batchError}</InlineAlert> : null}
-
-      {files.length > 0 ? (
-        <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
-          {summaryText(summary)}
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm leading-relaxed text-neutro-tintaMedia">
+          Leia planilhas e notas fiscais de uma vez, confira o que veio e grave no catálogo deste
+          dispositivo. Código repetido é apresentado para você decidir, e nada é sobrescrito sem a
+          sua escolha.
         </p>
-      ) : null}
 
-      <ImportFileStatusList files={files} />
+        <ImportFilePicker isParsing={isBusy} onFilesSelected={handleFilesSelected} />
 
-      <ImportReviewPanel />
-    </Card>
+        {batchError ? <InlineAlert>{batchError}</InlineAlert> : null}
+
+        {files.length > 0 ? (
+          <p role="status" className="text-sm text-neutro-tintaMedia">
+            {summaryText(summary)}
+          </p>
+        ) : null}
+
+        <ImportFileStatusList files={files} />
+
+        <ImportReviewPanel />
+      </div>
+    </ModalShell>
   );
 }

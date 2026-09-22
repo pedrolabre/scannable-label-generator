@@ -9,8 +9,8 @@ import { computeSheetGrid, describeEmptyGrid } from '../../domain/services/sheet
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import LabelLayoutPicker from '../label/LabelLayoutPicker.jsx';
+import ShellColumn from '../layout/ShellColumn.jsx';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import InlineAlert from '../ui/InlineAlert.jsx';
 
 import PrintExportControls from './PrintExportControls.jsx';
@@ -22,12 +22,17 @@ import { SHEET_FIELDS, parseCopies, parseMillimeters } from './printInputs.js';
 import { resolvePrintItems } from './printSelection.js';
 
 /**
- * Painel do trabalho de impressao: o que foi marcado na listagem, quantas
- * etiquetas de cada, em qual modelo de etiqueta e em qual folha.
+ * Coluna da esquerda: o que foi marcado na listagem, quantas etiquetas de cada,
+ * em qual modelo de etiqueta e em qual folha.
  *
- * Ele fecha a pagina porque e o passo terminal do fluxo: importar, cadastrar,
- * conferir uma etiqueta, listar, montar a folha. O desenho da folha e a
- * exportacao crescem daqui sem remexer o restante da tela.
+ * Ela abre a tela, a esquerda da listagem, porque e o trabalho que a listagem
+ * alimenta: marcar um produto la move um numero daqui.
+ *
+ * O painel ainda faz tres coisas numa coluna de 320 px — configura, desenha a
+ * folha e exporta. O desenho da folha e o que nao cabe: ele sai daqui para um
+ * dialogo proprio, e o rodape fixo desta coluna recebe os dois botoes que hoje
+ * moram no meio do corpo. Isso e reparticao de responsabilidade, nao de estilo,
+ * e por isso nao acontece junto com a mudanca de lugar de todos os paineis.
  *
  * A folha so e desenhada quando a configuracao inteira vale. Etiqueta que nao
  * cabe na area util bloqueia o trabalho como qualquer outra recusa, e o motivo
@@ -48,7 +53,7 @@ function PrintPlaceholder({ state, children }) {
   return (
     <div
       data-print-state={state}
-      className="flex items-center justify-center rounded-[3px] border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+      className="flex items-center justify-center rounded border border-dashed border-neutro-bordaForte px-6 py-10 text-center text-sm text-neutro-tintaFraca"
     >
       <p>{children}</p>
     </div>
@@ -135,7 +140,7 @@ export default function PrintJobPanel({ products = [] }) {
 
     return (
       <>
-        <div className="flex flex-wrap gap-x-8 gap-y-4">
+        <div className="flex flex-col gap-4">
           <LabelLayoutPicker
             legend="Modelo das etiquetas"
             name="modelo-etiqueta-impressao"
@@ -181,7 +186,7 @@ export default function PrintJobPanel({ products = [] }) {
             {missingSymbolCount > 0 ? (
               <p
                 data-symbol-warning=""
-                className="text-xs text-[#8a5a00] dark:text-[#f4c95f]"
+                className="text-xs text-marca-amareloTexto"
               >
                 {missingSymbolCount === 1
                   ? '1 produto selecionado não gera símbolo e sai com o restante do conteúdo.'
@@ -223,18 +228,14 @@ export default function PrintJobPanel({ products = [] }) {
   }
 
   return (
-    <Card className="p-6" data-print-job-panel={isReady ? 'ready' : 'blocked'}>
-      <div className="space-y-4">
-        <header className="space-y-1">
-          <h2 className="text-lg font-semibold">Folha de etiquetas</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Escolha o modelo da etiqueta, o formato da folha e quantas cópias de cada produto
-            selecionado. A configuração vale para esta sessão e recomeça ao recarregar a página.
-          </p>
-        </header>
-
-        {renderBody()}
-      </div>
-    </Card>
+    <ShellColumn
+      title="Trabalho de impressão"
+      label="Trabalho de impressão"
+      className="border-r border-neutro-borda bg-neutro-branco"
+      bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-5"
+      data-print-job-panel={isReady ? 'ready' : 'blocked'}
+    >
+      {renderBody()}
+    </ShellColumn>
   );
 }

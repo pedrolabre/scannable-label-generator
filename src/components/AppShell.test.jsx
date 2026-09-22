@@ -35,6 +35,19 @@ function Header() {
   );
 }
 
+function shell(props = {}) {
+  return (
+    <AppShell
+      header={<Header />}
+      left={<section aria-label="Trabalho de impressão">impressão</section>}
+      center={<section aria-label="Produtos">produtos</section>}
+      right={<section aria-label="Prévia da etiqueta">prévia</section>}
+      status={<footer>estado</footer>}
+      {...props}
+    />
+  );
+}
+
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -49,11 +62,15 @@ afterEach(() => {
 });
 
 describe('atalho para o conteudo', () => {
-  it('e o primeiro elemento focavel da pagina, antes do cabecalho', () => {
+  it('e o primeiro elemento focavel da tela, antes do cabecalho', () => {
     render(
-      <AppShell header={<Header />}>
-        <button type="button">Cadastrar produto</button>
-      </AppShell>,
+      shell({
+        center: (
+          <section aria-label="Produtos">
+            <button type="button">Cadastrar produto</button>
+          </section>
+        ),
+      }),
     );
 
     const focusable = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR));
@@ -66,7 +83,7 @@ describe('atalho para o conteudo', () => {
   });
 
   it('aponta para o identificador que o conteudo principal carrega', () => {
-    render(<AppShell header={<Header />}>conteúdo</AppShell>);
+    render(shell());
 
     const atalho = container.querySelector('a[href^="#"]');
     const principal = container.querySelector('main');
@@ -76,7 +93,7 @@ describe('atalho para o conteudo', () => {
   });
 
   it('fica fora da vista ate receber foco', () => {
-    render(<AppShell header={<Header />}>conteúdo</AppShell>);
+    render(shell());
 
     const atalho = container.querySelector('a[href^="#"]');
 
@@ -87,7 +104,7 @@ describe('atalho para o conteudo', () => {
 
 describe('conteudo principal', () => {
   it('aceita foco por programa sem entrar na ordem de tabulacao', () => {
-    render(<AppShell header={<Header />}>conteúdo</AppShell>);
+    render(shell());
 
     const principal = container.querySelector('main');
 
@@ -96,7 +113,7 @@ describe('conteudo principal', () => {
   });
 
   it('recebe o foco quando o atalho leva ate ele', () => {
-    render(<AppShell header={<Header />}>conteúdo</AppShell>);
+    render(shell());
 
     const principal = container.querySelector('main');
 
@@ -106,14 +123,50 @@ describe('conteudo principal', () => {
 
     expect(document.activeElement).toBe(principal);
   });
+});
 
-  it('desenha o conteudo que recebeu', () => {
-    render(
-      <AppShell header={<Header />}>
-        <p>Produtos cadastrados</p>
-      </AppShell>,
+describe('cinco faixas', () => {
+  it('desenha o cabecalho, as tres colunas e a linha de estado, nesta ordem', () => {
+    render(shell());
+
+    const regioes = Array.from(container.querySelectorAll('section[aria-label]')).map((secao) =>
+      secao.getAttribute('aria-label'),
     );
 
-    expect(container.querySelector('main').textContent).toContain('Produtos cadastrados');
+    expect(regioes).toEqual(['Trabalho de impressão', 'Produtos', 'Prévia da etiqueta']);
+    expect(container.querySelector('header').textContent).toContain('LabelForge');
+    expect(container.querySelector('footer').textContent).toBe('estado');
+  });
+
+  it('mantem as tres colunas dentro do conteudo principal', () => {
+    render(shell());
+
+    const principal = container.querySelector('main');
+
+    expect(principal.querySelectorAll('section[aria-label]')).toHaveLength(3);
+  });
+});
+
+describe('a janela e o limite', () => {
+  /**
+   * O `jsdom` nao faz layout, entao medir altura aqui nao prova nada: toda
+   * altura sai zero. O que se prova e o contrato que produz o resultado — a
+   * raiz presa a altura disponivel, sem transbordo, e o conteudo principal
+   * livre para encolher abaixo do proprio conteudo. Sem `min-h-0`, o
+   * `overflow-y` dos corpos nao vale, e essa e a regressao que volta sozinha.
+   */
+  it('prende a raiz a altura disponivel e nao deixa nada transbordar', () => {
+    render(shell());
+
+    const raiz = container.firstElementChild;
+
+    expect(raiz.className).toContain('h-full');
+    expect(raiz.className).toContain('overflow-hidden');
+  });
+
+  it('deixa o conteudo principal encolher abaixo do proprio conteudo', () => {
+    render(shell());
+
+    expect(container.querySelector('main').className).toContain('min-h-0');
   });
 });

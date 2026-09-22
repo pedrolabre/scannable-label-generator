@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 
 import {
   DEFAULT_LABEL_LAYOUT_ID,
@@ -6,47 +7,62 @@ import {
   getDefaultLabelLayout,
 } from '../../domain/services/labelLayoutCatalog.js';
 
+import ShellColumn from '../layout/ShellColumn.jsx';
+import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
+import IconButton from '../ui/IconButton.jsx';
 import ScrollRegion from '../ui/ScrollRegion.jsx';
 
 import LabelLayoutPicker from './LabelLayoutPicker.jsx';
+import LabelPreviewDialog from './LabelPreviewDialog.jsx';
 import LabelScalePicker, { DEFAULT_SCALE } from './LabelScalePicker.jsx';
 import ProductLabel from './ProductLabel.jsx';
 
 /**
- * Painel da previa de uma etiqueta: o modelo, a ampliacao e o desenho.
+ * Coluna da direita: o modelo, a ampliacao e o desenho da etiqueta escolhida.
  *
  * O produto escolhido chega pronto de quem montou a tela, porque a escolha e
  * feita na listagem e precisa sobreviver a este componente. Ja o modelo e a
- * ampliacao sao estado local e comecam no padrao a cada abertura da pagina:
+ * ampliacao sao estado local e comecam no padrao a cada abertura da aplicacao:
  * sao ajustes de quem esta olhando agora, e o modelo padrao e o que atende o
  * perfil real de produto.
  *
- * O aviso do cabecalho existe porque a tela nao e regua. O zoom do navegador
- * escala tudo, inclusive o milimetro do CSS, e a tela raramente tem a densidade
- * que a unidade pressupoe. Sem essa linha, quem imprimisse a tela em escala
- * cheia cobraria do aplicativo uma fidelidade que so o arquivo exportado
- * entrega.
+ * O aviso do corpo existe porque a tela nao e regua. O zoom do navegador escala
+ * tudo, inclusive o milimetro do CSS, e a tela raramente tem a densidade que a
+ * unidade pressupoe. Sem essa linha, quem imprimisse a tela em escala cheia
+ * cobraria do aplicativo uma fidelidade que so o arquivo exportado entrega.
  *
- * A etiqueta nao encolhe em janela estreita: o contrato visual proibe reflow, e
+ * A etiqueta nao encolhe em coluna estreita: o contrato visual proibe reflow, e
  * o modelo maior tem 100 mm de largura. Entao a area do desenho rola na
- * horizontal dentro do proprio painel, e o corpo da pagina continua parado.
- * A area que rola tem nome e recebe foco, para que o teclado tambem alcance a
- * parte do desenho que esta fora da vista.
+ * horizontal dentro do corpo da coluna. Essa rolagem e outra coisa que a da
+ * coluna, e nao conta como uma segunda regiao vertical: ela tem nome e recebe
+ * foco, para que o teclado tambem alcance a parte do desenho que esta fora da
+ * vista.
+ *
+ * `Ampliar` leva o mesmo desenho para um dialogo, onde ele tem a janela inteira
+ * em vez de 380 px. A ampliacao e uma so: o degrau escolhido aqui e o degrau
+ * que o dialogo abre.
  */
 
 function PreviewPlaceholder({ state, children }) {
   return (
     <div
       data-preview-state={state}
-      className="flex items-center justify-center rounded-[3px] border border-dashed border-slate-300 px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+      className="flex items-center justify-center rounded border border-dashed border-neutro-bordaForte px-6 py-12 text-center text-sm text-neutro-tintaFraca"
     >
       <p>{children}</p>
     </div>
   );
 }
 
-export default function LabelPreviewPanel({ product = null, hasProducts = false }) {
+export default function LabelPreviewPanel({
+  product = null,
+  hasProducts = false,
+  isEnlarged = false,
+  onEnlarge,
+  onCloseEnlarged,
+  onEditProduct,
+}) {
   const [layoutId, setLayoutId] = useState(DEFAULT_LABEL_LAYOUT_ID);
   const [scaleFactor, setScaleFactor] = useState(DEFAULT_SCALE);
 
@@ -58,53 +74,90 @@ export default function LabelPreviewPanel({ product = null, hasProducts = false 
     if (!hasProducts) {
       return (
         <PreviewPlaceholder state="empty-catalog">
-          Cadastre um produto no formulário acima para ver a etiqueta dele.
+          Cadastre um produto para ver a etiqueta dele.
         </PreviewPlaceholder>
       );
     }
 
     return (
       <>
-        <div className="flex flex-wrap gap-x-8 gap-y-4">
+        <div className="flex flex-col gap-4">
           <LabelLayoutPicker value={layout.id} onChange={setLayoutId} />
           <LabelScalePicker value={scaleFactor} onChange={setScaleFactor} />
         </div>
 
         {product ? (
-          <ScrollRegion
-            label="Desenho da etiqueta, rolagem horizontal"
-            data-preview-state="product"
-            className="pb-1"
-          >
-            <ProductLabel
-              product={product}
-              layout={layout}
-              scaleFactor={scaleFactor}
-              className="w-max"
-            />
-          </ScrollRegion>
+          <Card className="p-4">
+            <ScrollRegion
+              label="Desenho da etiqueta, rolagem horizontal"
+              data-preview-state="product"
+              className="pb-1"
+            >
+              <ProductLabel
+                product={product}
+                layout={layout}
+                scaleFactor={scaleFactor}
+                className="w-max"
+              />
+            </ScrollRegion>
+          </Card>
         ) : (
           <PreviewPlaceholder state="no-selection">
             Escolha um produto na listagem para ver a etiqueta dele.
           </PreviewPlaceholder>
         )}
+
+        <p className="text-xs leading-relaxed text-neutro-tintaFraca">
+          Prévia proporcional. O tamanho em tela varia com o zoom e com o monitor; a medida em
+          milímetros vale na impressão.
+        </p>
       </>
     );
   }
 
   return (
-    <Card className="p-6" data-label-preview="">
-      <div className="space-y-4">
-        <header className="space-y-1">
-          <h2 className="text-lg font-semibold">Etiqueta do produto</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Prévia proporcional. O tamanho em tela varia com o zoom e com o monitor; a medida em
-            milímetros vale na impressão.
-          </p>
-        </header>
-
+    <>
+      <ShellColumn
+        title="Prévia da etiqueta"
+        className="border-l border-neutro-borda bg-neutro-branco"
+        bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-4"
+        data-label-preview=""
+        actions={
+          product ? (
+            <IconButton label="Ampliar prévia" onClick={onEnlarge}>
+              <Maximize2 className="h-[15px] w-[15px]" aria-hidden="true" />
+            </IconButton>
+          ) : null
+        }
+        footer={
+          product ? (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={() => onEditProduct?.(product.id)}
+              >
+                Editar produto
+              </Button>
+              <Button type="button" className="flex-1" onClick={onEnlarge}>
+                Ampliar
+              </Button>
+            </div>
+          ) : null
+        }
+      >
         {renderBody()}
-      </div>
-    </Card>
+      </ShellColumn>
+
+      {isEnlarged && product ? (
+        <LabelPreviewDialog
+          product={product}
+          layout={layout}
+          scaleFactor={scaleFactor}
+          onScaleChange={setScaleFactor}
+          onClose={onCloseEnlarged}
+        />
+      ) : null}
+    </>
   );
 }

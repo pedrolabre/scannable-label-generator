@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { compareProductsByName, searchProducts } from '../../domain/services/productSearch.js';
 import { describeStorageError } from '../../storage/storageError.js';
 
-import Card from '../ui/Card.jsx';
+import ShellColumn from '../layout/ShellColumn.jsx';
 import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 import ProductCards from './ProductCards.jsx';
@@ -16,6 +16,12 @@ import {
 import ProductSearchField from './ProductSearchField.jsx';
 import ProductTable from './ProductTable.jsx';
 
+// Os avisos de estado nao encostam na borda da coluna como a tabela encosta: a
+// tabela e faixa de ponta a ponta, e eles sao texto.
+function Padded({ children }) {
+  return <div className="p-6">{children}</div>;
+}
+
 function countHint(visible, total) {
   if (visible === total) {
     return `${total} ${total === 1 ? 'produto' : 'produtos'}`;
@@ -25,11 +31,19 @@ function countHint(visible, total) {
 }
 
 /**
- * Listagem dos produtos salvos no dispositivo: busca, tabela ou cartoes
- * conforme a largura, e as acoes de editar e remover por item.
+ * Coluna central: busca, tabela ou cartoes conforme a largura, e as acoes de
+ * editar e remover por item.
+ *
+ * Ela e a unica regiao elastica da tela, e por isso ocupa o meio: e a unica
+ * cujo valor cresce com o tamanho do monitor. A configuracao do trabalho e a
+ * previa tem a largura de que precisam.
+ *
+ * A busca fica na faixa fixa, junto da contagem; o que rola e so a lista. Com
+ * trezentos produtos no banco, um campo de busca que sobe junto com a rolagem
+ * obriga a voltar ao topo para trocar o termo.
  *
  * O termo de busca vive aqui porque so esta tela o consome. A edicao sobe para
- * quem montou a listagem, que decide onde o formulario aparece; a remocao passa
+ * quem montou a tela, que decide onde o formulario aparece; a remocao passa
  * antes por uma confirmacao que mostra qual produto sai.
  *
  * `loadError` cobre a leitura inicial que nao completou: enquanto nao houver
@@ -91,19 +105,35 @@ export default function ProductList({
 
   function renderBody() {
     if (products.length === 0 && loadError) {
-      return <LoadFailureStatus message={loadError} onRetry={onRetryLoad} />;
+      return (
+        <Padded>
+          <LoadFailureStatus message={loadError} onRetry={onRetryLoad} />
+        </Padded>
+      );
     }
 
     if (isLoading && products.length === 0) {
-      return <LoadingStatus />;
+      return (
+        <Padded>
+          <LoadingStatus />
+        </Padded>
+      );
     }
 
     if (products.length === 0) {
-      return <EmptyCatalogStatus />;
+      return (
+        <Padded>
+          <EmptyCatalogStatus />
+        </Padded>
+      );
     }
 
     if (visibleProducts.length === 0) {
-      return <NoMatchStatus query={query} onClearSearch={() => setQuery('')} />;
+      return (
+        <Padded>
+          <NoMatchStatus query={query} onClearSearch={() => setQuery('')} />
+        </Padded>
+      );
     }
 
     return (
@@ -120,7 +150,7 @@ export default function ProductList({
           />
         </div>
 
-        <div className="sm:hidden">
+        <div className="p-6 sm:hidden">
           <ProductCards
             products={visibleProducts}
             selectedProductId={selectedProductId}
@@ -135,26 +165,27 @@ export default function ProductList({
     );
   }
 
-  return (
-    <Card className="overflow-hidden">
-      <div className="space-y-4 p-6">
-        <header className="space-y-1">
-          <h2 className="text-lg font-semibold">Produtos cadastrados</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Tudo o que está salvo neste dispositivo, pronto para virar etiqueta.
-          </p>
-        </header>
-
-        {products.length > 0 ? (
-          <ProductSearchField
-            value={query}
-            onChange={setQuery}
-            hint={countHint(visibleProducts.length, products.length)}
-          />
-        ) : null}
+  const header =
+    products.length > 0 ? (
+      <div className="border-b border-neutro-borda px-6 py-3.5">
+        <ProductSearchField
+          value={query}
+          onChange={setQuery}
+          hint={countHint(visibleProducts.length, products.length)}
+        />
       </div>
+    ) : null;
 
-      {renderBody()}
+  return (
+    <>
+      <ShellColumn
+        label="Produtos cadastrados"
+        header={header}
+        bodyClassName=""
+        className="bg-neutro-papel"
+      >
+        {renderBody()}
+      </ShellColumn>
 
       {productToRemove ? (
         <ConfirmModal
@@ -173,6 +204,6 @@ export default function ProductList({
           <p>Para usá-lo de novo depois, será preciso cadastrá-lo outra vez.</p>
         </ConfirmModal>
       ) : null}
-    </Card>
+    </>
   );
 }
