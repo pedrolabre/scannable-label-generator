@@ -46,7 +46,7 @@ function SymbolZone({ zone, symbol, symbolError }) {
     return (
       <div
         style={{ ...style, fontSize: toMm(Math.min(zone.sizeMm / 8, 3)) }}
-        className="flex items-center justify-center border border-dashed border-black/50 text-center leading-tight"
+        className="flex items-center justify-center border border-dashed border-etiqueta-tinta/50 text-center leading-tight"
       >
         {FAILED_SYMBOL_LABEL}
       </div>
@@ -60,7 +60,7 @@ function SymbolZone({ zone, symbol, symbolError }) {
     return (
       <div
         style={style}
-        className="border border-dashed border-black/20 bg-white"
+        className="border border-dashed border-etiqueta-tinta/20 bg-etiqueta-papel"
         aria-hidden="true"
         data-symbol-state="pending"
       />
@@ -70,7 +70,7 @@ function SymbolZone({ zone, symbol, symbolError }) {
   return (
     <div
       style={style}
-      className="bg-white [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+      className="bg-etiqueta-papel [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
       data-symbol-state="ready"
       role="img"
       aria-label={`Código ${symbol.systemCode} em QR Code`}
@@ -107,7 +107,7 @@ export default function LabelSurface({
 
   if (rendered.error) {
     return (
-      <p role="alert" className="text-sm text-[#b93a20]" data-label-state="rejected">
+      <p role="alert" className="text-sm text-marca-vermelhoTexto" data-label-state="rejected">
         {rendered.error.message}
       </p>
     );
@@ -136,7 +136,7 @@ export default function LabelSurface({
         }}
         // O traco da borda sai por `outline` e nao por `border`: borda entraria
         // na caixa e encolheria a etiqueta em fracao de milimetro.
-        className="relative overflow-hidden bg-white font-sans text-black outline outline-1 outline-slate-300"
+        className="relative overflow-hidden bg-etiqueta-papel font-sans text-etiqueta-tinta outline outline-1 outline-neutro-bordaForte"
       >
         <div style={zoneStyle(geometry.name)} className="overflow-hidden">
           {name.lines.map((line, index) => (

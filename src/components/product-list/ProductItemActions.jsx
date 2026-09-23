@@ -19,16 +19,22 @@ export default function ProductItemActions({
   onPreview,
   onEdit,
   onRemove,
+  align = 'end',
+  className,
 }) {
   return (
-    <div className="flex items-center justify-end gap-1">
+    <div
+      className={cx(
+        'flex items-center gap-1',
+        align === 'start' ? 'justify-start' : 'justify-end',
+        className,
+      )}
+    >
       <IconButton
         label={`Ver etiqueta de ${product.displayName}`}
         aria-pressed={isSelected}
         onClick={() => onPreview(product)}
-        className={cx(
-          isSelected && 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
-        )}
+        tone={isSelected ? 'selected' : 'plain'}
       >
         <Tag className="h-4 w-4" aria-hidden="true" />
       </IconButton>

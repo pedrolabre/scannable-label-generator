@@ -33,10 +33,10 @@ export default function BackupRestoreSection({ currentProductCount, onRestored }
     status === BACKUP_RESTORE_STATUS.READING || status === BACKUP_RESTORE_STATUS.WRITING;
 
   return (
-    <div className="space-y-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+    <div className="space-y-3 border-t border-neutro-divisor pt-6">
       <h3 className="text-base font-semibold">Restaurar</h3>
 
-      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      <p className="text-sm leading-relaxed text-neutro-tintaFraca">
         Lê um arquivo de backup e recria o ambiente que ele guarda. O arquivo é conferido inteiro
         antes de qualquer gravação: se algo nele estiver errado, ele é recusado e nada muda aqui.
       </p>
@@ -48,10 +48,7 @@ export default function BackupRestoreSection({ currentProductCount, onRestored }
       ) : null}
 
       {status === BACKUP_RESTORE_STATUS.DONE && result ? (
-        <p
-          role="status"
-          className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400"
-        >
+        <p role="status" className="flex items-center gap-2 text-sm text-marca-verdeTexto">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           {describeRestoreResult(result.restoredProducts)}
         </p>

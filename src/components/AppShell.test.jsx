@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import AppShell, { MAIN_CONTENT_ID } from './AppShell.jsx';
+import AppShell, { MAIN_CONTENT_ID, SHELL_VIEWS } from './AppShell.jsx';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -168,5 +168,68 @@ describe('a janela e o limite', () => {
     render(shell());
 
     expect(container.querySelector('main').className).toContain('min-h-0');
+  });
+});
+
+describe('tela estreita', () => {
+  /**
+   * Abaixo do ponto de corte so a vista ativa aparece. O `jsdom` nao aplica
+   * media query, entao o que se prova e o contrato das classes: a vista ativa
+   * e a unica sem `hidden`, as tres voltam com `lg:flex`, e a grade tem uma
+   * coluna so ate o ponto de corte.
+   */
+  function vistas() {
+    return Array.from(container.querySelectorAll('main > [data-vista]'));
+  }
+
+  function visiveisNaTelaEstreita() {
+    return vistas().filter((vista) => !vista.className.split(' ').includes('hidden'));
+  }
+
+  it('mostra uma coluna so, a da vista ativa', () => {
+    render(shell({ activeView: SHELL_VIEWS.PREVIEW }));
+
+    const visiveis = visiveisNaTelaEstreita();
+
+    expect(visiveis).toHaveLength(1);
+    expect(visiveis[0].getAttribute('data-vista')).toBe('previa');
+    expect(visiveis[0].querySelector('section').getAttribute('aria-label')).toBe(
+      'Prévia da etiqueta',
+    );
+  });
+
+  it('abre na listagem quando ninguem escolheu a vista', () => {
+    render(shell());
+
+    expect(visiveisNaTelaEstreita().map((vista) => vista.getAttribute('data-vista'))).toEqual([
+      'produtos',
+    ]);
+  });
+
+  it('devolve as tres colunas a partir do ponto de corte', () => {
+    render(shell({ activeView: SHELL_VIEWS.PRINT }));
+
+    for (const vista of vistas()) {
+      expect(vista.className).toContain('lg:flex');
+    }
+
+    const grade = container.querySelector('main').className;
+
+    expect(grade).toContain('grid-cols-1');
+    expect(grade).toContain('lg:grid-cols-janela');
+  });
+
+  it('continua sem rolar a raiz', () => {
+    render(shell({ activeView: SHELL_VIEWS.PRINT }));
+
+    const raiz = container.firstElementChild;
+
+    expect(raiz.className).toContain('h-full');
+    expect(raiz.className).toContain('overflow-hidden');
+
+    for (const vista of vistas()) {
+      expect(vista.className).toContain('min-h-0');
+      expect(vista.className).not.toMatch(/overflow-(y-)?(auto|scroll)/);
+    }
   });
 });

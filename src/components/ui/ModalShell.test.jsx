@@ -296,3 +296,34 @@ describe('dialogo com regiao rolavel propria', () => {
     expect(document.activeElement).toBe(fecharButton());
   });
 });
+
+describe('tela estreita', () => {
+  /**
+   * O `jsdom` nao aplica media query. O que se prova e a regra das classes:
+   * abaixo do ponto de corte o painel ocupa a janela menos 16 px de cada lado,
+   * e a regra vence a medida pedida em pixel, que chega por estilo em linha.
+   */
+  it('ocupa a janela menos a margem, por cima da medida pedida', () => {
+    render(
+      <ModalShell title="Importar produtos" width={680} onClose={vi.fn()}>
+        conteúdo
+      </ModalShell>,
+    );
+
+    const painel = container.querySelector('[role="dialog"]');
+
+    expect(painel.className).toContain('max-lg:!w-[calc(100dvw-32px)]');
+    expect(painel.className).toContain('max-lg:!h-[calc(100dvh-32px)]');
+    expect(painel.style.width).toBe('680px');
+  });
+
+  it('deixa a confirmacao curta do tamanho do proprio texto', () => {
+    render(
+      <ModalShell title="Remover produto" width={480} compact onClose={vi.fn()}>
+        conteúdo
+      </ModalShell>,
+    );
+
+    expect(container.querySelector('[role="dialog"]').className).not.toContain('max-lg:');
+  });
+});

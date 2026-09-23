@@ -70,4 +70,33 @@
     height: 100%;
     overflow: hidden;
   }
+
+  /*
+   * Densidade da tela. Abaixo do ponto de corte a janela mostra uma coluna por
+   * vez e pode estar num aparelho de toque, entao o controle tem 44 px. A
+   * partir dele sao tres colunas lado a lado, operadas com mouse no balcao, e
+   * tudo fica em tres quartos da medida — com um piso: nenhum texto de
+   * leitura abaixo de 12 px.
+   */
+  :root {
+    --altura-controle: 44px;
+    --altura-topo: 56px;
+    --altura-estado: 48px;
+    --recuo: 20px;
+    --texto-corpo: 14px;
+    --texto-corpo-linha: 20px;
+    --texto-rotulo: 13px;
+  }
+
+  @screen lg {
+    :root {
+      --altura-controle: 32px;
+      --altura-topo: 48px;
+      --altura-estado: 36px;
+      --recuo: 16px;
+      --texto-corpo: 12px;
+      --texto-corpo-linha: 16px;
+      --texto-rotulo: 12px;
+    }
+  }
 }

@@ -31,8 +31,8 @@ function Separator() {
 
 export default function StatusBar({ productCount = 0, selectedCount = 0, sheetCount = 0 }) {
   return (
-    <footer className="flex h-12 flex-none items-center gap-4 border-t border-neutro-borda bg-neutro-branco px-6 text-xs text-neutro-tintaFraca">
-      <div className="flex min-w-0 items-center gap-4">
+    <footer className="flex h-estado flex-none items-center gap-4 border-t border-neutro-borda bg-neutro-branco px-recuo text-xs text-neutro-tintaFraca">
+      <div className="flex min-w-0 items-center gap-3">
         <span className="truncate" data-status-products={productCount}>
           {plural(productCount, 'produto', 'produtos')} no banco
         </span>

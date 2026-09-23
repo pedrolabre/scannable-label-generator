@@ -3,8 +3,8 @@ import { cx } from '../../lib/cx.js';
 import { FOCUS_OUTLINE, FOCUS_OUTLINE_COLORS } from './focusClasses.js';
 
 const BASE_CLASSES = cx(
-  'inline-flex items-center justify-center gap-2 rounded border px-4 text-sm',
-  'h-11 font-semibold shadow-none transition-colors',
+  'inline-flex items-center justify-center gap-2 rounded border px-4 text-sm lg:px-3',
+  'h-controle font-semibold shadow-none transition-colors',
   FOCUS_OUTLINE,
   'disabled:cursor-not-allowed disabled:opacity-60',
 );

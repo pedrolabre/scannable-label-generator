@@ -65,19 +65,19 @@ export default function ImportFilePicker({ isParsing, onFilesSelected }) {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={cx(
-        'flex flex-col items-center gap-3 rounded-[3px] border border-dashed px-6 py-10 text-center transition-colors',
+        'flex flex-col items-center gap-3 rounded border border-dashed px-6 py-10 text-center transition-colors',
         isDraggingOver
-          ? 'border-[#cf1026] bg-[#fff1ea] dark:bg-[#3b211b]'
-          : 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-950',
+          ? 'border-marca-vermelho bg-marca-vermelhoTenue'
+          : 'border-neutro-bordaForte bg-neutro-papel',
       )}
     >
       {isParsing ? (
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" aria-hidden="true" />
+        <Loader2 className="h-8 w-8 animate-spin text-neutro-tintaFraca" aria-hidden="true" />
       ) : (
-        <FileUp className="h-8 w-8 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+        <FileUp className="h-8 w-8 text-neutro-bordaForte" aria-hidden="true" />
       )}
 
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-neutro-tintaFraca">
         Arraste os arquivos para cá ou escolha no computador.
       </p>
 
@@ -96,7 +96,7 @@ export default function ImportFilePicker({ isParsing, onFilesSelected }) {
         {isParsing ? 'Lendo arquivos…' : 'Escolher arquivos'}
       </Button>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-neutro-tintaFraca">
         Aceita planilhas .csv, listas .json e notas fiscais .xml. Vários arquivos de uma vez.
       </p>
     </div>

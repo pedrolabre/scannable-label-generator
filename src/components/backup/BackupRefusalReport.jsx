@@ -22,7 +22,7 @@ export default function BackupRefusalReport({ report }) {
     <div className="space-y-2">
       <InlineAlert>{describeRefusalHeadline(report.totalIssues)}</InlineAlert>
 
-      <ul className="space-y-1 pl-4 text-sm text-slate-600 dark:text-slate-300">
+      <ul className="space-y-1 pl-4 text-sm text-neutro-tintaFraca">
         {report.issues.map((issue, index) => (
           <li key={`${issue.where ?? 'arquivo'}-${index}`} className="list-disc">
             {describeRefusalLine(issue)}
@@ -30,7 +30,7 @@ export default function BackupRefusalReport({ report }) {
         ))}
       </ul>
 
-      {omitted ? <p className="text-sm text-slate-500 dark:text-slate-400">{omitted}</p> : null}
+      {omitted ? <p className="text-sm text-neutro-tintaFraca">{omitted}</p> : null}
     </div>
   );
 }

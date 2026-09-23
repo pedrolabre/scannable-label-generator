@@ -3,10 +3,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  COMPACT_SHEET_ADJUSTMENTS,
   MAX_COPIES,
   SHEET_FIELDS,
   findSheetField,
   formatMillimeters,
+  isCompactSheet,
   parseCopies,
   parseMillimeters,
 } from './printInputs.js';
@@ -113,5 +115,18 @@ describe('campos da folha', () => {
   it('exibe o milimetro com virgula', () => {
     expect(formatMillimeters(10.5)).toBe('10,5');
     expect(formatMillimeters(10)).toBe('10');
+  });
+});
+
+describe('ajuste que aproveita a folha', () => {
+  it('reconhece os seis campos no ajuste, com virgula ou ponto', () => {
+    expect(isCompactSheet(COMPACT_SHEET_ADJUSTMENTS)).toBe(true);
+    expect(isCompactSheet({ ...COMPACT_SHEET_ADJUSTMENTS, marginTopMm: '5,0' })).toBe(true);
+  });
+
+  it('nao reconhece quando um campo foge do ajuste ou esta vazio', () => {
+    expect(isCompactSheet({ ...COMPACT_SHEET_ADJUSTMENTS, rowGapMm: '3' })).toBe(false);
+    expect(isCompactSheet({ ...COMPACT_SHEET_ADJUSTMENTS, marginLeftMm: '' })).toBe(false);
+    expect(isCompactSheet(undefined)).toBe(false);
   });
 });

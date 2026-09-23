@@ -54,7 +54,7 @@ export default function BackupFilePicker({ isBusy, onFileSelected }) {
         {isBusy ? 'Conferindo o arquivo…' : 'Escolher arquivo de backup'}
       </Button>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-neutro-tintaFraca">
         Aceita o arquivo .json gerado pela exportação.
       </p>
     </div>

@@ -21,7 +21,9 @@ import { useSheetSymbols } from './useSheetSymbols.js';
 
 /**
  * Miolo do dialogo da folha: a mesa com a folha desenhada e, ao lado, a ficha
- * que diz o que a folha contem.
+ * que diz o que a folha contem. Abaixo do ponto de corte a ficha desce para
+ * baixo da mesa, na largura inteira: ao lado, ela tomaria da mesa quase toda a
+ * largura da janela.
  *
  * Recebe o trabalho, a folha e a grade ja conferidos por quem montou a tela.
  * Desenha so a folha escolhida: a tiragem pode passar de milhares de etiquetas,
@@ -57,8 +59,8 @@ function FactRow({ label, children, last = false, ...rest }) {
     <div
       className={
         last
-          ? 'flex justify-between gap-3 py-2 text-[13px]'
-          : 'flex justify-between gap-3 border-b border-neutro-superficie py-2 text-[13px]'
+          ? 'flex justify-between gap-3 py-2 text-rotulo'
+          : 'flex justify-between gap-3 border-b border-neutro-superficie py-2 text-rotulo'
       }
     >
       <dt className="text-neutro-tintaFraca">{label}</dt>
@@ -102,13 +104,13 @@ export default function SheetPreview({
   const sheetCountMessage = hasCapacity ? describeSheetCount(pages, grid.perSheet) : null;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1" data-sheet-preview="">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row" data-sheet-preview="">
       <div
         role="group"
         aria-label="Mesa da folha"
         tabIndex={0}
         data-sheet-table=""
-        className="min-h-0 min-w-0 flex-1 overflow-auto bg-neutro-superficie p-7 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca-vermelho"
+        className="min-h-0 min-w-0 flex-1 overflow-auto bg-neutro-superficie p-4 lg:p-6 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca-vermelho"
       >
         {hasCapacity ? (
           <div className="mx-auto w-max" data-sheet-state="drawn">
@@ -127,7 +129,7 @@ export default function SheetPreview({
 
       <aside
         aria-label="Ficha da folha"
-        className="flex w-[300px] flex-none flex-col gap-4 border-l border-neutro-borda bg-neutro-branco px-5 py-5"
+        className="flex w-full flex-none flex-col gap-3 border-t border-neutro-borda bg-neutro-branco px-recuo py-4 lg:w-[300px] lg:gap-4 lg:border-l lg:border-t-0"
       >
         <div className="flex flex-col gap-1">
           <h3 className="font-display text-xs font-semibold uppercase tracking-[0.09em] text-neutro-tintaFraca">

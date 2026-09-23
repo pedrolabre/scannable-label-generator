@@ -239,3 +239,63 @@ describe('edicao', () => {
     expect(tituloDoDialogo()).toBe('Editar produto');
   });
 });
+
+describe('vistas da tela estreita', () => {
+  function vistaAtiva() {
+    return container.querySelector('main > [data-vista-ativa]').getAttribute('data-vista');
+  }
+
+  it('abre na listagem e troca de vista pela barra do cabecalho', async () => {
+    await render();
+
+    expect(vistaAtiva()).toBe('produtos');
+
+    await act(async () => {
+      container.querySelector('[data-barra-vistas] input[value="impressao"]').click();
+    });
+
+    expect(vistaAtiva()).toBe('impressao');
+  });
+
+  it('leva a previa junto quando a etiqueta e escolhida na listagem', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+
+    await render();
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+
+    expect(vistaAtiva()).toBe('previa');
+    expect(container.querySelector('[data-barra-vistas] input[value="previa"]').checked).toBe(true);
+  });
+
+  it('marca a linha em previa com fundo e peso, e nao so com a cor', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+
+    await render();
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+
+    const linha = container.querySelector('tr[data-em-previa]');
+
+    expect(linha.className).toContain('bg-marca-vermelhoTenue');
+    expect(linha.querySelector('td p').className).toContain('font-bold');
+    expect(botao(`Ver etiqueta de ${PRODUCT.displayName}`).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+  });
+});
+
+describe('colunas da listagem', () => {
+  it('leva o codigo de barras para a linha de apoio, sem coluna propria', async () => {
+    const comBarras = { ...PRODUCT, ean: '7891000000017', category: 'Móveis de quarto' };
+    useProductStore.setState({ products: [comBarras], isLoading: false, loadError: null });
+
+    await render();
+
+    const cabecalhos = Array.from(container.querySelectorAll('thead th')).map((th) =>
+      th.textContent.trim(),
+    );
+
+    expect(cabecalhos).toEqual(['Imprimir', 'Produto', 'Código', 'Preço', 'Ações']);
+    expect(container.querySelector('tbody [data-ean]').textContent).toBe('7891000000017');
+    expect(container.querySelector('tbody td p + p').textContent).toContain('Móveis de quarto');
+  });
+});

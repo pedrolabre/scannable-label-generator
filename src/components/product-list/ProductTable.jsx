@@ -8,7 +8,7 @@ import ProductTableRow from './ProductTableRow.jsx';
 // dentro de uma tabela — `thead` nao aceita posicionamento em todos os
 // navegadores, e a celula aceita.
 const HEAD_CELL_BASE = cx(
-  'sticky top-0 z-10 bg-neutro-superficie px-2 py-2.5 text-left',
+  'sticky top-0 z-10 bg-neutro-superficie px-2 py-2.5 text-left lg:py-2',
   'border-b border-neutro-borda text-[11px] font-semibold uppercase',
   'tracking-[0.07em] text-neutro-tintaFraca',
 );
@@ -26,6 +26,11 @@ const HEAD_CELL_BASE = cx(
  * Com a largura decidida pelo conteudo, a soma dos codigos e do preco passava da
  * coluna central e a listagem rolava de lado. Fixada, a tabela nunca passa da
  * largura que recebe, e o nome longo e o que cede, com reticencias.
+ *
+ * Sao quatro colunas de dado alem da marcacao: produto, codigo, preco e acoes.
+ * O codigo de barras nao tem coluna propria: ele desce para a linha muda do
+ * produto, ao lado da categoria. Com coluna, ele tomava do nome a largura de que
+ * o nome precisa para ser lido numa tela de 1366 px.
  */
 export default function ProductTable({
   products,
@@ -46,16 +51,13 @@ export default function ProductTable({
           <th scope="col" className={HEAD_CELL_BASE}>
             Produto
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[104px]')}>
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[104px] lg:w-[96px]')}>
             Código
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[140px]')}>
-            Cód. barras
-          </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[132px] text-right')}>
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[128px] text-right lg:w-[112px]')}>
             Preço
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[120px]')}>
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[168px] lg:w-[128px]')}>
             <span className="sr-only">Ações</span>
           </th>
         </tr>

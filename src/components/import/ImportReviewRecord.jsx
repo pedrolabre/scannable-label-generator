@@ -39,10 +39,10 @@ function StatusBadge({ status }) {
   return (
     <span
       className={cx(
-        'shrink-0 rounded-[2px] border px-2 py-0.5 text-xs font-semibold',
+        'shrink-0 rounded border px-2 py-0.5 text-xs font-semibold',
         refused
-          ? 'border-[#b93a20] bg-[#fff1ea] text-[#b93a20] dark:border-[#ffb8a7] dark:bg-[#3b211b] dark:text-[#ffb8a7]'
-          : 'border-[#8a5a00] bg-[#fdf6e3] text-[#8a5a00] dark:border-[#f4c95f] dark:bg-[#3a2f16] dark:text-[#f4c95f]',
+          ? 'border-marca-vermelhoBorda bg-marca-vermelhoTenue text-marca-vermelhoTexto'
+          : 'border-marca-amareloBorda bg-marca-amareloTenue text-marca-amareloTexto',
       )}
     >
       {BADGE_LABEL.get(status) ?? 'Conferir'}
@@ -82,18 +82,18 @@ export default function ImportReviewRecord({
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={entry.status} />
 
-        <p className="min-w-0 truncate text-sm text-slate-600 dark:text-slate-300">
+        <p className="min-w-0 truncate text-sm text-neutro-tintaFraca">
           {describeImportOrigin(record)}
         </p>
 
         {record.candidate.systemCode ? (
-          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+          <span className="font-mono text-xs text-neutro-tintaFraca">
             {record.candidate.systemCode}
           </span>
         ) : null}
 
         {typeof price === 'number' ? (
-          <span className="ml-auto text-sm font-semibold tabular-nums text-[#159447]">
+          <span className="ml-auto text-sm font-semibold tabular-nums text-neutro-tintaMedia">
             {formatCentavosAsBRL(price)}
           </span>
         ) : null}
@@ -110,9 +110,8 @@ export default function ImportReviewRecord({
       />
 
       {hasTruncatedName(record) && description ? (
-        <p className="text-xs text-slate-600 dark:text-slate-300">
-          Texto completo do produto:{' '}
-          <span className="text-slate-800 dark:text-slate-100">{description}</span>
+        <p className="text-xs text-neutro-tintaFraca">
+          Texto completo do produto: <span className="text-neutro-tinta">{description}</span>
         </p>
       ) : null}
 

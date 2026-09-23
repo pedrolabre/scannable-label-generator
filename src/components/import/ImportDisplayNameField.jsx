@@ -55,13 +55,13 @@ export default function ImportDisplayNameField({
       </div>
 
       {corrected ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-neutro-tintaFraca">
           {originalValue === '' ? (
             'Ajustado por você. O arquivo não trazia nome para este registro.'
           ) : (
             <>
               Ajustado por você. No arquivo:{' '}
-              <span className="font-mono text-slate-700 dark:text-slate-200">{originalValue}</span>
+              <span className="font-mono text-neutro-tintaMedia">{originalValue}</span>
             </>
           )}
         </p>
