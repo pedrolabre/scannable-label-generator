@@ -11,6 +11,7 @@ import { findSheetLayout } from '../../domain/services/sheetLayoutCatalog.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
 
 import PrintExportControls from './PrintExportControls.jsx';
+import { usePrintExport } from './usePrintExport.js';
 
 /**
  * A geracao do PDF e o download entram dublados: o que se prova aqui e a tela —
@@ -89,26 +90,50 @@ afterEach(async () => {
   downloadBlob.mockReset();
 });
 
-async function render({ items, canExport = true }) {
+/**
+ * A exportacao e criada uma vez por quem monta a tela e entregue aos dois
+ * lugares que exportam. O mesmo arranjo e montado aqui: um `exporter`, e um ou
+ * dois conjuntos de botoes sobre ele.
+ */
+function Controles({ items, ready, twice }) {
+  const exporter = usePrintExport();
   const grid = computeSheetGrid(RETRATO, GRANDE);
+  const request = ready
+    ? {
+        job: { labelLayoutId: GRANDE.id, sheetLayoutId: RETRATO.id, items },
+        sheet: RETRATO,
+        labelLayout: GRANDE,
+        grid,
+        products: PRODUCTS,
+      }
+    : null;
 
+  return (
+    <>
+      <div data-lugar="coluna">
+        <PrintExportControls
+          exporter={exporter}
+          request={request}
+          leadingAction={<button type="button">Prévia da folha</button>}
+        />
+      </div>
+      {twice ? (
+        <div data-lugar="dialogo">
+          <PrintExportControls exporter={exporter} request={request} />
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+async function render({ items, ready = true, twice = false }) {
   await act(async () => {
-    root.render(
-      <PrintExportControls
-        job={{ labelLayoutId: GRANDE.id, sheetLayoutId: RETRATO.id, items }}
-        sheet={RETRATO}
-        labelLayout={GRANDE}
-        grid={grid}
-        products={PRODUCTS}
-        canExport={canExport}
-        readyMessage="Configuração pronta: 2 etiquetas em 1 produto."
-      />,
-    );
+    root.render(<Controles items={items} ready={ready} twice={twice} />);
   });
 }
 
-function button() {
-  return container.querySelector('[data-export-button]');
+function button(lugar = 'coluna') {
+  return container.querySelector(`[data-lugar="${lugar}"] [data-export-button]`);
 }
 
 async function click(target) {
@@ -118,18 +143,17 @@ async function click(target) {
 }
 
 describe('botao de exportar', () => {
-  it('mostra a linha de estado e o botao disponivel', async () => {
+  it('mostra o botao disponivel abaixo da acao que vem antes dele', async () => {
     await render({ items: [{ productId: ARMARIO.id, copies: 2 }] });
 
-    expect(container.querySelector('[data-print-status]').textContent).toBe(
-      'Configuração pronta: 2 etiquetas em 1 produto.',
-    );
-    expect(button().textContent).toBe('Exportar PDF');
+    const botoes = [...container.querySelectorAll('[data-lugar="coluna"] button')];
+
+    expect(botoes.map((botao) => botao.textContent)).toEqual(['Prévia da folha', 'Exportar PDF']);
     expect(button().disabled).toBe(false);
   });
 
   it('fica desabilitado quando a configuracao nao permite exportar', async () => {
-    await render({ items: [{ productId: ARMARIO.id, copies: 2 }], canExport: false });
+    await render({ items: [{ productId: ARMARIO.id, copies: 2 }], ready: false });
 
     expect(button().disabled).toBe(true);
   });
@@ -194,8 +218,9 @@ describe('exportacao', () => {
 
     await click(button());
 
-    expect(container.querySelector('[data-print-status]').dataset.printStatus).toBe('exporting');
-    expect(container.querySelector('[data-print-status]').textContent).toBe('Gerando folha 2 de 4…');
+    expect(container.querySelector('[data-export-progress]').textContent).toBe(
+      'Gerando folha 2 de 4…',
+    );
     expect(button().textContent).toBe('Exportando…');
     expect(button().disabled).toBe(true);
     expect(downloadBlob).not.toHaveBeenCalled();
@@ -206,9 +231,7 @@ describe('exportacao', () => {
 
     expect(downloadBlob).toHaveBeenCalledTimes(1);
     expect(button().disabled).toBe(false);
-    expect(container.querySelector('[data-print-status]').textContent).toBe(
-      'Configuração pronta: 2 etiquetas em 1 produto.',
-    );
+    expect(container.querySelector('[data-export-progress]')).toBeNull();
   });
 
   it('avisa quando a geracao falha, e libera o botao', async () => {
@@ -236,5 +259,52 @@ describe('exportacao', () => {
     expect(texts).toContain('Sem símbolo');
     expect(texts).toContain('R$ 2.199,00');
     expect(downloadBlob).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('dois lugares, um caminho', () => {
+  it('acompanha no segundo lugar a exportacao disparada no primeiro', async () => {
+    let releaseRender;
+
+    renderPrintDocument.mockImplementation(async (description, { onProgress }) => {
+      onProgress(1, 4);
+
+      await new Promise((resolve) => {
+        releaseRender = resolve;
+      });
+
+      return new Uint8Array([1]);
+    });
+
+    await render({ items: [{ productId: ARMARIO.id, copies: 10 }], twice: true });
+
+    await click(button('dialogo'));
+
+    expect(button('coluna').textContent).toBe('Exportando…');
+    expect(button('coluna').disabled).toBe(true);
+    expect(container.querySelectorAll('[data-export-progress]')).toHaveLength(2);
+
+    await click(button('coluna'));
+
+    expect(renderPrintDocument).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      releaseRender();
+    });
+
+    expect(downloadBlob).toHaveBeenCalledTimes(1);
+    expect(button('coluna').disabled).toBe(false);
+    expect(button('dialogo').disabled).toBe(false);
+  });
+
+  it('segura o teto nos dois lugares', async () => {
+    await render({
+      items: [{ productId: ARMARIO.id, copies: MAX_EXPORT_LABELS + 1 }],
+      twice: true,
+    });
+
+    expect(button('coluna').disabled).toBe(true);
+    expect(button('dialogo').disabled).toBe(true);
+    expect(container.querySelectorAll('[data-export-limit]')).toHaveLength(2);
   });
 });

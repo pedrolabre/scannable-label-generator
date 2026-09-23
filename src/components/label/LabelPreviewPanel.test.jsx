@@ -1,13 +1,17 @@
 // @vitest-environment jsdom
 
-import { act } from 'react';
+import { act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
-import { findLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
+import {
+  DEFAULT_LABEL_LAYOUT_ID,
+  findLabelLayout,
+} from '../../domain/services/labelLayoutCatalog.js';
 
 import LabelPreviewPanel from './LabelPreviewPanel.jsx';
+import { DEFAULT_SCALE } from './LabelScalePicker.jsx';
 
 const generateSymbol = vi.hoisted(() => vi.fn());
 
@@ -36,6 +40,26 @@ const SYMBOL = Object.freeze({
   totalModules: 29,
   svg: '<svg viewBox="0 0 58 58" preserveAspectRatio="xMidYMid meet"><rect width="58" height="58" fill="#FFFFFF"/></svg>',
 });
+
+/**
+ * O modelo e a ampliacao chegam de quem monta a tela. O painel e montado aqui
+ * com o mesmo par de estados que a tela guarda, para que a troca de modelo e de
+ * ampliacao seja exercida de ponta a ponta.
+ */
+function Painel(props) {
+  const [layoutId, setLayoutId] = useState(DEFAULT_LABEL_LAYOUT_ID);
+  const [scaleFactor, setScaleFactor] = useState(DEFAULT_SCALE);
+
+  return (
+    <LabelPreviewPanel
+      {...props}
+      layoutId={layoutId}
+      onLayoutChange={setLayoutId}
+      scaleFactor={scaleFactor}
+      onScaleChange={setScaleFactor}
+    />
+  );
+}
 
 let container;
 let root;
@@ -74,7 +98,7 @@ function surface() {
 
 describe('previa sem produto escolhido', () => {
   it('convida a escolher um produto e nao desenha etiqueta nenhuma', async () => {
-    await render(<LabelPreviewPanel product={null} hasProducts />);
+    await render(<Painel product={null} hasProducts />);
 
     const placeholder = container.querySelector('[data-preview-state="no-selection"]');
 
@@ -85,7 +109,7 @@ describe('previa sem produto escolhido', () => {
   });
 
   it('mantem o seletor de modelo utilizavel antes da escolha', async () => {
-    await render(<LabelPreviewPanel product={null} hasProducts />);
+    await render(<Painel product={null} hasProducts />);
 
     expect(container.querySelectorAll('input[name="modelo-etiqueta"]')).toHaveLength(3);
     expect(
@@ -94,7 +118,7 @@ describe('previa sem produto escolhido', () => {
   });
 
   it('com o catalogo vazio aponta o formulario e esconde os seletores', async () => {
-    await render(<LabelPreviewPanel product={null} hasProducts={false} />);
+    await render(<Painel product={null} hasProducts={false} />);
 
     const placeholder = container.querySelector('[data-preview-state="empty-catalog"]');
 
@@ -110,7 +134,7 @@ describe('troca de modelo', () => {
   it('redesenha a etiqueta com as medidas do novo modelo, sem recarregar a pagina', async () => {
     generateSymbol.mockResolvedValue(SYMBOL);
 
-    await render(<LabelPreviewPanel product={PRODUCT} hasProducts />);
+    await render(<Painel product={PRODUCT} hasProducts />);
 
     expect(surface().style.width).toBe(`${PADRAO.widthMm}mm`);
     expect(surface().style.height).toBe(`${PADRAO.heightMm}mm`);
@@ -131,7 +155,7 @@ describe('troca de modelo', () => {
   it('nao gera o simbolo de novo ao trocar de modelo, porque o codigo nao mudou', async () => {
     generateSymbol.mockResolvedValue(SYMBOL);
 
-    await render(<LabelPreviewPanel product={PRODUCT} hasProducts />);
+    await render(<Painel product={PRODUCT} hasProducts />);
     await choose('modelo-etiqueta', MENOR.id);
 
     expect(generateSymbol).toHaveBeenCalledTimes(1);
@@ -143,7 +167,7 @@ describe('ampliacao', () => {
   it('amplia o desenho sem mexer na medida fisica da etiqueta', async () => {
     generateSymbol.mockResolvedValue(SYMBOL);
 
-    await render(<LabelPreviewPanel product={PRODUCT} hasProducts />);
+    await render(<Painel product={PRODUCT} hasProducts />);
 
     expect(surface().style.transform).toBe('scale(1)');
 
@@ -164,7 +188,7 @@ describe('produto com simbolo recusado', () => {
       ),
     );
 
-    await render(<LabelPreviewPanel product={PRODUCT} hasProducts />);
+    await render(<Painel product={PRODUCT} hasProducts />);
 
     expect(surface()).not.toBeNull();
     expect(container.querySelector('[data-preview-state="product"]')).not.toBeNull();
@@ -185,7 +209,7 @@ describe('produto com simbolo recusado', () => {
       new BarcodeError(BARCODE_ERROR_CODES.ENGINE_FAILURE, 'Falha inesperada.'),
     );
 
-    await render(<LabelPreviewPanel product={PRODUCT} hasProducts />);
+    await render(<Painel product={PRODUCT} hasProducts />);
     await choose('modelo-etiqueta', MENOR.id);
 
     expect(surface().style.width).toBe(`${MENOR.widthMm}mm`);

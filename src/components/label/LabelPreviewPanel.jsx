@@ -1,11 +1,6 @@
-import { useState } from 'react';
 import { Maximize2 } from 'lucide-react';
 
-import {
-  DEFAULT_LABEL_LAYOUT_ID,
-  findLabelLayout,
-  getDefaultLabelLayout,
-} from '../../domain/services/labelLayoutCatalog.js';
+import { findLabelLayout, getDefaultLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
 
 import ShellColumn from '../layout/ShellColumn.jsx';
 import Button from '../ui/Button.jsx';
@@ -14,7 +9,6 @@ import IconButton from '../ui/IconButton.jsx';
 import ScrollRegion from '../ui/ScrollRegion.jsx';
 
 import LabelLayoutPicker from './LabelLayoutPicker.jsx';
-import LabelPreviewDialog from './LabelPreviewDialog.jsx';
 import LabelScalePicker, { DEFAULT_SCALE } from './LabelScalePicker.jsx';
 import ProductLabel from './ProductLabel.jsx';
 
@@ -22,10 +16,12 @@ import ProductLabel from './ProductLabel.jsx';
  * Coluna da direita: o modelo, a ampliacao e o desenho da etiqueta escolhida.
  *
  * O produto escolhido chega pronto de quem montou a tela, porque a escolha e
- * feita na listagem e precisa sobreviver a este componente. Ja o modelo e a
- * ampliacao sao estado local e comecam no padrao a cada abertura da aplicacao:
- * sao ajustes de quem esta olhando agora, e o modelo padrao e o que atende o
- * perfil real de produto.
+ * feita na listagem e precisa sobreviver a este componente. O modelo e a
+ * ampliacao tambem chegam de fora, pelo mesmo motivo: o dialogo da etiqueta
+ * desenha com os dois, e quem monta a tela e quem abre o dialogo. Guardados
+ * aqui, eles seriam dois valores — o da coluna e o do dialogo. Continuam
+ * comecando no padrao a cada abertura da aplicacao: sao ajustes de quem esta
+ * olhando agora, e o modelo padrao e o que atende o perfil real de produto.
  *
  * O aviso do corpo existe porque a tela nao e regua. O zoom do navegador escala
  * tudo, inclusive o milimetro do CSS, e a tela raramente tem a densidade que a
@@ -39,9 +35,10 @@ import ProductLabel from './ProductLabel.jsx';
  * foco, para que o teclado tambem alcance a parte do desenho que esta fora da
  * vista.
  *
- * `Ampliar` leva o mesmo desenho para um dialogo, onde ele tem a janela inteira
- * em vez de 380 px. A ampliacao e uma so: o degrau escolhido aqui e o degrau
- * que o dialogo abre.
+ * `Ampliar` pede o dialogo da etiqueta, onde o mesmo desenho tem a janela
+ * inteira em vez de 380 px. Este componente pede e nao desenha: o dialogo e de
+ * quem monta a tela, porque so ha um aberto por vez. A ampliacao e uma so: o
+ * degrau escolhido aqui e o degrau que o dialogo abre.
  */
 
 function PreviewPlaceholder({ state, children }) {
@@ -58,14 +55,13 @@ function PreviewPlaceholder({ state, children }) {
 export default function LabelPreviewPanel({
   product = null,
   hasProducts = false,
-  isEnlarged = false,
+  layoutId,
+  onLayoutChange,
+  scaleFactor = DEFAULT_SCALE,
+  onScaleChange,
   onEnlarge,
-  onCloseEnlarged,
   onEditProduct,
 }) {
-  const [layoutId, setLayoutId] = useState(DEFAULT_LABEL_LAYOUT_ID);
-  const [scaleFactor, setScaleFactor] = useState(DEFAULT_SCALE);
-
   // O modelo escolhido sempre existe no catalogo, que e constante; o desvio
   // para o padrao cobre o dia em que um modelo sair da lista.
   const layout = findLabelLayout(layoutId) ?? getDefaultLabelLayout();
@@ -82,8 +78,8 @@ export default function LabelPreviewPanel({
     return (
       <>
         <div className="flex flex-col gap-4">
-          <LabelLayoutPicker value={layout.id} onChange={setLayoutId} />
-          <LabelScalePicker value={scaleFactor} onChange={setScaleFactor} />
+          <LabelLayoutPicker value={layout.id} onChange={onLayoutChange} />
+          <LabelScalePicker value={scaleFactor} onChange={onScaleChange} />
         </div>
 
         {product ? (
@@ -116,48 +112,36 @@ export default function LabelPreviewPanel({
   }
 
   return (
-    <>
-      <ShellColumn
-        title="Prévia da etiqueta"
-        className="border-l border-neutro-borda bg-neutro-branco"
-        bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-4"
-        data-label-preview=""
-        actions={
-          product ? (
-            <IconButton label="Ampliar prévia" onClick={onEnlarge}>
-              <Maximize2 className="h-[15px] w-[15px]" aria-hidden="true" />
-            </IconButton>
-          ) : null
-        }
-        footer={
-          product ? (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                className="flex-1"
-                onClick={() => onEditProduct?.(product.id)}
-              >
-                Editar produto
-              </Button>
-              <Button type="button" className="flex-1" onClick={onEnlarge}>
-                Ampliar
-              </Button>
-            </div>
-          ) : null
-        }
-      >
-        {renderBody()}
-      </ShellColumn>
-
-      {isEnlarged && product ? (
-        <LabelPreviewDialog
-          product={product}
-          layout={layout}
-          scaleFactor={scaleFactor}
-          onScaleChange={setScaleFactor}
-          onClose={onCloseEnlarged}
-        />
-      ) : null}
-    </>
+    <ShellColumn
+      title="Prévia da etiqueta"
+      className="border-l border-neutro-borda bg-neutro-branco"
+      bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-4"
+      data-label-preview=""
+      actions={
+        product ? (
+          <IconButton label="Ampliar prévia" onClick={onEnlarge}>
+            <Maximize2 className="h-[15px] w-[15px]" aria-hidden="true" />
+          </IconButton>
+        ) : null
+      }
+      footer={
+        product ? (
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => onEditProduct?.(product.id)}
+            >
+              Editar produto
+            </Button>
+            <Button type="button" className="flex-1" onClick={onEnlarge}>
+              Ampliar
+            </Button>
+          </div>
+        ) : null
+      }
+    >
+      {renderBody()}
+    </ShellColumn>
   );
 }

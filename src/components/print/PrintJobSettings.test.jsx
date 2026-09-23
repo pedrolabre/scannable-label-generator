@@ -4,13 +4,16 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { MAX_EXPORT_LABELS } from '../../domain/services/printExport.js';
 import { MAX_NUMERIC_LENGTH } from '../../lib/barcodeSymbology.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
-import PrintJobPanel from './PrintJobPanel.jsx';
+import PrintJobSettings from './PrintJobSettings.jsx';
+import { usePrintJobState } from './printJobState.js';
+import { usePrintExport } from './usePrintExport.js';
 
-// O painel pronto desenha a folha, e a folha pede os simbolos. O duble responde
-// na hora e deixa a biblioteca do simbolo fora deste arquivo.
+// A coluna nao desenha a folha, mas a exportacao que ela dispara pede simbolos.
+// O duble responde na hora e deixa a biblioteca do simbolo fora deste arquivo.
 const generateSymbol = vi.hoisted(() =>
   vi.fn(async (systemCode) => ({
     systemCode,
@@ -50,11 +53,31 @@ const SEM_SIMBOLO = {
 
 let container;
 let root;
+let openSheetPreview;
+
+/**
+ * A leitura do trabalho e a exportacao chegam de quem monta a tela. A coluna e
+ * montada aqui com os mesmos dois ganchos que a tela usa.
+ */
+function Coluna({ products }) {
+  const printState = usePrintJobState(products);
+  const exporter = usePrintExport();
+
+  return (
+    <PrintJobSettings
+      products={products}
+      printState={printState}
+      exporter={exporter}
+      onOpenSheetPreview={openSheetPreview}
+    />
+  );
+}
 
 beforeEach(() => {
   // O store e singleton de modulo, e o Vitest isola por arquivo e nao por teste:
   // sem este reinicio a selecao de um teste chegaria ao seguinte.
   usePrintJobStore.getState().resetPrintJob();
+  openSheetPreview = vi.fn();
 
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -96,7 +119,7 @@ function status() {
 
 describe('catalogo vazio', () => {
   it('pede produtos antes de falar em folha', async () => {
-    await render(<PrintJobPanel products={[]} />);
+    await render(<Coluna products={[]} />);
 
     expect(container.querySelector('[data-print-state="empty-catalog"]')).not.toBeNull();
   });
@@ -104,7 +127,7 @@ describe('catalogo vazio', () => {
 
 describe('selecao multipla', () => {
   it('cobra a selecao enquanto nada esta marcado', async () => {
-    await render(<PrintJobPanel products={[ARMARIO, GELADEIRA]} />);
+    await render(<Coluna products={[ARMARIO, GELADEIRA]} />);
 
     expect(container.querySelector('[data-print-state="no-selection"]')).not.toBeNull();
     expect(status().dataset.printStatus).toBe('blocked');
@@ -112,7 +135,7 @@ describe('selecao multipla', () => {
   });
 
   it('leva a quantidade digitada de cada produto ao trabalho', async () => {
-    await render(<PrintJobPanel products={[ARMARIO, GELADEIRA]} />);
+    await render(<Coluna products={[ARMARIO, GELADEIRA]} />);
 
     await select(ARMARIO.id);
     await select(GELADEIRA.id);
@@ -123,15 +146,17 @@ describe('selecao multipla', () => {
 
     expect(status().dataset.printStatus).toBe('ready');
     expect(status().textContent).toBe('Configuração pronta: 13 etiquetas em 2 produtos.');
+    // Tag grande em A4 retrato: 3 por folha; 13 etiquetas ocupam 5 folhas.
+    expect(container.querySelector('[data-print-sheets]').textContent).toBe('5');
   });
 
   it('larga o produto removido da listagem e mantem o restante da selecao', async () => {
-    await render(<PrintJobPanel products={[ARMARIO, GELADEIRA]} />);
+    await render(<Coluna products={[ARMARIO, GELADEIRA]} />);
 
     await select(ARMARIO.id);
     await select(GELADEIRA.id);
 
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await render(<Coluna products={[ARMARIO]} />);
 
     expect(container.querySelector(`[data-print-item="${GELADEIRA.id}"]`)).toBeNull();
     expect(container.querySelector(`[data-print-item="${ARMARIO.id}"]`)).not.toBeNull();
@@ -141,7 +166,7 @@ describe('selecao multipla', () => {
 
 describe('quantidade por produto', () => {
   it('bloqueia o trabalho quando a quantidade nao vale', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await render(<Coluna products={[ARMARIO]} />);
     await select(ARMARIO.id);
 
     await type(`#copias-${ARMARIO.id}`, '0');
@@ -153,7 +178,7 @@ describe('quantidade por produto', () => {
   });
 
   it('nao completa sozinho o campo apagado', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await render(<Coluna products={[ARMARIO]} />);
     await select(ARMARIO.id);
 
     await type(`#copias-${ARMARIO.id}`, '');
@@ -165,7 +190,7 @@ describe('quantidade por produto', () => {
 
 describe('configuracao da folha', () => {
   it('parte do modelo escolhido e repoe os numeros ao trocar de folha', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await render(<Coluna products={[ARMARIO]} />);
 
     await type('#folha-marginTopMm', '4');
     expect(container.querySelector('#folha-marginTopMm').value).toBe('4');
@@ -180,7 +205,7 @@ describe('configuracao da folha', () => {
   });
 
   it('recusa a configuracao invalida com a mensagem que o operador le', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+    await render(<Coluna products={[ARMARIO]} />);
     await select(ARMARIO.id);
 
     await type('#folha-marginLeftMm', '80');
@@ -193,93 +218,126 @@ describe('configuracao da folha', () => {
   });
 });
 
-describe('produto sem simbolo', () => {
-  it('entra na selecao com aviso, e nao bloqueia o trabalho', async () => {
-    await render(<PrintJobPanel products={[ARMARIO, SEM_SIMBOLO]} />);
+function sheetPreviewButton() {
+  return container.querySelector('[data-sheet-preview-trigger]');
+}
+
+function exportButton() {
+  return container.querySelector('[data-export-button]');
+}
+
+describe('contagens', () => {
+  it('batem com a selecao guardada no store', async () => {
+    await render(<Coluna products={[ARMARIO, GELADEIRA, SEM_SIMBOLO]} />);
 
     await select(ARMARIO.id);
     await select(SEM_SIMBOLO.id);
-
-    const row = container.querySelector(`[data-print-item="${SEM_SIMBOLO.id}"]`);
-
-    expect(row.dataset.symbolSupport).toBe('unsupported');
-    expect(container.querySelector('[data-symbol-warning]').textContent).toContain(
-      '1 produto selecionado não gera símbolo',
-    );
-    expect(status().dataset.printStatus).toBe('ready');
-  });
-});
-
-describe('previa da folha', () => {
-  it('aparece quando a configuracao esta pronta e some quando ela e recusada', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
-
-    expect(container.querySelector('[data-sheet-preview]')).toBeNull();
-
-    await select(ARMARIO.id);
-
-    expect(container.querySelector('[data-sheet-preview]')).not.toBeNull();
-    expect(container.querySelectorAll('[data-sheet-cell]')).toHaveLength(1);
-
-    await type(`#copias-${ARMARIO.id}`, '0');
-
-    expect(container.querySelector('[data-sheet-preview]')).toBeNull();
-  });
-
-  it('acompanha a margem digitada e o modelo escolhido', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
-    await select(ARMARIO.id);
-
-    await type('#folha-marginLeftMm', '25,5');
-
-    expect(container.querySelector('[data-sheet-cell="0"]').style.left).toBe('25.5mm');
-    expect(container.querySelector('[data-sheet-usable-area]').style.left).toBe('25.5mm');
-
-    const pequena = container.querySelector(
-      'input[name="modelo-etiqueta-impressao"][value="etiqueta-pequena"]',
-    );
-
-    await act(async () => {
-      pequena.click();
-    });
-
-    // Largura util 210 - 25,5 - 10 = 174,5: tres colunas de 50 com 3 de espaco.
-    expect(container.querySelector('[data-sheet-count]').textContent).toBe(
-      '1 etiqueta numa folha que comporta 24 etiquetas.',
-    );
-  });
-
-  it('avisa quantas folhas a selecao ocupa', async () => {
-    await render(<PrintJobPanel products={[ARMARIO, GELADEIRA]} />);
-    await select(ARMARIO.id);
     await select(GELADEIRA.id);
 
-    // Tag grande em A4 retrato: 3 por folha; 4 + 3 = 7 etiquetas, 3 folhas.
-    await type(`#copias-${ARMARIO.id}`, '4');
-    await type(`#copias-${GELADEIRA.id}`, '3');
+    const { selection } = usePrintJobStore.getState();
 
-    const count = container.querySelector('[data-sheet-count]');
-
-    expect(count.dataset.sheetCount).toBe('3');
-    expect(count.textContent).toBe('A seleção ocupa 3 folhas: 7 etiquetas, 3 por folha.');
+    expect(container.querySelector('[data-print-selected-count]').dataset.printSelectedCount).toBe(
+      String(selection.length),
+    );
+    expect(container.querySelectorAll('[data-print-item]')).toHaveLength(selection.length);
+    expect(container.querySelector('[data-symbol-warning]').dataset.symbolWarning).toBe('1');
+    expect(
+      container.querySelector(`[data-print-item="${SEM_SIMBOLO.id}"]`).dataset.symbolSupport,
+    ).toBe('unsupported');
+    // Produto sem simbolo entra com aviso e nao bloqueia o trabalho.
     expect(status().dataset.printStatus).toBe('ready');
+
+    await select(SEM_SIMBOLO.id);
+
+    expect(usePrintJobStore.getState().selection).toHaveLength(2);
+    expect(container.querySelector('[data-print-selected-count]').dataset.printSelectedCount).toBe(
+      '2',
+    );
+    expect(container.querySelector('[data-symbol-warning]')).toBeNull();
   });
 });
 
-describe('exportacao em PDF', () => {
-  it('oferece a acao de exportar quando a configuracao vale, e a recolhe quando ela e recusada', async () => {
-    await render(<PrintJobPanel products={[ARMARIO]} />);
+describe('rodape fixo', () => {
+  it('traz a previa da folha e a exportacao, nesta ordem, os dois em largura cheia', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
 
-    expect(container.querySelector('[data-export-button]')).toBeNull();
+    const footer = container.querySelector('section > div:last-child');
+    const botoes = [...footer.querySelectorAll('button')];
+
+    expect(botoes.map((botao) => botao.textContent)).toEqual(['Prévia da folha', 'Exportar PDF']);
+    botoes.forEach((botao) => expect(botao.className).toContain('w-full'));
+    expect(footer.contains(container.querySelector('[data-corpo]'))).toBe(false);
+  });
+
+  it('libera a previa da folha so quando a configuracao vale, e pede o dialogo', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+
+    expect(sheetPreviewButton().disabled).toBe(true);
 
     await select(ARMARIO.id);
 
-    expect(container.querySelector('[data-export-button]').textContent).toBe('Exportar PDF');
-    expect(container.querySelector('[data-export-button]').disabled).toBe(false);
+    expect(sheetPreviewButton().disabled).toBe(false);
+
+    await act(async () => {
+      sheetPreviewButton().click();
+    });
+
+    expect(openSheetPreview).toHaveBeenCalledTimes(1);
 
     await type('#folha-marginLeftMm', '80');
 
-    expect(container.querySelector('[data-export-button]')).toBeNull();
+    expect(sheetPreviewButton().disabled).toBe(true);
+  });
+
+  it('segura a exportacao quando a configuracao e recusada', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+
+    expect(exportButton().disabled).toBe(true);
+
+    await select(ARMARIO.id);
+
+    expect(exportButton().textContent).toBe('Exportar PDF');
+    expect(exportButton().disabled).toBe(false);
+
+    await type('#folha-marginLeftMm', '80');
+
+    expect(exportButton().disabled).toBe(true);
     expect(status().dataset.printStatus).toBe('blocked');
+  });
+
+  it('respeita o teto de exportacao e avisa acima dos botoes', async () => {
+    // A quantidade por produto para em 999, entao o teto so e alcancado com
+    // varios produtos: cinco a 999 ficam em 4.995, o sexto passa de 5.000.
+    const lote = Array.from({ length: 6 }, (_, index) => ({
+      id: `44444444-4444-4444-8444-44444444444${index}`,
+      systemCode: `MOV-0050${index}`,
+      displayName: `Estante de aço ${index + 1}`,
+      priceInCentavos: 49990,
+    }));
+
+    await render(<Coluna products={lote} />);
+
+    for (const produto of lote.slice(0, 5)) {
+      await select(produto.id);
+      await type(`#copias-${produto.id}`, '999');
+    }
+
+    expect(5 * 999).toBeLessThanOrEqual(MAX_EXPORT_LABELS);
+    expect(exportButton().disabled).toBe(false);
+    expect(container.querySelector('[data-export-limit]')).toBeNull();
+
+    await select(lote[5].id);
+    await type(`#copias-${lote[5].id}`, '999');
+
+    const limite = container.querySelector('[data-export-limit]');
+
+    expect(exportButton().disabled).toBe(true);
+    expect(limite).not.toBeNull();
+    expect(
+      limite.compareDocumentPosition(exportButton()) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // O teto nao bloqueia o trabalho: a folha continua valendo para conferir.
+    expect(status().dataset.printStatus).toBe('ready');
+    expect(sheetPreviewButton().disabled).toBe(false);
   });
 });

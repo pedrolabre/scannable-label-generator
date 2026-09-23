@@ -56,10 +56,22 @@ function focusableElementsOf(container) {
  * tela.
  *
  * `width` e a largura do painel em pixel, porque cada dialogo tem a sua e a
- * medida vem do desenho, nao de uma escala de tamanhos. A altura nao e
- * parametro: o painel para em `calc(100dvh - 96px)` e quem cresce e o corpo,
- * pelo mesmo padrao das colunas. Dialogo que precisaria de mais altura perde
- * conteudo para o corpo rolavel, nunca para a janela.
+ * medida vem do desenho, nao de uma escala de tamanhos. O painel para em
+ * `calc(100dvh - 96px)` e quem cresce e o corpo, pelo mesmo padrao das colunas.
+ * Dialogo que precisaria de mais altura perde conteudo para o corpo rolavel,
+ * nunca para a janela.
+ *
+ * `height` fixa a altura para o dialogo cujo conteudo nao define a propria —
+ * a folha, que ocupa o espaco que houver. O teto continua valendo por cima
+ * dela: em janela baixa, o painel encolhe ate o teto e nao passa dele.
+ *
+ * `scrollBody` em `false` entrega o corpo sem rolagem e sem recuo, para o
+ * dialogo que ja tem a propria regiao rolavel. Sem essa saida, o corpo rolaria
+ * por fora de uma regiao que rola por dentro — duas rolagens, uma dentro da
+ * outra, que e justamente o que a tela inteira evita.
+ *
+ * `headerActions` fica no cabecalho, antes do botao de fechar: o controle que
+ * governa o dialogo inteiro, e nao uma parte do corpo.
  *
  * `closeOnBackdrop` fica em `false` onde ha trabalho em andamento —
  * importacao e restauracao. Clique fora nao descarta um arquivo ja conferido.
@@ -71,8 +83,11 @@ export default function ModalShell({
   title,
   subtitle,
   width = 560,
+  height,
   closeOnBackdrop = true,
+  scrollBody = true,
   onClose,
+  headerActions,
   footer,
   children,
 }) {
@@ -159,7 +174,7 @@ export default function ModalShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        style={{ width, maxWidth: '100%' }}
+        style={{ width, height, maxWidth: '100%' }}
         className={cx(
           'flex max-h-[calc(100dvh-96px)] flex-col rounded border',
           'border-neutro-borda bg-neutro-branco shadow-modal',
@@ -178,12 +193,24 @@ export default function ModalShell({
             ) : null}
           </div>
 
-          <IconButton ref={closeButtonRef} label="Fechar" onClick={onClose}>
-            <X className="h-4 w-4" aria-hidden="true" />
-          </IconButton>
+          <div className="flex flex-none items-center gap-3">
+            {headerActions}
+
+            <IconButton ref={closeButtonRef} label="Fechar" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden="true" />
+            </IconButton>
+          </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        <div
+          className={
+            scrollBody
+              ? 'min-h-0 flex-1 overflow-y-auto px-6 py-5'
+              : 'flex min-h-0 flex-1 overflow-hidden'
+          }
+        >
+          {children}
+        </div>
 
         {footer ? (
           <footer className="flex flex-none flex-col-reverse gap-2 border-t border-neutro-borda px-6 py-4 sm:flex-row sm:justify-end">

@@ -1,14 +1,25 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import {
+  DEFAULT_LABEL_LAYOUT_ID,
+  findLabelLayout,
+  getDefaultLabelLayout,
+} from './domain/services/labelLayoutCatalog.js';
+
 import AppHeader from './components/AppHeader.jsx';
 import AppShell from './components/AppShell.jsx';
 import StatusBar from './components/layout/StatusBar.jsx';
 import BackupPanel from './components/backup/BackupPanel.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
+import LabelPreviewDialog from './components/label/LabelPreviewDialog.jsx';
 import LabelPreviewPanel from './components/label/LabelPreviewPanel.jsx';
+import { DEFAULT_SCALE } from './components/label/LabelScalePicker.jsx';
 import { resolveSelectedProduct } from './components/label/previewSelection.js';
-import PrintJobPanel from './components/print/PrintJobPanel.jsx';
+import PrintJobSettings from './components/print/PrintJobSettings.jsx';
+import SheetPreviewDialog from './components/print/SheetPreviewDialog.jsx';
+import { usePrintJobState } from './components/print/printJobState.js';
 import { selectedPrintIds } from './components/print/printSelection.js';
+import { usePrintExport } from './components/print/usePrintExport.js';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
 import UpdateNotice from './components/pwa/UpdateNotice.jsx';
@@ -23,27 +34,36 @@ import { useProductStore } from './store/useProductStore.js';
  * leituras de `Esc`. Cadastro aberto por cima da importacao nao e um caso de
  * uso, e sim o que acontece quando ninguem decidiu.
  *
- * Os tres valores de tela sao locais e morrem no recarregamento — nada disso
- * vai para o armazenamento nem para um store. E a mesma decisao ja tomada para
- * o seletor de modelo e para a ampliacao: estado de tela nao sobrevive ao
- * recarregamento.
+ * Os valores de tela sao locais e morrem no recarregamento — nada disso vai
+ * para o armazenamento nem para um store. Estado de tela nao sobrevive ao
+ * recarregamento, e isso vale para o dialogo aberto, para o produto em previa,
+ * para o modelo e para a ampliacao.
  *
  * `editingProductId` guarda identificador, e nao o objeto do produto. Assim o
  * formulario aberto sobre um produto que acabou de ser editado em outro lugar
  * abre com o valor atual, e o produto removido nao deixa um fantasma no
  * formulario.
  *
- * A previa ampliada e o quarto dialogo, e o identificador dela mora aqui pelo
- * mesmo motivo dos outros tres. Quem o desenha e a coluna da direita, porque e
- * la que vivem o modelo e o degrau de ampliacao: separar o que abre de quem
- * desenha e o que impede que a ampliacao da coluna e a do dialogo virem dois
- * valores diferentes.
+ * As duas previas ampliadas, a da etiqueta e a da folha, sao dialogos irmaos,
+ * cada uma com o seu gatilho: `Ampliar` na coluna da direita, `Prévia da folha`
+ * na da esquerda. Os dois sao desenhados daqui, como os outros tres, porque so
+ * aqui se sabe qual esta aberto.
+ *
+ * O modelo e o degrau de ampliacao da etiqueta moram aqui pelo mesmo motivo: a
+ * coluna da direita e o dialogo da etiqueta desenham com eles, e um valor
+ * guardado em cada um viraria dois valores diferentes.
+ *
+ * A leitura do trabalho de impressao e feita uma vez, aqui, e entregue aos tres
+ * lugares que a usam: a coluna da esquerda, o dialogo da folha e a linha de
+ * estado. A exportacao tambem e uma so, e os dois botoes de exportar — na
+ * coluna e no dialogo — disparam e acompanham a mesma.
  */
 
 const MODALS = Object.freeze({
   PRODUCT: 'produto',
   IMPORT: 'importacao',
   PREVIEW: 'previa',
+  SHEET: 'folha',
   BACKUP: 'backup',
 });
 
@@ -63,6 +83,15 @@ export default function App() {
   const [openModal, setOpenModal] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [previewLayoutId, setPreviewLayoutId] = useState(DEFAULT_LABEL_LAYOUT_ID);
+  const [previewScale, setPreviewScale] = useState(DEFAULT_SCALE);
+
+  const printState = usePrintJobState(products);
+  const exporter = usePrintExport();
+
+  // O modelo escolhido sempre existe no catalogo, que e constante; o desvio
+  // para o padrao cobre o dia em que um modelo sair da lista.
+  const previewLayout = findLabelLayout(previewLayoutId) ?? getDefaultLabelLayout();
 
   // A previa e guardada por identificador, e o produto desenhado sai da lista
   // atual. Assim o produto editado aparece ja atualizado, o produto removido
@@ -162,7 +191,14 @@ export default function App() {
             onBackup={() => setOpenModal(MODALS.BACKUP)}
           />
         }
-        left={<PrintJobPanel products={products} />}
+        left={
+          <PrintJobSettings
+            products={products}
+            printState={printState}
+            exporter={exporter}
+            onOpenSheetPreview={() => setOpenModal(MODALS.SHEET)}
+          />
+        }
         center={
           <ProductList
             products={products}
@@ -181,14 +217,20 @@ export default function App() {
           <LabelPreviewPanel
             product={selectedProduct}
             hasProducts={products.length > 0}
-            isEnlarged={openModal === MODALS.PREVIEW}
+            layoutId={previewLayout.id}
+            onLayoutChange={setPreviewLayoutId}
+            scaleFactor={previewScale}
+            onScaleChange={setPreviewScale}
             onEnlarge={() => setOpenModal(MODALS.PREVIEW)}
-            onCloseEnlarged={closeModal}
             onEditProduct={handleEditById}
           />
         }
         status={
-          <StatusBar productCount={products.length} selectedCount={printSelectionIds.size} />
+          <StatusBar
+            productCount={products.length}
+            selectedCount={printSelectionIds.size}
+            sheetCount={printState.totalSheets}
+          />
         }
       />
 
@@ -199,6 +241,25 @@ export default function App() {
           key={editingProductId ?? 'novo'}
           product={editingProduct}
           onSubmit={handleSubmit}
+          onClose={closeModal}
+        />
+      ) : null}
+
+      {openModal === MODALS.PREVIEW && selectedProduct ? (
+        <LabelPreviewDialog
+          product={selectedProduct}
+          layout={previewLayout}
+          scaleFactor={previewScale}
+          onScaleChange={setPreviewScale}
+          onClose={closeModal}
+        />
+      ) : null}
+
+      {openModal === MODALS.SHEET ? (
+        <SheetPreviewDialog
+          printState={printState}
+          products={products}
+          exporter={exporter}
           onClose={closeModal}
         />
       ) : null}

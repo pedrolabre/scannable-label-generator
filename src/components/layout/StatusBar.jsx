@@ -1,6 +1,6 @@
 /**
- * Faixa de leitura ao pe da tela: o que existe no banco e o que esta marcado
- * para a folha.
+ * Faixa de leitura ao pe da tela: o que existe no banco, o que esta marcado
+ * para a folha e quantas folhas isso ocupa.
  *
  * Ela nao tem acao nenhuma, e isso e a decisao, nao um detalhe: o rodape da
  * pagina antiga foi virando a gaveta das sobras — o botao que nao tinha dono,
@@ -12,26 +12,38 @@
  * informacao e passava a ser ruido. Quem precisa dele encontra o assunto onde
  * ele importa, que e a janela do arquivo de backup.
  *
- * Falta a contagem de folhas. Ela nao e um numero que a tela tenha: sai da
- * grade calculada sobre o modelo de etiqueta e o de folha, dentro da coluna da
- * esquerda. Traze-la ate aqui pede que esse calculo suba junto — e e isso que a
- * reparticao da coluna de impressao faz. Ate la, a faixa prefere nao dizer a
- * repetir mal o que a coluna ja diz bem.
+ * A contagem de folhas chega pronta, da mesma leitura do trabalho que a coluna
+ * da esquerda e o dialogo da folha usam. Enquanto o trabalho nao vale, ela e
+ * zero: a faixa nao repete a ultima conta que valeu.
  */
 
 function plural(count, singular, pluralForm) {
   return `${count} ${count === 1 ? singular : pluralForm}`;
 }
 
-export default function StatusBar({ productCount = 0, selectedCount = 0 }) {
+function Separator() {
+  return (
+    <span aria-hidden="true" className="text-neutro-bordaForte">
+      ·
+    </span>
+  );
+}
+
+export default function StatusBar({ productCount = 0, selectedCount = 0, sheetCount = 0 }) {
   return (
     <footer className="flex h-12 flex-none items-center gap-4 border-t border-neutro-borda bg-neutro-branco px-6 text-xs text-neutro-tintaFraca">
       <div className="flex min-w-0 items-center gap-4">
-        <span className="truncate">{plural(productCount, 'produto', 'produtos')} no banco</span>
-        <span aria-hidden="true" className="text-neutro-bordaForte">
-          ·
+        <span className="truncate" data-status-products={productCount}>
+          {plural(productCount, 'produto', 'produtos')} no banco
         </span>
-        <span className="truncate">{selectedCount} selecionados</span>
+        <Separator />
+        <span className="truncate" data-status-selected={selectedCount}>
+          {plural(selectedCount, 'selecionado', 'selecionados')}
+        </span>
+        <Separator />
+        <span className="truncate" data-status-sheets={sheetCount}>
+          {plural(sheetCount, 'folha', 'folhas')}
+        </span>
       </div>
     </footer>
   );
