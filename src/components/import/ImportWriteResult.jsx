@@ -80,19 +80,19 @@ export default function ImportWriteResult({ result, error }) {
   const written = result.created + result.replaced;
 
   return (
-    <div className="space-y-2 rounded-[3px] border border-slate-200 p-3 dark:border-slate-800">
-      <p role="status" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+    <div className="space-y-2 rounded border border-neutro-divisor p-3">
+      <p role="status" className="text-sm font-semibold text-neutro-tintaMedia">
         {written > 0 ? 'Lote gravado no catálogo.' : 'Nada foi gravado no catálogo.'}
       </p>
 
-      <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+      <ul className="space-y-1 text-sm text-neutro-tintaFraca">
         {lines(result).map((line) => (
           <li key={line}>{line}</li>
         ))}
       </ul>
 
       {result.stopped ? (
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-neutro-tintaFraca">
           A gravação foi interrompida por você. O que já entrou está no catálogo.
         </p>
       ) : null}

@@ -57,7 +57,7 @@ export default function ImportReviewPanel() {
 
   if (isChecking) {
     return (
-      <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+      <p role="status" className="text-sm text-neutro-tintaFraca">
         Conferindo {formatCount(checkedCount)} de {formatCount(records.length)} registros…
       </p>
     );
@@ -65,7 +65,7 @@ export default function ImportReviewPanel() {
 
   if (isDetecting) {
     return (
-      <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+      <p role="status" className="text-sm text-neutro-tintaFraca">
         Procurando código repetido em {formatCount(detectedCount)} de{' '}
         {formatCount(records.length)} registros…
       </p>
@@ -90,7 +90,7 @@ export default function ImportReviewPanel() {
       {entries.length > 0 ? (
         <ul
           aria-label="Registros para revisão"
-          className="divide-y divide-slate-200 rounded-[3px] border border-slate-200 dark:divide-slate-800 dark:border-slate-800"
+          className="divide-y divide-neutro-divisor rounded border border-neutro-divisor"
         >
           {entries.map((entry) => (
             <ImportReviewRecord
@@ -112,7 +112,7 @@ export default function ImportReviewPanel() {
             Mostrar mais
           </Button>
 
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-neutro-tintaFraca">
             {pluralize(remaining, 'registro ainda não exibido', 'registros ainda não exibidos')}.
           </p>
         </div>

@@ -9,14 +9,11 @@ import Button from '../ui/Button.jsx';
 function StatusBlock({ icon: Icon, iconClassName, title, children }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-      <Icon
-        className={iconClassName ?? 'h-8 w-8 text-slate-300 dark:text-slate-600'}
-        aria-hidden="true"
-      />
+      <Icon className={iconClassName ?? 'h-8 w-8 text-neutro-bordaForte'} aria-hidden="true" />
 
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{title}</p>
-        <div className="text-sm text-slate-500 dark:text-slate-400">{children}</div>
+        <p className="text-sm font-semibold text-neutro-tintaMedia">{title}</p>
+        <div className="text-sm text-neutro-tintaFraca">{children}</div>
       </div>
     </div>
   );
@@ -26,7 +23,7 @@ export function LoadingStatus() {
   return (
     <StatusBlock
       icon={Loader2}
-      iconClassName="h-8 w-8 animate-spin text-slate-300 dark:text-slate-600"
+      iconClassName="h-8 w-8 animate-spin text-neutro-bordaForte"
       title="Carregando produtos"
     >
       <p role="status">Lendo o que está salvo neste dispositivo.</p>
@@ -64,7 +61,7 @@ export function LoadFailureStatus({ message, onRetry }) {
   return (
     <StatusBlock
       icon={AlertTriangle}
-      iconClassName="h-8 w-8 text-[#b93a20] dark:text-[#ffb8a7]"
+      iconClassName="h-8 w-8 text-marca-vermelhoTexto"
       title="Falha ao ler os produtos salvos"
     >
       <p role="alert">{message}</p>

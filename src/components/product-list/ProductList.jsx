@@ -19,7 +19,7 @@ import ProductTable from './ProductTable.jsx';
 // Os avisos de estado nao encostam na borda da coluna como a tabela encosta: a
 // tabela e faixa de ponta a ponta, e eles sao texto.
 function Padded({ children }) {
-  return <div className="p-6">{children}</div>;
+  return <div className="p-recuo">{children}</div>;
 }
 
 function countHint(visible, total) {
@@ -150,7 +150,7 @@ export default function ProductList({
           />
         </div>
 
-        <div className="p-6 sm:hidden">
+        <div className="p-recuo sm:hidden">
           <ProductCards
             products={visibleProducts}
             selectedProductId={selectedProductId}
@@ -167,7 +167,7 @@ export default function ProductList({
 
   const header =
     products.length > 0 ? (
-      <div className="border-b border-neutro-borda px-6 py-3.5">
+      <div className="border-b border-neutro-borda px-recuo py-3 lg:py-2.5">
         <ProductSearchField
           value={query}
           onChange={setQuery}
@@ -178,12 +178,7 @@ export default function ProductList({
 
   return (
     <>
-      <ShellColumn
-        label="Produtos cadastrados"
-        header={header}
-        bodyClassName=""
-        className="bg-neutro-papel"
-      >
+      <ShellColumn label="Produtos cadastrados" header={header} flush className="bg-neutro-papel">
         {renderBody()}
       </ShellColumn>
 

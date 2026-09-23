@@ -32,6 +32,7 @@ export default function ConfirmModal({
       title={title}
       subtitle={subtitle}
       width={480}
+      compact
       onClose={onCancel}
       footer={
         <>

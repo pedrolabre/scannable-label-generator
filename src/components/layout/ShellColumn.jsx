@@ -33,6 +33,14 @@ import { cx } from '../../lib/cx.js';
  *
  * `header={null}` e diferente de nao informar `header`: e a regiao que declara
  * nao ter faixa fixa nenhuma, e nao a que aceita a faixa padrao.
+ *
+ * O recuo do corpo e o mesmo nas tres colunas e acompanha a densidade da tela.
+ * `bodyClassName` acrescenta ao recuo o arranjo do conteudo; `flush` tira o
+ * recuo, para o corpo que encosta nas bordas, como a tabela da listagem.
+ *
+ * A regiao ocupa a altura inteira de quem a recebe. Na tela estreita ela vive
+ * dentro de uma vista, e nao direto na grade, e sem isso o corpo nao teria
+ * altura de onde rolar.
  */
 export default function ShellColumn({
   title,
@@ -42,18 +50,19 @@ export default function ShellColumn({
   footer,
   className,
   bodyClassName,
+  flush = false,
   children,
   ...rest
 }) {
   return (
     <section
       aria-label={label ?? title}
-      className={cx('flex min-h-0 min-w-0 flex-col', className)}
+      className={cx('flex min-h-0 min-w-0 flex-1 flex-col', className)}
       {...rest}
     >
       <div className="flex-none">
         {header === undefined ? (
-          <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-5">
+          <div className="flex items-center justify-between gap-3 px-recuo pb-1 pt-4 lg:pt-3">
             <h2 className="font-display text-xs font-semibold uppercase tracking-[0.09em] text-neutro-tintaFraca">
               {title}
             </h2>
@@ -66,13 +75,17 @@ export default function ShellColumn({
 
       <div
         data-corpo=""
-        className={cx('min-h-0 flex-1 overflow-y-auto', bodyClassName ?? 'px-5 pb-5 pt-4')}
+        className={cx(
+          'min-h-0 flex-1 overflow-y-auto',
+          flush ? null : 'px-recuo pb-recuo pt-3',
+          bodyClassName,
+        )}
       >
         {children}
       </div>
 
       {footer ? (
-        <div className="flex flex-none flex-col gap-2 border-t border-neutro-borda px-5 py-4">
+        <div className="flex flex-none flex-col gap-2 border-t border-neutro-borda px-recuo py-3">
           {footer}
         </div>
       ) : null}

@@ -37,7 +37,7 @@ export default function SheetCanvas({ sheet, labelLayout, slots, symbols, scaleF
           transform: `scale(${scaleFactor})`,
           transformOrigin: 'top left',
         }}
-        className="relative overflow-hidden bg-white outline outline-1 outline-slate-300 dark:outline-slate-600"
+        className="relative overflow-hidden bg-etiqueta-papel outline outline-1 outline-neutro-bordaForte"
       >
         <div
           aria-hidden="true"
@@ -49,7 +49,7 @@ export default function SheetCanvas({ sheet, labelLayout, slots, symbols, scaleF
             right: toMm(sheet.marginRightMm),
             bottom: toMm(sheet.marginBottomMm),
           }}
-          className="border border-dashed border-slate-300"
+          className="border border-dashed border-neutro-bordaForte"
         />
 
         {slots.map(({ cell, product, copyNumber }) => {

@@ -83,7 +83,7 @@ export default function SheetPreviewDialog({ printState, products, exporter, onC
       ) : (
         <div className="flex flex-1 flex-col justify-between gap-4 p-6" data-sheet-state="blocked">
           <p className="text-sm text-neutro-tintaMedia">{blockingMessage}</p>
-          <div className="w-[260px] self-end">{closeButton}</div>
+          <div className="w-full self-end lg:w-[260px]">{closeButton}</div>
         </div>
       )}
     </ModalShell>

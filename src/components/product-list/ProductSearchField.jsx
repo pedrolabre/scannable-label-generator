@@ -26,7 +26,7 @@ export default function ProductSearchField({ value, onChange, hint }) {
       {(control) => (
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutro-tintaFraca"
             aria-hidden="true"
           />
 
@@ -44,6 +44,7 @@ export default function ProductSearchField({ value, onChange, hint }) {
           {value ? (
             <IconButton
               label="Limpar busca"
+              size="inline"
               onClick={handleClear}
               className="absolute right-1 top-1/2 -translate-y-1/2"
             >

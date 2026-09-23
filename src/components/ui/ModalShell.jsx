@@ -61,6 +61,12 @@ function focusableElementsOf(container) {
  * Dialogo que precisaria de mais altura perde conteudo para o corpo rolavel,
  * nunca para a janela.
  *
+ * Abaixo do ponto de corte a medida do desenho deixa de valer: todo dialogo
+ * ocupa a janela, menos 16 px de cada lado, na largura e na altura. A regra
+ * vence a medida pedida, e as de foco e fechamento continuam as mesmas.
+ * `compact` e a excecao: a confirmacao curta, que nao e tarefa e sim uma
+ * pergunta, continua do tamanho do proprio texto.
+ *
  * `height` fixa a altura para o dialogo cujo conteudo nao define a propria —
  * a folha, que ocupa o espaco que houver. O teto continua valendo por cima
  * dela: em janela baixa, o painel encolhe ate o teto e nao passa dele.
@@ -85,6 +91,7 @@ export default function ModalShell({
   width = 560,
   height,
   closeOnBackdrop = true,
+  compact = false,
   scrollBody = true,
   onClose,
   headerActions,
@@ -178,18 +185,21 @@ export default function ModalShell({
         className={cx(
           'flex max-h-[calc(100dvh-96px)] flex-col rounded border',
           'border-neutro-borda bg-neutro-branco shadow-modal',
+          compact
+            ? null
+            : 'max-lg:!h-[calc(100dvh-32px)] max-lg:!max-h-none max-lg:!w-[calc(100dvw-32px)]',
         )}
       >
-        <header className="flex flex-none items-start justify-between gap-4 border-b border-neutro-borda px-6 py-5">
+        <header className="flex flex-none items-start justify-between gap-4 border-b border-neutro-borda px-recuo py-4 lg:py-3">
           <div className="min-w-0 flex-1 space-y-1">
             <h2
               id={titleId}
-              className="font-display text-xl font-bold leading-tight tracking-[-0.015em] text-neutro-tinta"
+              className="font-display text-xl font-bold leading-tight tracking-[-0.015em] text-neutro-tinta lg:text-lg"
             >
               {title}
             </h2>
             {subtitle ? (
-              <p className="text-[13px] leading-snug text-neutro-tintaFraca">{subtitle}</p>
+              <p className="text-rotulo leading-snug text-neutro-tintaFraca">{subtitle}</p>
             ) : null}
           </div>
 
@@ -205,7 +215,7 @@ export default function ModalShell({
         <div
           className={
             scrollBody
-              ? 'min-h-0 flex-1 overflow-y-auto px-6 py-5'
+              ? 'min-h-0 flex-1 overflow-y-auto px-recuo py-4'
               : 'flex min-h-0 flex-1 overflow-hidden'
           }
         >
@@ -213,7 +223,7 @@ export default function ModalShell({
         </div>
 
         {footer ? (
-          <footer className="flex flex-none flex-col-reverse gap-2 border-t border-neutro-borda px-6 py-4 sm:flex-row sm:justify-end">
+          <footer className="flex flex-none flex-col-reverse gap-2 border-t border-neutro-borda px-recuo py-3 sm:flex-row sm:justify-end">
             {footer}
           </footer>
         ) : null}

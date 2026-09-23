@@ -37,7 +37,7 @@ export function TextInput({ focus = 'neutral', invalid = false, className, ...re
     <input
       type="text"
       aria-invalid={invalid || undefined}
-      className={cx(controlClasses({ focus, invalid, className }), 'h-11')}
+      className={cx(controlClasses({ focus, invalid, className }), 'h-controle')}
       {...rest}
     />
   );
@@ -68,7 +68,7 @@ export default function Field({ id, label, error, hint, optional = false, childr
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="flex items-baseline justify-between gap-2 text-[13px] font-semibold text-neutro-tinta"
+        className="flex items-baseline justify-between gap-2 text-rotulo font-semibold text-neutro-tinta"
       >
         <span>
           {label}

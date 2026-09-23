@@ -218,6 +218,69 @@ describe('configuracao da folha', () => {
   });
 });
 
+describe('aproveitar a folha', () => {
+  function fitButton() {
+    return container.querySelector('[data-sheet-fit] button');
+  }
+
+  function sheets() {
+    return container.querySelector('[data-print-sheets]').dataset.printSheets;
+  }
+
+  it('encosta as etiquetas com margem de 5 mm e cabe mais em cada folha', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+    await select(ARMARIO.id);
+
+    await act(async () => {
+      usePrintJobStore.getState().setCopies(ARMARIO.id, '8');
+    });
+
+    // Tag grande em A4 retrato: uma coluna e tres linhas com as margens do modelo.
+    expect(sheets()).toBe('3');
+    expect(fitButton().textContent).toBe('Aproveitar a folha');
+
+    await act(async () => {
+      fitButton().click();
+    });
+
+    // Duas colunas e quatro linhas: as oito cabem numa folha so.
+    expect(sheets()).toBe('1');
+    expect(container.querySelector('#folha-marginTopMm').value).toBe('5');
+    expect(container.querySelector('#folha-columnGapMm').value).toBe('0');
+    expect(container.querySelector('[data-sheet-fit]').dataset.sheetFit).toBe('compact');
+  });
+
+  it('volta as margens do modelo no clique seguinte', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+
+    await act(async () => {
+      fitButton().click();
+    });
+
+    expect(fitButton().textContent).toBe('Voltar às margens do modelo');
+
+    await act(async () => {
+      fitButton().click();
+    });
+
+    expect(container.querySelector('#folha-marginTopMm').value).toBe('10');
+    expect(container.querySelector('#folha-columnGapMm').value).toBe('3');
+    expect(fitButton().textContent).toBe('Aproveitar a folha');
+  });
+
+  it('deixa os campos editaveis depois do atalho', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+
+    await act(async () => {
+      fitButton().click();
+    });
+    await type('#folha-marginTopMm', '6');
+
+    expect(container.querySelector('#folha-marginTopMm').value).toBe('6');
+    expect(container.querySelector('[data-sheet-fit]').dataset.sheetFit).toBe('layout');
+  });
+});
+
 function sheetPreviewButton() {
   return container.querySelector('[data-sheet-preview-trigger]');
 }

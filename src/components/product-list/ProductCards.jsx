@@ -5,13 +5,15 @@ import Checkbox from '../ui/Checkbox.jsx';
 
 import ProductItemActions from './ProductItemActions.jsx';
 
-// Mesmo tom de venda da linha da tabela, pelo mesmo motivo de contraste.
-const PRICE_TEXT = 'text-[#0f7a3d] dark:text-[#4bd486]';
+// O mesmo tom da linha da tabela. O verde e reservado a confirmacao, e preco
+// nao e confirmacao de nada: as duas vistas da listagem dizem o preco igual.
+const PRICE_TEXT = 'text-neutro-tintaMedia';
 
 /**
- * Superficie da listagem abaixo de `sm:`, onde as cinco colunas da tabela nao
- * cabem lado a lado. Cada produto vira um cartao com o nome em destaque, os
- * codigos empilhados e o preco alinhado com as acoes.
+ * Superficie da listagem abaixo de `sm:`, onde as colunas da tabela nao cabem
+ * lado a lado. Cada produto vira um cartao com o nome em destaque e o preco na
+ * mesma linha, os codigos embaixo e as acoes por ultimo, na largura do texto:
+ * com as acoes ao lado do nome, sobrava ao nome um terco da tela.
  *
  * A caixa de marcacao abre o cartao, no mesmo lugar em que abre a linha da
  * tabela: e a primeira decisao sobre o produto, e nao uma acao entre as outras.
@@ -26,7 +28,7 @@ export default function ProductCards({
   onRemove,
 }) {
   return (
-    <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+    <ul className="divide-y divide-neutro-divisor">
       {products.map((product) => (
         <li key={product.id} className="flex items-start gap-3 px-4 py-3">
           <Checkbox
@@ -37,37 +39,25 @@ export default function ProductCards({
           />
 
           <div className="min-w-0 flex-1 space-y-1">
-            <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
-              {product.displayName}
-            </p>
+            <p className="truncate font-semibold text-neutro-tinta">{product.displayName}</p>
 
             {product.category ? (
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                {product.category}
-              </p>
+              <p className="truncate text-xs text-neutro-tintaFraca">{product.category}</p>
             ) : null}
 
-            <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+            <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-neutro-tintaFraca">
               <div className="flex gap-1.5">
-                <dt>Código</dt>
-                <dd className="tabular-nums text-slate-700 dark:text-slate-200">
-                  {product.systemCode}
-                </dd>
+                <dt className="whitespace-nowrap">Código</dt>
+                <dd className="tabular-nums text-neutro-tintaMedia">{product.systemCode}</dd>
               </div>
 
               {product.ean ? (
                 <div className="flex gap-1.5">
-                  <dt>Cód. barras</dt>
-                  <dd className="tabular-nums text-slate-700 dark:text-slate-200">{product.ean}</dd>
+                  <dt className="whitespace-nowrap">Cód. barras</dt>
+                  <dd className="tabular-nums text-neutro-tintaMedia">{product.ean}</dd>
                 </div>
               ) : null}
             </dl>
-          </div>
-
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <p className={cx('font-semibold tabular-nums', PRICE_TEXT)}>
-              {formatCentavosAsBRL(product.priceInCentavos)}
-            </p>
 
             <ProductItemActions
               product={product}
@@ -75,8 +65,14 @@ export default function ProductCards({
               onEdit={onEdit}
               onPreview={onPreview}
               onRemove={onRemove}
+              align="start"
+              className="pt-2"
             />
           </div>
+
+          <p className={cx('shrink-0 font-semibold tabular-nums', PRICE_TEXT)}>
+            {formatCentavosAsBRL(product.priceInCentavos)}
+          </p>
         </li>
       ))}
     </ul>

@@ -31,7 +31,7 @@ export default function SheetNavigation({ sheetIndex, totalSheets, onChange }) {
       </Button>
 
       <p
-        className="order-last w-full text-center text-sm tabular-nums text-slate-600 dark:text-slate-300 sm:order-none sm:w-auto sm:text-left"
+        className="order-last w-full text-center text-sm tabular-nums text-neutro-tintaFraca sm:order-none sm:w-auto sm:text-left"
         aria-live="polite"
       >
         <span data-sheet-position="">{`Folha ${sheetIndex + 1} de ${totalSheets}`}</span>

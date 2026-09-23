@@ -36,7 +36,7 @@ import ProductLabel from './ProductLabel.jsx';
  * vista.
  *
  * `Ampliar` pede o dialogo da etiqueta, onde o mesmo desenho tem a janela
- * inteira em vez de 380 px. Este componente pede e nao desenha: o dialogo e de
+ * inteira em vez da largura da coluna. Este componente pede e nao desenha: o dialogo e de
  * quem monta a tela, porque so ha um aberto por vez. A ampliacao e uma so: o
  * degrau escolhido aqui e o degrau que o dialogo abre.
  */
@@ -45,7 +45,7 @@ function PreviewPlaceholder({ state, children }) {
   return (
     <div
       data-preview-state={state}
-      className="flex items-center justify-center rounded border border-dashed border-neutro-bordaForte px-6 py-12 text-center text-sm text-neutro-tintaFraca"
+      className="flex items-center justify-center rounded border border-dashed border-neutro-bordaForte px-6 py-10 text-center text-sm text-neutro-tintaFraca"
     >
       <p>{children}</p>
     </div>
@@ -83,7 +83,7 @@ export default function LabelPreviewPanel({
         </div>
 
         {product ? (
-          <Card className="p-4">
+          <Card className="p-3">
             <ScrollRegion
               label="Desenho da etiqueta, rolagem horizontal"
               data-preview-state="product"
@@ -115,7 +115,7 @@ export default function LabelPreviewPanel({
     <ShellColumn
       title="Prévia da etiqueta"
       className="border-l border-neutro-borda bg-neutro-branco"
-      bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-4"
+      bodyClassName="flex flex-col gap-4 lg:gap-3"
       data-label-preview=""
       actions={
         product ? (

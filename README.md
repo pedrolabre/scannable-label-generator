@@ -73,6 +73,7 @@ scannable-label-generator/
       AppShell.jsx
       AppShell.test.jsx
       AppHeader.jsx
+      AppHeader.test.jsx
       backup/
         BackupExportSection.jsx
         BackupFilePicker.jsx
@@ -122,6 +123,7 @@ scannable-label-generator/
         PrintJobSettings.jsx
         PrintJobSettings.test.jsx
         SheetCanvas.jsx
+        SheetFitToggle.jsx
         SheetLayoutPicker.jsx
         SheetMarginFields.jsx
         SheetNavigation.jsx
@@ -168,6 +170,7 @@ scannable-label-generator/
         ScrollRegion.jsx
         ScrollRegion.test.jsx
         SegmentedControl.jsx
+        SegmentedControl.test.jsx
         focusClasses.js
     domain/
       schemas/
@@ -274,5 +277,6 @@ scannable-label-generator/
       usePrintJobStore.js
       useProductStore.js
     styles/
+      brandClasses.test.js
       global.css
 ```

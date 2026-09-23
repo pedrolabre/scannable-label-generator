@@ -21,23 +21,19 @@ function ImportFileStatusItem({ file }) {
       <Icon
         className={
           isRejected
-            ? 'mt-0.5 h-4 w-4 shrink-0 text-[#b93a20] dark:text-[#ffb8a7]'
-            : 'mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400'
+            ? 'mt-0.5 h-4 w-4 shrink-0 text-marca-vermelhoTexto'
+            : 'mt-0.5 h-4 w-4 shrink-0 text-marca-verdeTexto'
         }
         aria-hidden="true"
       />
 
       <div className="min-w-0 space-y-1">
-        <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-          {file.fileName}
-        </p>
+        <p className="truncate text-sm font-semibold text-neutro-tintaMedia">{file.fileName}</p>
 
         {isRejected ? (
-          <p className="text-sm text-[#b93a20] dark:text-[#ffb8a7]">{file.error}</p>
+          <p className="text-sm text-marca-vermelhoTexto">{file.error}</p>
         ) : (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {recordCountLabel(file.recordCount)}
-          </p>
+          <p className="text-sm text-neutro-tintaFraca">{recordCountLabel(file.recordCount)}</p>
         )}
       </div>
     </li>
@@ -52,7 +48,7 @@ export default function ImportFileStatusList({ files }) {
   return (
     <ul
       aria-label="Resultado por arquivo"
-      className="divide-y divide-slate-200 rounded-[3px] border border-slate-200 dark:divide-slate-800 dark:border-slate-800"
+      className="divide-y divide-neutro-divisor rounded border border-neutro-divisor"
     >
       {files.map((file) => (
         <ImportFileStatusItem key={file.fileIndex} file={file} />

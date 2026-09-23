@@ -27,22 +27,20 @@ export default function PrintJobItemRow({
     <li
       data-print-item={product.id}
       data-symbol-support={hasSymbol ? 'ok' : 'unsupported'}
-      className="flex items-start gap-3 border-b border-slate-200 py-3 last:border-b-0 dark:border-slate-800"
+      className="flex items-start gap-3 border-b border-neutro-divisor py-3 last:border-b-0"
     >
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
-          {product.displayName}
-        </p>
+        <p className="truncate font-semibold text-neutro-tinta">{product.displayName}</p>
 
-        <p className="flex flex-wrap gap-x-3 text-xs text-slate-500 dark:text-slate-400">
+        <p className="flex flex-wrap gap-x-3 text-xs text-neutro-tintaFraca">
           <span className="tabular-nums">{product.systemCode}</span>
-          <span className="tabular-nums text-[#0f8a45] dark:text-[#4bd486]">
+          <span className="font-semibold tabular-nums text-neutro-tintaMedia">
             {formatCentavosAsBRL(product.priceInCentavos)}
           </span>
         </p>
 
         {hasSymbol ? null : (
-          <p className="text-xs text-[#8a5a00] dark:text-[#f4c95f]">
+          <p className="text-xs text-marca-amareloTexto">
             Sem símbolo: o código não cabe na simbologia. A etiqueta sai com o restante do conteúdo.
           </p>
         )}

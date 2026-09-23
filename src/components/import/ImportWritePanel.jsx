@@ -75,7 +75,7 @@ export default function ImportWritePanel() {
   if (isWriting) {
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+        <p role="status" className="text-sm text-neutro-tintaFraca">
           Gravando {formatCount(writtenCount)} de {formatCount(writeTotal)} registros…
         </p>
 
@@ -103,14 +103,14 @@ export default function ImportWritePanel() {
           </Button>
 
           {report.pendingCount > 0 ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm text-neutro-tintaFraca">
               {pluralize(report.pendingCount, 'registro fica de fora', 'registros ficam de fora')} até
               você decidir o que fazer com o código repetido.
             </p>
           ) : null}
         </div>
       ) : (
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-neutro-tintaFraca">
           {report.pendingCount > 0
             ? 'Decida o que fazer com os códigos repetidos para que o lote possa ser gravado.'
             : 'Nenhum registro deste lote está pronto para o catálogo.'}

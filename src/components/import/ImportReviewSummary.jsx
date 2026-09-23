@@ -39,12 +39,12 @@ function reviewSentence({ readyCount, attentionCount, pendingCount, refusedCount
 export default function ImportReviewSummary({ report }) {
   return (
     <div className="space-y-1">
-      <p role="status" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+      <p role="status" className="text-sm font-semibold text-neutro-tintaMedia">
         {reviewSentence(report)}
       </p>
 
       {report.refusedCount > 0 ? (
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-neutro-tintaFraca">
           Os registros recusados não seguem para o catálogo. Corrija o arquivo de origem e leia o
           arquivo de novo.
         </p>

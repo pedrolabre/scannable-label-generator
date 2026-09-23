@@ -98,6 +98,27 @@ export const usePrintJobStore = create((set, get) => ({
     set({ sheetAdjustments: { ...get().sheetAdjustments, [field]: value } });
   },
 
+  // Os seis campos de uma vez, como texto: o ajuste que aproveita a folha. So
+  // os campos ajustaveis entram; o resto e ignorado.
+  setSheetAdjustments: (values) => {
+    const next = { ...get().sheetAdjustments };
+
+    ADJUSTABLE_SHEET_FIELDS.forEach((field) => {
+      if (values?.[field] !== undefined) {
+        next[field] = values[field];
+      }
+    });
+
+    set({ sheetAdjustments: next });
+  },
+
+  // Volta os seis campos aos numeros do modelo de folha escolhido.
+  restoreSheetAdjustments: () => {
+    const layout = findSheetLayout(get().sheetLayoutId) ?? getDefaultSheetLayout();
+
+    set({ sheetAdjustments: adjustmentsFromLayout(layout) });
+  },
+
   clearSelection: () => {
     set({ selection: [] });
   },

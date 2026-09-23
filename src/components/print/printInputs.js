@@ -42,6 +42,31 @@ export const SHEET_FIELDS = Object.freeze([
   Object.freeze({ key: 'rowGapMm', label: 'Espaçamento entre linhas', max: MAX_GAP_MM }),
 ]);
 
+/**
+ * Ajuste que aproveita a folha: margem de 5 mm nos quatro lados e etiquetas
+ * encostadas. Cinco milimetros e a borda que a maior parte das impressoras
+ * domesticas e de escritorio ainda imprime; abaixo disso a borda da etiqueta
+ * comeca a sair cortada. Sem espacamento, a linha de corte de uma etiqueta e a
+ * da vizinha, e o que a folha ganha e uma coluna ou uma linha a mais.
+ */
+export const COMPACT_SHEET_ADJUSTMENTS = Object.freeze({
+  marginTopMm: '5',
+  marginRightMm: '5',
+  marginBottomMm: '5',
+  marginLeftMm: '5',
+  columnGapMm: '0',
+  rowGapMm: '0',
+});
+
+/** Diz se os seis campos estao, como texto, no ajuste que aproveita a folha. */
+export function isCompactSheet(adjustments) {
+  return SHEET_FIELDS.every(
+    ({ key }) =>
+      parseMillimeters(adjustments?.[key], { label: '', max: Infinity }).value ===
+      Number(COMPACT_SHEET_ADJUSTMENTS[key]),
+  );
+}
+
 export function findSheetField(key) {
   return SHEET_FIELDS.find((field) => field.key === key) ?? null;
 }

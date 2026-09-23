@@ -34,22 +34,22 @@ export default function ImportConflictNotice({ conflict, onDecide }) {
   const stored = conflict.code?.storedProduct ?? null;
 
   return (
-    <div className="space-y-2 border-l-2 border-[#8a5a00] pl-3 dark:border-[#f4c95f]">
+    <div className="space-y-2 border-l-2 border-marca-amareloTexto pl-3">
       {conflict.code ? (
-        <p className="text-sm text-[#8a5a00] dark:text-[#f4c95f]">
+        <p className="text-sm text-marca-amareloTexto">
           {describeCodeConflict(conflict.code)}
         </p>
       ) : null}
 
       {stored ? (
-        <p className="text-xs text-slate-600 dark:text-slate-300">
+        <p className="text-xs text-neutro-tintaFraca">
           No catálogo:{' '}
-          <span className="text-slate-800 dark:text-slate-100">{describeStoredProduct(stored)}</span>
+          <span className="text-neutro-tinta">{describeStoredProduct(stored)}</span>
         </p>
       ) : null}
 
       {conflict.name ? (
-        <p className="text-sm text-[#8a5a00] dark:text-[#f4c95f]">
+        <p className="text-sm text-marca-amareloTexto">
           {describeNameConflict(conflict.name)}
         </p>
       ) : null}
@@ -74,7 +74,7 @@ export default function ImportConflictNotice({ conflict, onDecide }) {
             ))}
           </div>
 
-          <p className="text-xs text-slate-600 dark:text-slate-300">
+          <p className="text-xs text-neutro-tintaFraca">
             {conflict.decision
               ? DECISION_RESULT[conflict.decision]
               : 'Escolha uma das opções para este registro poder ser gravado.'}

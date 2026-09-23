@@ -27,8 +27,8 @@ export default function ImportConflictBulkActions({ summary, onDecideAll }) {
   }
 
   return (
-    <div className="space-y-2 rounded-[3px] border border-[#8a5a00] bg-[#fdf6e3] p-3 dark:border-[#f4c95f] dark:bg-[#3a2f16]">
-      <p className="text-sm text-[#8a5a00] dark:text-[#f4c95f]">
+    <div className="space-y-2 rounded border border-marca-amareloBorda bg-marca-amareloTenue p-3">
+      <p className="text-sm text-marca-amareloTexto">
         {pluralize(
           summary.pending,
           'registro com código repetido espera decisão',

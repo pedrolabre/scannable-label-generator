@@ -7,7 +7,7 @@ import {
 } from './domain/services/labelLayoutCatalog.js';
 
 import AppHeader from './components/AppHeader.jsx';
-import AppShell from './components/AppShell.jsx';
+import AppShell, { SHELL_VIEWS } from './components/AppShell.jsx';
 import StatusBar from './components/layout/StatusBar.jsx';
 import BackupPanel from './components/backup/BackupPanel.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
@@ -49,6 +49,10 @@ import { useProductStore } from './store/useProductStore.js';
  * na da esquerda. Os dois sao desenhados daqui, como os outros tres, porque so
  * aqui se sabe qual esta aberto.
  *
+ * A vista ativa da tela estreita tambem mora aqui, e tambem morre no
+ * recarregamento. Ela so decide qual coluna aparece abaixo do ponto de corte;
+ * na tela larga as tres estao sempre a vista.
+ *
  * O modelo e o degrau de ampliacao da etiqueta moram aqui pelo mesmo motivo: a
  * coluna da direita e o dialogo da etiqueta desenham com eles, e um valor
  * guardado em cada um viraria dois valores diferentes.
@@ -85,6 +89,7 @@ export default function App() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [previewLayoutId, setPreviewLayoutId] = useState(DEFAULT_LABEL_LAYOUT_ID);
   const [previewScale, setPreviewScale] = useState(DEFAULT_SCALE);
+  const [activeView, setActiveView] = useState(SHELL_VIEWS.PRODUCTS);
 
   const printState = usePrintJobState(products);
   const exporter = usePrintExport();
@@ -130,8 +135,12 @@ export default function App() {
     setOpenModal(MODALS.PRODUCT);
   }, []);
 
+  // Na tela estreita, escolher a etiqueta e querer ve-la: a vista troca junto,
+  // para que a escolha nao custe um toque a mais na barra. Na tela larga a
+  // previa ja esta a vista e a troca nao muda nada.
   const handlePreview = useCallback((product) => {
     setSelectedProductId(product.id);
+    setActiveView(SHELL_VIEWS.PREVIEW);
   }, []);
 
   // As tres acoes deixam a falha subir para quem as chamou: o formulario e o
@@ -184,11 +193,14 @@ export default function App() {
   return (
     <>
       <AppShell
+        activeView={activeView}
         header={
           <AppHeader
             onNewProduct={handleNewProduct}
             onImport={() => setOpenModal(MODALS.IMPORT)}
             onBackup={() => setOpenModal(MODALS.BACKUP)}
+            activeView={activeView}
+            onViewChange={setActiveView}
           />
         }
         left={

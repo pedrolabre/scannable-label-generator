@@ -7,15 +7,17 @@ import InlineAlert from '../ui/InlineAlert.jsx';
 
 import PrintExportControls from './PrintExportControls.jsx';
 import PrintJobItemRow from './PrintJobItemRow.jsx';
+import SheetFitToggle from './SheetFitToggle.jsx';
 import SheetLayoutPicker from './SheetLayoutPicker.jsx';
 import SheetMarginFields from './SheetMarginFields.jsx';
+import { COMPACT_SHEET_ADJUSTMENTS } from './printInputs.js';
 
 /**
  * Coluna da esquerda: o que foi marcado na listagem, quantas etiquetas de cada,
  * em qual modelo de etiqueta e em qual folha.
  *
  * Ela configura e nada mais. O desenho da folha mora num dialogo proprio,
- * aberto por `Prévia da folha`, porque dentro de 320 px ele so cabia rolando
+ * aberto por `Prévia da folha`, porque dentro da coluna ele so cabia rolando
  * de lado dentro de uma coluna que ja rola na vertical. O rodape fixo guarda os
  * dois passos seguintes, a previa e a exportacao, sempre a vista por mais longa
  * que seja a selecao.
@@ -72,6 +74,8 @@ export default function PrintJobSettings({
   const setLabelLayoutId = usePrintJobStore((state) => state.setLabelLayoutId);
   const setSheetLayoutId = usePrintJobStore((state) => state.setSheetLayoutId);
   const setSheetAdjustment = usePrintJobStore((state) => state.setSheetAdjustment);
+  const setSheetAdjustments = usePrintJobStore((state) => state.setSheetAdjustments);
+  const restoreSheetAdjustments = usePrintJobStore((state) => state.restoreSheetAdjustments);
   const toggleProduct = usePrintJobStore((state) => state.toggleProduct);
   const clearSelection = usePrintJobStore((state) => state.clearSelection);
 
@@ -104,7 +108,7 @@ export default function PrintJobSettings({
         <p data-print-status="ready" className="text-sm text-neutro-tintaMedia">
           {describeReady(printState)}
         </p>
-        <dl className="flex flex-col text-[13px] text-neutro-tintaMedia">
+        <dl className="flex flex-col text-rotulo text-neutro-tintaMedia">
           <div className="flex justify-between gap-3 border-b border-neutro-superficie py-1.5">
             <dt>Papel</dt>
             <dd className="font-medium">{sheet.name}</dd>
@@ -141,6 +145,12 @@ export default function PrintJobSettings({
           <SheetLayoutPicker value={sheetLayoutId} onChange={setSheetLayoutId} />
         </div>
 
+        <SheetFitToggle
+          adjustments={sheetAdjustments}
+          onCompact={() => setSheetAdjustments(COMPACT_SHEET_ADJUSTMENTS)}
+          onRestore={restoreSheetAdjustments}
+        />
+
         <SheetMarginFields
           values={sheetAdjustments}
           errors={fieldErrors}
@@ -154,7 +164,7 @@ export default function PrintJobSettings({
         ) : (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-[13px] font-semibold text-neutro-tinta">
+              <h3 className="text-rotulo font-semibold text-neutro-tinta">
                 Produtos selecionados{' '}
                 <span data-print-selected-count={items.length}>({items.length})</span>
               </h3>
@@ -196,7 +206,7 @@ export default function PrintJobSettings({
       title="Trabalho de impressão"
       label="Trabalho de impressão"
       className="border-r border-neutro-borda bg-neutro-branco"
-      bodyClassName="px-5 pb-5 pt-4 flex flex-col gap-5"
+      bodyClassName="flex flex-col gap-5 lg:gap-4"
       data-print-job-settings={isReady ? 'ready' : 'blocked'}
       footer={
         products.length > 0 ? (

@@ -24,30 +24,23 @@ export default function ImportRecordIssueList({ lines }) {
           key={`${line.field ?? 'registro'}-${index}`}
           className={cx(
             'border-l-2 pl-3',
-            line.blocking
-              ? 'border-[#b93a20] dark:border-[#ffb8a7]'
-              : 'border-[#8a5a00] dark:border-[#f4c95f]',
+            line.blocking ? 'border-marca-vermelhoTexto' : 'border-marca-amareloTexto',
           )}
         >
           <p
             className={cx(
               'text-sm',
-              line.blocking
-                ? 'text-[#b93a20] dark:text-[#ffb8a7]'
-                : 'text-[#8a5a00] dark:text-[#f4c95f]',
+              line.blocking ? 'text-marca-vermelhoTexto' : 'text-marca-amareloTexto',
             )}
           >
             {line.message}
           </p>
 
-          {line.cause ? (
-            <p className="text-xs text-slate-600 dark:text-slate-300">{line.cause}</p>
-          ) : null}
+          {line.cause ? <p className="text-xs text-neutro-tintaFraca">{line.cause}</p> : null}
 
           {line.rawValue ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              No arquivo:{' '}
-              <span className="font-mono text-slate-700 dark:text-slate-200">{line.rawValue}</span>
+            <p className="text-xs text-neutro-tintaFraca">
+              No arquivo: <span className="font-mono text-neutro-tintaMedia">{line.rawValue}</span>
             </p>
           ) : null}
         </li>

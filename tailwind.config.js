@@ -5,6 +5,16 @@ export default {
   theme: {
     extend: {
       /**
+       * Um ponto de corte so. Abaixo dele a janela mostra uma coluna por vez;
+       * a partir dele, as tres lado a lado. Os outros pontos do Tailwind
+       * continuam valendo para o conteudo de dentro das colunas, e nenhum
+       * deles muda a forma do contorno.
+       */
+      screens: {
+        lg: '1100px',
+      },
+
+      /**
        * Unica fonte de cor do produto. Nenhum valor literal acompanha a classe
        * no componente: quando a cor de um papel muda, ela muda aqui e em lugar
        * nenhum mais.
@@ -39,6 +49,16 @@ export default {
           amareloBorda: '#EBD79A',
           amareloTexto: '#7A5A00',
           amareloTextoForte: '#6B4E00',
+        },
+        /**
+         * A superficie que sai impressa: a etiqueta e a folha desenhadas em
+         * milimetro. Ela nao usa os neutros da interface porque o arquivo
+         * exportado e preto puro sobre branco puro, e a previa precisa ser o
+         * mesmo desenho, e nao um tom parecido.
+         */
+        etiqueta: {
+          papel: '#FFFFFF',
+          tinta: '#000000',
         },
         neutro: {
           branco: '#FFFFFF',
@@ -76,6 +96,32 @@ export default {
        * A unica elevacao do produto, e ela existe por necessidade: o painel do
        * dialogo precisa se descolar da tela que continua desenhada atras dele.
        */
+      /**
+       * Medidas que definem a densidade da tela. O valor mora em variavel de
+       * CSS, e nao aqui, porque ele muda no ponto de corte: a tela larga e
+       * operada com mouse e fica compacta, a estreita pode ser tocada e fica
+       * com alvo de 44 px. Os valores e a troca estao em `global.css`.
+       */
+      spacing: {
+        controle: 'var(--altura-controle)',
+        topo: 'var(--altura-topo)',
+        estado: 'var(--altura-estado)',
+        recuo: 'var(--recuo)',
+      },
+
+      fontSize: {
+        sm: ['var(--texto-corpo)', { lineHeight: 'var(--texto-corpo-linha)' }],
+        rotulo: ['var(--texto-rotulo)', { lineHeight: '1.35' }],
+      },
+
+      /**
+       * As tres colunas da tela larga. So a do meio e elastica: e a unica
+       * regiao cujo valor cresce com o tamanho do monitor.
+       */
+      gridTemplateColumns: {
+        janela: '240px minmax(0, 1fr) 288px',
+      },
+
       boxShadow: {
         modal: '0 24px 64px rgba(0, 0, 0, 0.28)',
       },

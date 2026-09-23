@@ -2,6 +2,8 @@
 
 import { describe, expect, it } from 'vitest';
 
+import tailwindConfig from '../../tailwind.config.js';
+
 import {
   CONTRAST_MINIMUM,
   ContrastError,
@@ -118,5 +120,30 @@ describe('tons que saem de uso por reprovarem no minimo', () => {
   it('registra por que o tom de apoio mais escuro saiu do texto no tema escuro', () => {
     expect(contrastRatio('#64748b', CARTAO_ESCURO)).toBeLessThan(CONTRAST_MINIMUM.text);
     expect(contrastRatio('#94a3b8', CARTAO_ESCURO)).toBeGreaterThanOrEqual(CONTRAST_MINIMUM.text);
+  });
+});
+
+describe('tokens de marca', () => {
+  /**
+   * Os pares que a interface monta com os tokens de `tailwind.config.js`, lidos
+   * de la e nao copiados, para que trocar um valor no tema passe por aqui.
+   */
+  const { marca, neutro, etiqueta } = tailwindConfig.theme.extend.colors;
+
+  const PARES_DOS_TOKENS = [
+    ['texto sobre branco', neutro.tinta, neutro.branco],
+    ['texto medio sobre o fundo tenue', neutro.tintaMedia, neutro.papel],
+    ['texto fraco sobre branco', neutro.tintaFraca, neutro.branco],
+    ['texto fraco sobre o fundo tenue', neutro.tintaFraca, neutro.papel],
+    ['branco sobre a marca', neutro.branco, marca.vermelho],
+    ['erro sobre o proprio fundo tenue', marca.vermelhoTexto, marca.vermelhoTenue],
+    ['aviso sobre o proprio fundo tenue', marca.amareloTexto, marca.amareloTenue],
+    ['confirmacao sobre branco', marca.verdeTexto, neutro.branco],
+    ['nome da linha em previa', neutro.tinta, marca.vermelhoTenue],
+    ['tinta sobre o papel da etiqueta', etiqueta.tinta, etiqueta.papel],
+  ];
+
+  it.each(PARES_DOS_TOKENS)('%s passa de 4,5 para 1', (_, texto, fundo) => {
+    expect(contrastRatio(texto, fundo)).toBeGreaterThanOrEqual(4.5);
   });
 });
