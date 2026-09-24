@@ -66,6 +66,15 @@ scannable-label-generator/
       AppShell.jsx
       AppHeader.jsx
       LocalOnlyNotice.jsx
+      backup/
+        BackupExportSection.jsx
+        BackupFilePicker.jsx
+        BackupPanel.jsx
+        BackupPanel.test.jsx
+        BackupRefusalReport.jsx
+        BackupRestoreSection.jsx
+        useBackupExport.js
+        useBackupRestore.js
       import/
         ImportConflictBulkActions.jsx
         ImportConflictNotice.jsx
@@ -142,12 +151,20 @@ scannable-label-generator/
         SegmentedControl.jsx
     domain/
       schemas/
+        backupFileSchema.js
+        backupFileSchema.test.js
         commonFields.js
         productSchema.js
         labelLayoutSchema.js
         sheetLayoutSchema.js
         printJobSchema.js
       services/
+        backupFile.js
+        backupFile.test.js
+        backupRead.js
+        backupRestore.test.js
+        backupText.js
+        backupWriter.js
         csvParser.js
         importConflict.js
         importConflict.test.js
@@ -224,6 +241,7 @@ scannable-label-generator/
       updateState.js
       updateState.test.js
     storage/
+      backupRepository.js
       indexed-db.js
       productRepository.js
       storageError.js

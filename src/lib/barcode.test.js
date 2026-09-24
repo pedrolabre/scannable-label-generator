@@ -130,6 +130,11 @@ describe('extremos aceitos pelo contrato do produto', () => {
     expect(symbol.moduleCount).toBe(21);
   });
 
+  // O simbolo de capacidade maxima e o desenho mais caro do arquivo: 177 modulos
+  // por lado, contra 21 do menor. Sozinho ele leva cerca de um segundo, mas a
+  // suite monta um ambiente por arquivo e executa os arquivos em paralelo, e sob
+  // essa disputa o mesmo desenho passa do limite padrao. O limite proprio faz a
+  // prova medir o desenho, e nao a carga da maquina que o executa.
   it('gera o simbolo de um codigo longo, ja que o contrato do produto nao tem teto', async () => {
     const product = productFrom({ systemCode: 'A'.repeat(MAX_ALPHANUMERIC_LENGTH) });
     const symbol = await generateProductSymbol(product);
@@ -138,7 +143,7 @@ describe('extremos aceitos pelo contrato do produto', () => {
     expect(product.systemCode).toHaveLength(MAX_ALPHANUMERIC_LENGTH);
     expect(symbol.moduleCount).toBe(177);
     expect(viewBox.width).toBe(viewBox.height);
-  });
+  }, 30_000);
 });
 
 describe('codigo que nao pode ser codificado', () => {
