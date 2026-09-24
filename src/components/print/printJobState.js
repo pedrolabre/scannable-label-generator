@@ -7,11 +7,17 @@ import {
   countCopies,
 } from '../../domain/services/printJobBuilder.js';
 import { computeSheetGrid, describeEmptyGrid } from '../../domain/services/sheetGrid.js';
+import { findSheetLayout } from '../../domain/services/sheetLayoutCatalog.js';
 import { paginateLabels } from '../../domain/services/sheetPagination.js';
 import { describeProductSymbolSupport } from '../../domain/services/symbolContent.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
-import { SHEET_FIELDS, parseCopies, parseMillimeters } from './printInputs.js';
+import {
+  SHEET_FIELDS,
+  describeCompactGain,
+  parseCopies,
+  parseMillimeters,
+} from './printInputs.js';
 import { resolvePrintItems } from './printSelection.js';
 
 /**
@@ -104,6 +110,11 @@ export function describePrintJobState({
   // a ultima conta que valeu.
   const totalSheets = isReady ? paginateLabels(job.items, grid.perSheet).totalSheets : 0;
 
+  // O atalho que aproveita a folha so aparece quando rende mais etiquetas do
+  // que as margens do modelo. A conta nao depende da selecao nem do que esta
+  // digitado, so do par de modelos.
+  const canCompact = describeCompactGain(findSheetLayout(sheetLayoutId), labelLayout).gains;
+
   return {
     items,
     fieldErrors,
@@ -117,6 +128,7 @@ export function describePrintJobState({
     missingSymbolCount: items.filter((entry) => !entry.hasSymbol).length,
     totalCopies: countCopies(jobItems),
     totalSheets,
+    canCompact,
   };
 }
 

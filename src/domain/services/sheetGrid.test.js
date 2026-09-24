@@ -2,6 +2,12 @@
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  SHEET_FIELDS,
+  describeCompactGain,
+  parseMillimeters,
+} from '../../components/print/printInputs.js';
+import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 import { SheetLayoutSchema } from '../schemas/sheetLayoutSchema.js';
 
 import { findLabelLayout } from './labelLayoutCatalog.js';
@@ -14,6 +20,113 @@ const PAISAGEM = findSheetLayout('a4-paisagem');
 const GRANDE = findLabelLayout('tag-grande');
 const MEDIA = findLabelLayout('etiqueta-media');
 const PEQUENA = findLabelLayout('etiqueta-pequena');
+const DEZ = findSheetLayout('a4-10-etiquetas');
+const MEDIA_DEZ = findLabelLayout('etiqueta-media-10');
+
+function overlaps(a, b) {
+  return (
+    a.xMm < b.xMm + b.widthMm &&
+    b.xMm < a.xMm + a.widthMm &&
+    a.yMm < b.yMm + b.heightMm &&
+    b.yMm < a.yMm + a.heightMm
+  );
+}
+
+describe('folha de 10 etiquetas com a etiqueta de 10 por folha', () => {
+  // Area util: 184,6 x 271,6 mm. Largura: 2 x 84,7 + 13,9 = 183,3; tres colunas
+  // pediriam 281,9. Altura: 5 x 46,6 + 4 x 6,5 = 259; seis linhas pediriam 312,1.
+  it('fecha duas colunas por cinco linhas, dentro da area util e sem sobreposicao', () => {
+    const grid = computeSheetGrid(DEZ, MEDIA_DEZ);
+
+    expect(grid.columns).toBe(2);
+    expect(grid.rows).toBe(5);
+    expect(grid.perSheet).toBe(10);
+    expect(grid.cells).toHaveLength(10);
+
+    const right = DEZ.widthMm - DEZ.marginRightMm;
+    const bottom = DEZ.heightMm - DEZ.marginBottomMm;
+
+    for (const cell of grid.cells) {
+      expect(cell.xMm).toBeGreaterThanOrEqual(DEZ.marginLeftMm);
+      expect(cell.yMm).toBeGreaterThanOrEqual(DEZ.marginTopMm);
+      expect(cell.xMm + cell.widthMm).toBeLessThanOrEqual(right);
+      expect(cell.yMm + cell.heightMm).toBeLessThanOrEqual(bottom);
+    }
+
+    grid.cells.forEach((cell, index) => {
+      grid.cells.slice(index + 1).forEach((other) => {
+        expect(overlaps(cell, other)).toBe(false);
+      });
+    });
+  });
+
+  it('poe cada etiqueta na posicao da folha antiga', () => {
+    const { cells } = computeSheetGrid(DEZ, MEDIA_DEZ);
+
+    // Segunda coluna: 12,7 + 84,7 + 13,9. Quinta linha: 12,7 + 4 x 53,1.
+    expect(cells[1]).toMatchObject({ xMm: 111.3, yMm: 12.7 });
+    expect(cells[9]).toMatchObject({ xMm: 111.3, yMm: 225.1 });
+  });
+
+  it('fecha a mesma grade com os numeros que voltam dos campos da tela', () => {
+    usePrintJobStore.getState().resetPrintJob();
+
+    const { sheetLayoutId, labelLayoutId, sheetAdjustments } = usePrintJobStore.getState();
+    const adjustments = {};
+
+    SHEET_FIELDS.forEach((field) => {
+      const { value, error } = parseMillimeters(sheetAdjustments[field.key], field);
+
+      expect(error).toBeNull();
+      expect(value).toBe(DEZ[field.key]);
+      adjustments[field.key] = value;
+    });
+
+    const { sheet } = buildSheetLayout(sheetLayoutId, adjustments);
+    const grid = computeSheetGrid(sheet, findLabelLayout(labelLayoutId));
+
+    expect(sheetLayoutId).toBe('a4-10-etiquetas');
+    expect(labelLayoutId).toBe('etiqueta-media-10');
+    expect(grid).toMatchObject({ columns: 2, rows: 5, perSheet: 10 });
+  });
+
+  it.each([
+    // Largura 184,6: 1 x 100; 2 x 100 + 13,9 passa. Altura 271,6: 3 x 70 + 2 x 6,5
+    // = 223; 4 x 70 + 3 x 6,5 = 299,5 passa.
+    ['tag-grande', GRANDE, 1, 3, 3],
+    // 2 x 70 + 13,9 = 153,9; 3 x 70 + 27,8 passa. 4 x 50 + 19,5 = 219,5;
+    // 5 x 50 + 26 = 276 passa.
+    ['etiqueta-media', MEDIA, 2, 4, 8],
+    // 3 x 50 + 27,8 = 177,8; 4 x 50 + 41,7 passa. 7 x 30 + 39 = 249;
+    // 8 x 30 + 45,5 = 285,5 passa.
+    ['etiqueta-pequena', PEQUENA, 3, 7, 21],
+  ])('%s na folha de 10', (_name, label, columns, rows, perSheet) => {
+    expect(computeSheetGrid(DEZ, label)).toMatchObject({ columns, rows, perSheet });
+  });
+
+  it('o atalho que aproveita a folha abre uma linha a mais e continua sendo oferecido', () => {
+    // Margem de 5 mm e etiquetas encostadas: 287 / 46,6 = 6 linhas.
+    expect(describeCompactGain(DEZ, MEDIA_DEZ)).toEqual({
+      layoutPerSheet: 10,
+      compactPerSheet: 12,
+      gains: true,
+    });
+  });
+});
+
+describe('oferta do atalho que aproveita a folha', () => {
+  it.each([
+    ['tag-grande', 'a4-retrato', GRANDE, 3, 8, true],
+    ['etiqueta-media', 'a4-retrato', MEDIA, 10, 10, false],
+    ['etiqueta-pequena', 'a4-retrato', PEQUENA, 24, 36, true],
+  ])('%s em %s', (_name, sheetId, label, layoutPerSheet, compactPerSheet, gains) => {
+    expect(describeCompactGain(findSheetLayout(sheetId), label)).toEqual({
+      layoutPerSheet,
+      compactPerSheet,
+      gains,
+    });
+  });
+});
 
 describe('capacidade das duas folhas com as medidas do catalogo', () => {
   // Margem de 10 mm e espacamento de 3 mm. Area util do retrato: 190 x 277 mm;

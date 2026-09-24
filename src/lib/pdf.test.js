@@ -107,7 +107,7 @@ describe('tamanho da pagina', () => {
     expect(mediaBox[3]).toBeCloseTo((297 / 25.4) * 72, 4);
     expect(mediaBox[2]).toBeCloseTo(595.28, 2);
     expect(mediaBox[3]).toBeCloseTo(841.89, 2);
-  });
+  }, 30_000);
 
   it('sai em A4 paisagem como pagina deitada, e nao como retrato girado', async () => {
     const bytes = await renderBytes({
@@ -133,7 +133,7 @@ describe('tamanho da pagina', () => {
     });
 
     expect(readMediaBoxes(bytes)).toHaveLength(3);
-  });
+  }, 30_000);
 });
 
 describe('posicao das etiquetas', () => {

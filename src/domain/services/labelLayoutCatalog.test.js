@@ -50,6 +50,40 @@ describe('catalogo de modelos', () => {
     expect(findLabelLayout('modelo-que-nao-existe')).toBeNull();
   });
 
+  it('o padrao e a etiqueta de 10 por folha, primeira da lista', () => {
+    expect(DEFAULT_LABEL_LAYOUT_ID).toBe('etiqueta-media-10');
+    expect(LABEL_LAYOUTS[0].id).toBe(DEFAULT_LABEL_LAYOUT_ID);
+    expect(getDefaultLabelLayout()).toEqual({
+      id: 'etiqueta-media-10',
+      name: 'Etiqueta 10 (84,7 x 46,6 mm)',
+      widthMm: 84.7,
+      heightMm: 46.6,
+      paddingMm: 2.5,
+      symbolSizeMm: 27,
+    });
+  });
+
+  it('mantem os tres modelos anteriores como estavam', () => {
+    expect(findLabelLayout('tag-grande')).toMatchObject({
+      widthMm: 100,
+      heightMm: 70,
+      paddingMm: 4,
+      symbolSizeMm: 32,
+    });
+    expect(findLabelLayout('etiqueta-media')).toMatchObject({
+      widthMm: 70,
+      heightMm: 50,
+      paddingMm: 3,
+      symbolSizeMm: 27,
+    });
+    expect(findLabelLayout('etiqueta-pequena')).toMatchObject({
+      widthMm: 50,
+      heightMm: 30,
+      paddingMm: 1.5,
+      symbolSizeMm: 27,
+    });
+  });
+
   it('nao permite alteracao do catalogo em tempo de execucao', () => {
     expect(Object.isFrozen(LABEL_LAYOUTS)).toBe(true);
     expect(LABEL_LAYOUTS.every((layout) => Object.isFrozen(layout))).toBe(true);
@@ -73,6 +107,16 @@ describe('piso de legibilidade do simbolo', () => {
       );
     },
   );
+
+  it('a etiqueta de 10 por folha fica acima do piso no pior caso', () => {
+    const padrao = getDefaultLabelLayout();
+
+    // 27 mm para 53 modulos: 0,509 mm por modulo.
+    expect(moduleSizeMm(MAX_SYMBOL_TOTAL_MODULES, padrao.symbolSizeMm)).toBeGreaterThan(
+      MIN_MODULE_SIZE_MM,
+    );
+    expect(computeLabelGeometry(padrao).symbol.moduleSizeMm).toBeCloseTo(27 / 53, 10);
+  });
 
   it('a tag grande alcanca o alvo mesmo no pior caso', () => {
     const grande = findLabelLayout('tag-grande');

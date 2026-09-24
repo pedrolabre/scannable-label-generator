@@ -188,6 +188,60 @@ describe('as duas previas', () => {
   });
 });
 
+describe('abertura sem nada guardado', () => {
+  it('parte da etiqueta de 10 por folha na folha de 10, com os numeros do modelo', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+
+    const estado = usePrintJobStore.getState();
+
+    expect(estado.labelLayoutId).toBe('etiqueta-media-10');
+    expect(estado.sheetLayoutId).toBe('a4-10-etiquetas');
+
+    await render();
+
+    const marcado = (nome) => container.querySelector(`input[name="${nome}"]:checked`).value;
+
+    expect(marcado('modelo-etiqueta')).toBe('etiqueta-media-10');
+    expect(marcado('modelo-etiqueta-impressao')).toBe('etiqueta-media-10');
+    expect(marcado('modelo-folha')).toBe('a4-10-etiquetas');
+
+    const campos = [
+      ['marginTopMm', '12,7'],
+      ['marginRightMm', '12,7'],
+      ['marginBottomMm', '12,7'],
+      ['marginLeftMm', '12,7'],
+      ['columnGapMm', '13,9'],
+      ['rowGapMm', '6,5'],
+    ];
+
+    for (const [campo, valor] of campos) {
+      expect(container.querySelector(`#folha-${campo}`).value).toBe(valor);
+    }
+
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+
+    const etiqueta = container.querySelector('[data-label-preview] [data-label-surface]');
+
+    expect(etiqueta.style.width).toBe('84.7mm');
+    expect(etiqueta.style.height).toBe('46.6mm');
+  });
+
+  it('desenha 10 etiquetas na previa da folha', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+    usePrintJobStore.getState().toggleProduct(PRODUCT.id);
+    usePrintJobStore.getState().setCopies(PRODUCT.id, '10');
+
+    await render();
+    await clicar('Prévia da folha');
+
+    const dialogo = container.querySelector('[role="dialog"]');
+
+    expect(dialogo.querySelector('[data-sheet-labels]').dataset.sheetLabels).toBe('10');
+    expect(dialogo.querySelectorAll('[data-sheet-surface] [data-label-surface]')).toHaveLength(10);
+    expect(container.querySelector('[data-status-sheets]').textContent).toBe('1 folha');
+  });
+});
+
 describe('um dialogo por vez', () => {
   it('nunca deixa dois abertos ao mesmo tempo', async () => {
     useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });

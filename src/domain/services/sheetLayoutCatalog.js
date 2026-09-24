@@ -8,10 +8,14 @@
  * tabela `sheetLayouts` fica reservada para o dia em que existirem folhas do
  * proprio usuario.
  *
- * Dois modelos, e nao mais. A folha unica do perfil real e a A4, e a variante
- * em paisagem nao e enfeite: o modelo de etiqueta padrao tem 100 mm de largura,
- * que cabe uma vez na area util da folha em retrato e duas vezes na area util
- * em paisagem. E o dobro de etiqueta por folha no modelo mais usado.
+ * Tres modelos. A folha de 10 etiquetas e a que a operacao ja usa: um
+ * formulario de preco repetido duas colunas por cinco linhas numa A4 comum,
+ * impresso a 100% e recortado a tesoura. Os numeros dela reproduzem a posicao
+ * da folha antiga: margem de 12,7 mm nos quatro lados, 13,9 mm entre as colunas
+ * e 6,5 mm entre as linhas, com a sobra a direita e embaixo, como no documento
+ * original. O retrato e o paisagem de margem estreita ficam para os outros
+ * modelos de etiqueta: a tag grande tem 100 mm de largura, cabe uma vez na
+ * largura util em retrato e duas vezes em paisagem.
  *
  * As margens e os espacamentos declarados aqui sao o ponto de partida, e nao um
  * limite: a borda nao imprimivel muda de impressora para impressora, entao o
@@ -26,6 +30,18 @@
 import { SheetLayoutSchema } from '../schemas/sheetLayoutSchema.js';
 
 const DEFINITIONS = [
+  {
+    id: 'a4-10-etiquetas',
+    name: 'A4 10 etiquetas (2 x 5)',
+    widthMm: 210,
+    heightMm: 297,
+    marginTopMm: 12.7,
+    marginRightMm: 12.7,
+    marginBottomMm: 12.7,
+    marginLeftMm: 12.7,
+    columnGapMm: 13.9,
+    rowGapMm: 6.5,
+  },
   {
     id: 'a4-retrato',
     name: 'A4 retrato (210 x 297 mm)',
@@ -67,8 +83,12 @@ function buildCatalog() {
 
 export const SHEET_LAYOUTS = Object.freeze(buildCatalog());
 
-/** O retrato e a orientacao que qualquer impressora domestica ja assume. */
-export const DEFAULT_SHEET_LAYOUT_ID = 'a4-retrato';
+/**
+ * A folha de 10 etiquetas e o ponto de partida porque e a folha que a operacao
+ * ja imprime e recorta: a etiqueta padrao sai nela na mesma posicao de antes.
+ * O modelo padrao vem primeiro na lista, que e a ordem dos botoes.
+ */
+export const DEFAULT_SHEET_LAYOUT_ID = 'a4-10-etiquetas';
 
 export function listSheetLayouts() {
   return SHEET_LAYOUTS;

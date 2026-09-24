@@ -146,8 +146,8 @@ describe('selecao multipla', () => {
 
     expect(status().dataset.printStatus).toBe('ready');
     expect(status().textContent).toBe('Configuração pronta: 13 etiquetas em 2 produtos.');
-    // Tag grande em A4 retrato: 3 por folha; 13 etiquetas ocupam 5 folhas.
-    expect(container.querySelector('[data-print-sheets]').textContent).toBe('5');
+    // Etiqueta de 10 por folha na folha de 10: 13 etiquetas ocupam 2 folhas.
+    expect(container.querySelector('[data-print-sheets]').textContent).toBe('2');
   });
 
   it('larga o produto removido da listagem e mantem o restante da selecao', async () => {
@@ -227,8 +227,57 @@ describe('aproveitar a folha', () => {
     return container.querySelector('[data-print-sheets]').dataset.printSheets;
   }
 
+  async function useModels(labelLayoutId, sheetLayoutId) {
+    await act(async () => {
+      usePrintJobStore.getState().setLabelLayoutId(labelLayoutId);
+      usePrintJobStore.getState().setSheetLayoutId(sheetLayoutId);
+    });
+  }
+
+  it('aparece no padrao, em que o ajuste abre uma linha a mais', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+
+    expect(fitButton().textContent).toBe('Aproveitar a folha');
+  });
+
+  it('some quando o ajuste nao abre coluna nem linha', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+    // Etiqueta media em A4 retrato: duas por cinco com qualquer uma das margens.
+    await useModels('etiqueta-media', 'a4-retrato');
+
+    expect(container.querySelector('[data-sheet-fit]')).toBeNull();
+
+    // A etiqueta pequena passa de tres para quatro colunas: o atalho volta.
+    await useModels('etiqueta-pequena', 'a4-retrato');
+
+    expect(fitButton().textContent).toBe('Aproveitar a folha');
+  });
+
+  it('mantem o caminho de volta mesmo num par de modelos em que o ajuste nao rende', async () => {
+    await render(<Coluna products={[ARMARIO]} />);
+    await useModels('tag-grande', 'a4-retrato');
+
+    await act(async () => {
+      fitButton().click();
+    });
+
+    await act(async () => {
+      usePrintJobStore.getState().setLabelLayoutId('etiqueta-media');
+    });
+
+    expect(fitButton().textContent).toBe('Voltar às margens do modelo');
+
+    await act(async () => {
+      fitButton().click();
+    });
+
+    expect(container.querySelector('#folha-marginTopMm').value).toBe('10');
+    expect(container.querySelector('[data-sheet-fit]')).toBeNull();
+  });
+
   it('encosta as etiquetas com margem de 5 mm e cabe mais em cada folha', async () => {
     await render(<Coluna products={[ARMARIO]} />);
+    await useModels('tag-grande', 'a4-retrato');
     await select(ARMARIO.id);
 
     await act(async () => {
@@ -252,6 +301,7 @@ describe('aproveitar a folha', () => {
 
   it('volta as margens do modelo no clique seguinte', async () => {
     await render(<Coluna products={[ARMARIO]} />);
+    await useModels('tag-grande', 'a4-retrato');
 
     await act(async () => {
       fitButton().click();

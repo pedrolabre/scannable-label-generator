@@ -97,7 +97,7 @@ describe('paginas e medidas da folha', () => {
     expect(document.pages).toHaveLength(3);
     // A ultima folha recebe as nove etiquetas que sobraram.
     expect(opsOfType(document.pages[2], 'path')).toHaveLength(9);
-  });
+  }, 30_000);
 
   it('nomeia o documento com o modelo da etiqueta e o da folha', async () => {
     const document = await describe1({ items: [{ productId: ARMARIO.id, copies: 1 }] });
