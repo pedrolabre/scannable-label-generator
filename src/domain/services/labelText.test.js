@@ -42,14 +42,13 @@ describe('corte do nome da etiqueta', () => {
 
   it('corta o nome de comprimento maximo no menor modelo do catalogo', () => {
     expect(LONGEST_NAME).toHaveLength(DISPLAY_NAME_MAX_LENGTH);
-    expect(SMALLEST_GEOMETRY.name.lines).toBe(1);
 
     const fitted = fitNameLines(LONGEST_NAME, SMALLEST_GEOMETRY.name);
 
     expect(fitted.truncated).toBe(true);
-    expect(fitted.lines).toHaveLength(1);
-    expect(fitted.lines[0].endsWith(ELLIPSIS)).toBe(true);
-    expect(fitted.lines[0].length).toBeLessThanOrEqual(fitted.charBudget);
+    expect(fitted.lines).toHaveLength(SMALLEST_GEOMETRY.name.lines);
+    expect(fitted.lines.at(-1).endsWith(ELLIPSIS)).toBe(true);
+    expect(fitted.lines.every((line) => line.length <= fitted.charBudget)).toBe(true);
     expect(fitted.lines[0].startsWith(LONGEST_NAME.slice(0, 10))).toBe(true);
   });
 
@@ -125,15 +124,12 @@ describe('preco de seis digitos', () => {
     expect(price.step).toBe(1);
   });
 
-  it('o preco mantem a hierarquia mesmo no degrau mais baixo', () => {
-    const smallest = FONT_SIZE_STEPS[FONT_SIZE_STEPS.length - 1];
-
+  it('o preco mais alto do catalogo real sai em corpo cheio em todo modelo', () => {
     for (const layout of LABEL_LAYOUTS) {
-      const geometry = computeLabelGeometry(layout);
+      const price = fitPriceText(formatCentavosAsBRL(556990), computeLabelGeometry(layout).price);
 
-      expect(geometry.price.fontSizeMm * smallest).toBeGreaterThanOrEqual(
-        geometry.code.fontSizeMm - 1e-9,
-      );
+      expect(price.text).toBe('R$ 5.569,90');
+      expect(price.step).toBe(1);
     }
   });
 });

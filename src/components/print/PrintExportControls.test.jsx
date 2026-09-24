@@ -4,11 +4,13 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_LABEL_SETTINGS } from '../../domain/schemas/labelSettingsSchema.js';
 import { findLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
 import { MAX_EXPORT_LABELS } from '../../domain/services/printExport.js';
 import { computeSheetGrid } from '../../domain/services/sheetGrid.js';
 import { findSheetLayout } from '../../domain/services/sheetLayoutCatalog.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
+import { useLabelSettingsStore } from '../../store/useLabelSettingsStore.js';
 
 import PrintExportControls from './PrintExportControls.jsx';
 import { usePrintExport } from './usePrintExport.js';
@@ -49,11 +51,11 @@ const FOGAO = {
 
 const PRODUCTS = [ARMARIO, FOGAO];
 
-function symbolFor(systemCode) {
+function symbolFor(text) {
   return Object.freeze({
-    systemCode,
+    text,
     symbology: 'qrcode',
-    errorCorrectionLevel: 'Q',
+    errorCorrectionLevel: 'M',
     moduleCount: 21,
     quietZoneModules: 4,
     totalModules: 29,
@@ -65,12 +67,12 @@ let container;
 let root;
 
 beforeEach(() => {
-  generateSymbol.mockImplementation(async (systemCode) => {
-    if (systemCode === FOGAO.systemCode) {
+  generateSymbol.mockImplementation(async (text) => {
+    if (text.split('|')[1] === FOGAO.systemCode) {
       throw new BarcodeError(BARCODE_ERROR_CODES.UNSUPPORTED_CHARACTER, 'Código sem símbolo.');
     }
 
-    return symbolFor(systemCode);
+    return symbolFor(text);
   });
 
   renderPrintDocument.mockResolvedValue(new Uint8Array([1, 2, 3]));
@@ -170,7 +172,7 @@ describe('botao de exportar', () => {
 });
 
 describe('exportacao', () => {
-  it('gera um simbolo por codigo da tiragem e dispara o download', async () => {
+  it('gera um simbolo por exemplar da tiragem e dispara o download', async () => {
     await render({
       items: [
         { productId: ARMARIO.id, copies: 3 },
@@ -180,8 +182,15 @@ describe('exportacao', () => {
 
     await click(button());
 
-    // Cinco etiquetas, dois codigos: um simbolo por codigo, e nao por etiqueta.
-    expect(generateSymbol).toHaveBeenCalledTimes(2);
+    // Cinco etiquetas, cinco exemplares: cada copia grava o proprio numero.
+    expect(generateSymbol).toHaveBeenCalledTimes(5);
+    expect(generateSymbol.mock.calls.map(([text]) => text.split('|')[6])).toEqual([
+      'c1',
+      'c2',
+      'c3',
+      'c1',
+      'c2',
+    ]);
     expect(renderPrintDocument).toHaveBeenCalledTimes(1);
     expect(downloadBlob).toHaveBeenCalledTimes(1);
 
@@ -246,6 +255,30 @@ describe('exportacao', () => {
     );
     expect(button().disabled).toBe(false);
     expect(downloadBlob).not.toHaveBeenCalled();
+  });
+
+  it('leva ao documento o nome da empresa e o parcelamento guardados', async () => {
+    useLabelSettingsStore.setState({
+      settings: {
+        companyName: 'Loja Inventada',
+        showCompanyName: true,
+        installmentText: '10x no cartão',
+        showInstallmentText: true,
+      },
+    });
+
+    await render({ items: [{ productId: ARMARIO.id, copies: 1 }] });
+    await click(button());
+
+    const [description] = renderPrintDocument.mock.calls[0];
+    const texts = description.pages[0].ops.filter((op) => op.type === 'text').map((op) => op.text);
+
+    expect(texts).toContain('Loja Inventada');
+    expect(texts).toContain('10x no cartão');
+
+    await act(async () => {
+      useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS } });
+    });
   });
 
   it('exporta o produto sem simbolo junto com os demais', async () => {

@@ -8,6 +8,7 @@ import { SheetLayoutSchema } from '../../domain/schemas/sheetLayoutSchema.js';
 import { findLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
 import { computeSheetGrid } from '../../domain/services/sheetGrid.js';
 import { findSheetLayout } from '../../domain/services/sheetLayoutCatalog.js';
+import { buildSymbolText } from '../../domain/services/symbolContent.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
 
 import SheetPreview from './SheetPreview.jsx';
@@ -45,11 +46,11 @@ const RECUSADO = {
 
 const PRODUCTS = [ARMARIO, GELADEIRA, RECUSADO];
 
-function symbolFor(systemCode) {
+function symbolFor(text) {
   return Object.freeze({
-    systemCode,
+    text,
     symbology: 'qrcode',
-    errorCorrectionLevel: 'Q',
+    errorCorrectionLevel: 'M',
     moduleCount: 21,
     quietZoneModules: 4,
     totalModules: 29,
@@ -61,12 +62,12 @@ let container;
 let root;
 
 beforeEach(() => {
-  generateSymbol.mockImplementation(async (systemCode) => {
-    if (systemCode === RECUSADO.systemCode) {
+  generateSymbol.mockImplementation(async (text) => {
+    if (text.split('|')[1] === RECUSADO.systemCode) {
       throw new BarcodeError(BARCODE_ERROR_CODES.CODE_TOO_LONG, 'O código não cabe no símbolo.');
     }
 
-    return symbolFor(systemCode);
+    return symbolFor(text);
   });
 
   container = document.createElement('div');
@@ -132,7 +133,7 @@ describe('folha desenhada', () => {
     expect(container.querySelectorAll('[data-label-surface]')).toHaveLength(2);
   });
 
-  it('gera um simbolo por codigo e repete o desenho nas copias', async () => {
+  it('gera um simbolo por exemplar: copias do mesmo produto tem simbolos diferentes', async () => {
     await render({
       items: [
         { productId: ARMARIO.id, copies: 3 },
@@ -141,8 +142,18 @@ describe('folha desenhada', () => {
       labelLayout: PEQUENA,
     });
 
-    expect(generateSymbol).toHaveBeenCalledTimes(2);
-    expect(container.querySelectorAll('[data-symbol-state="ready"]')).toHaveLength(5);
+    const ready = [...container.querySelectorAll('[data-symbol-state="ready"]')];
+
+    expect(generateSymbol).toHaveBeenCalledTimes(5);
+    expect(ready).toHaveLength(5);
+    expect(ready.map((symbol) => symbol.dataset.symbolText)).toEqual([
+      buildSymbolText(ARMARIO, 1),
+      buildSymbolText(ARMARIO, 2),
+      buildSymbolText(ARMARIO, 3),
+      buildSymbolText(GELADEIRA, 1),
+      buildSymbolText(GELADEIRA, 2),
+    ]);
+    expect(new Set(ready.map((symbol) => symbol.dataset.symbolText)).size).toBe(5);
   });
 
   it('desenha em tamanho real sem mexer na medida da folha', async () => {

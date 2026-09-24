@@ -9,6 +9,9 @@ import LabelSurface from '../label/LabelSurface.jsx';
  * interface. O contorno tracejado marca a area util, para que a margem digitada
  * fique visivel mesmo onde nao ha etiqueta.
  *
+ * Cada etiqueta recebe o simbolo do proprio exemplar: duas copias do mesmo
+ * produto sao duas etiquetas diferentes.
+ *
  * O fator de tamanho segue o padrao da etiqueta: o involucro externo recebe a
  * medida ja multiplicada, e a folha por dentro continua com a medida do modelo,
  * reduzida por transformacao.
@@ -18,7 +21,14 @@ function toMm(value) {
   return `${value}mm`;
 }
 
-export default function SheetCanvas({ sheet, labelLayout, slots, symbols, scaleFactor = 1 }) {
+export default function SheetCanvas({
+  sheet,
+  labelLayout,
+  slots,
+  symbols,
+  header = {},
+  scaleFactor = 1,
+}) {
   return (
     <div
       style={{
@@ -52,8 +62,8 @@ export default function SheetCanvas({ sheet, labelLayout, slots, symbols, scaleF
           className="border border-dashed border-neutro-bordaForte"
         />
 
-        {slots.map(({ cell, product, copyNumber }) => {
-          const resolved = symbols.get(product.systemCode);
+        {slots.map(({ cell, product, copyNumber, symbolText, symbolError }) => {
+          const resolved = symbolText ? symbols.get(symbolText) : { symbol: null, error: symbolError };
 
           return (
             <div
@@ -74,6 +84,8 @@ export default function SheetCanvas({ sheet, labelLayout, slots, symbols, scaleF
                 layout={labelLayout}
                 symbol={resolved?.symbol ?? null}
                 symbolError={resolved?.error ?? null}
+                companyName={header.companyName ?? null}
+                installmentText={header.installmentText ?? null}
               />
             </div>
           );

@@ -79,6 +79,7 @@ export default function App() {
   const addProduct = useProductStore((state) => state.addProduct);
   const updateProduct = useProductStore((state) => state.updateProduct);
   const removeProduct = useProductStore((state) => state.removeProduct);
+  const clearAllProducts = useProductStore((state) => state.clearAllProducts);
 
   const printSelection = usePrintJobStore((state) => state.selection);
   const togglePrintProduct = usePrintJobStore((state) => state.toggleProduct);
@@ -175,20 +176,30 @@ export default function App() {
     loadProducts().catch(() => {});
   }, [loadProducts]);
 
-  // A restauracao troca o catalogo inteiro, entao tudo o que a tela guardava por
-  // identificador deixa de valer: a edicao em andamento, a etiqueta escolhida
-  // para a previa e a selecao da folha podem apontar para produtos que nao
-  // existem mais. Os tres sao zerados antes da releitura.
-  //
-  // A releitura falhando nao derruba a restauracao, que ja terminou: o motivo
-  // fica em `loadError` e a listagem o exibe junto da acao de tentar de novo.
-  const handleRestored = useCallback(async () => {
+  // A restauracao e a limpeza trocam o catalogo inteiro, entao tudo o que a
+  // tela guardava por identificador deixa de valer: a edicao em andamento, a
+  // etiqueta escolhida para a previa e a selecao da folha podem apontar para
+  // produtos que nao existem mais. Os dois caminhos zeram os tres por aqui.
+  const forgetCatalogReferences = useCallback(() => {
     setEditingProductId(null);
     setSelectedProductId(null);
     clearPrintSelection();
+  }, [clearPrintSelection]);
+
+  // A releitura falhando nao derruba a restauracao, que ja terminou: o motivo
+  // fica em `loadError` e a listagem o exibe junto da acao de tentar de novo.
+  const handleRestored = useCallback(async () => {
+    forgetCatalogReferences();
 
     await loadProducts().catch(() => {});
-  }, [clearPrintSelection, loadProducts]);
+  }, [forgetCatalogReferences, loadProducts]);
+
+  // A falha da limpeza sobe para o dialogo de confirmacao, que a mostra e deixa
+  // tentar de novo; as referencias so sao esquecidas quando o banco ficou vazio.
+  const handleClearCatalog = useCallback(async () => {
+    await clearAllProducts();
+    forgetCatalogReferences();
+  }, [clearAllProducts, forgetCatalogReferences]);
 
   return (
     <>
@@ -223,6 +234,7 @@ export default function App() {
             onEdit={handleEdit}
             onPreview={handlePreview}
             onRemove={handleRemove}
+            onClearCatalog={handleClearCatalog}
           />
         }
         right={

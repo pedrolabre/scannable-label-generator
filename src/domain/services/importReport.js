@@ -107,6 +107,7 @@ const FIELD_ORDER = [
   'description',
   'priceInCentavos',
   'ean',
+  'ncm',
   'category',
   'notes',
 ];

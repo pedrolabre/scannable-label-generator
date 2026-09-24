@@ -10,6 +10,7 @@ export const EMPTY_PRODUCT_FORM_VALUES = {
   description: '',
   systemCode: '',
   ean: '',
+  ncm: '',
   price: '',
   category: '',
   notes: '',
@@ -17,7 +18,16 @@ export const EMPTY_PRODUCT_FORM_VALUES = {
 
 // Campos que o contrato aceita ausentes: em branco, saem do objeto em vez de
 // virarem string vazia.
-const OPTIONAL_TEXT_FIELDS = ['description', 'ean', 'category', 'notes'];
+const OPTIONAL_TEXT_FIELDS = ['description', 'ean', 'ncm', 'category', 'notes'];
+
+/**
+ * O NCM costuma ser copiado da nota no formato 9403.50.00. Os pontos e os
+ * espacos saem antes do contrato, que guarda so os oito digitos; o que sobrar
+ * de diferente continua indo ao contrato, que diz o que esta errado.
+ */
+function normalizeNcmText(text) {
+  return text.replace(/[.\s]/g, '');
+}
 
 /** Preenche os controles a partir de um produto ja gravado. */
 export function toFormValues(product) {
@@ -30,6 +40,7 @@ export function toFormValues(product) {
     description: product.description ?? '',
     systemCode: product.systemCode ?? '',
     ean: product.ean ?? '',
+    ncm: product.ncm ?? '',
     price: formatCentavosAsBRL(product.priceInCentavos) ?? '',
     category: product.category ?? '',
     notes: product.notes ?? '',
@@ -49,7 +60,8 @@ export function toProductFields(values) {
   };
 
   for (const field of OPTIONAL_TEXT_FIELDS) {
-    const text = values[field].trim();
+    const raw = values[field].trim();
+    const text = field === 'ncm' ? normalizeNcmText(raw) : raw;
 
     if (text !== '') {
       fields[field] = text;

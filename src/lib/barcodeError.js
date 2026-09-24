@@ -8,6 +8,11 @@
  * com codigo de maquina e frase em portugues.
  */
 
+import {
+  SYMBOL_CONTENT_ERROR_CODES,
+  SymbolContentError,
+} from '../domain/services/symbolContent.js';
+
 export const BARCODE_ERROR_CODES = Object.freeze({
   EMPTY_CODE: 'EMPTY_CODE',
   UNSUPPORTED_CHARACTER: 'UNSUPPORTED_CHARACTER',
@@ -22,6 +27,26 @@ export class BarcodeError extends Error {
     this.name = 'BarcodeError';
     this.code = code;
   }
+}
+
+const CONTENT_ERROR_CODES = Object.freeze({
+  [SYMBOL_CONTENT_ERROR_CODES.MISSING_FIELD]: BARCODE_ERROR_CODES.EMPTY_CODE,
+  [SYMBOL_CONTENT_ERROR_CODES.UNSAFE_CHARACTER]: BARCODE_ERROR_CODES.UNSUPPORTED_CHARACTER,
+  [SYMBOL_CONTENT_ERROR_CODES.INVALID_COPY]: BARCODE_ERROR_CODES.UNSUPPORTED_CHARACTER,
+  [SYMBOL_CONTENT_ERROR_CODES.TOO_LONG]: BARCODE_ERROR_CODES.CODE_TOO_LONG,
+});
+
+/**
+ * Traduz a recusa do contrato do texto do simbolo para a falha do motor, com a
+ * mesma frase. Quem desenha a etiqueta trata uma falha so, venha ela do texto
+ * ou do desenho.
+ */
+export function toBarcodeError(error) {
+  if (error instanceof SymbolContentError) {
+    return new BarcodeError(CONTENT_ERROR_CODES[error.code], error.message);
+  }
+
+  return error;
 }
 
 const UNEXPECTED_FAILURE_MESSAGE =

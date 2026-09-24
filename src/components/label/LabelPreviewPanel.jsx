@@ -10,6 +10,7 @@ import ScrollRegion from '../ui/ScrollRegion.jsx';
 
 import LabelLayoutPicker from './LabelLayoutPicker.jsx';
 import LabelScalePicker, { DEFAULT_SCALE } from './LabelScalePicker.jsx';
+import LabelTextSettings from './LabelTextSettings.jsx';
 import ProductLabel from './ProductLabel.jsx';
 
 /**
@@ -34,6 +35,10 @@ import ProductLabel from './ProductLabel.jsx';
  * coluna, e nao conta como uma segunda regiao vertical: ela tem nome e recebe
  * foco, para que o teclado tambem alcance a parte do desenho que esta fora da
  * vista.
+ *
+ * Abaixo do desenho ficam os textos que valem para toda etiqueta — o nome da
+ * empresa e o parcelamento —, a vista mesmo com o catalogo vazio: sao
+ * configuracao da etiqueta, e nao do produto escolhido.
  *
  * `Ampliar` pede o dialogo da etiqueta, onde o mesmo desenho tem a janela
  * inteira em vez da largura da coluna. Este componente pede e nao desenha: o dialogo e de
@@ -142,6 +147,10 @@ export default function LabelPreviewPanel({
       }
     >
       {renderBody()}
+
+      <div className="border-t border-neutro-borda pt-4 lg:pt-3">
+        <LabelTextSettings />
+      </div>
     </ShellColumn>
   );
 }

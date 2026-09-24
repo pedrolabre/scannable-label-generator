@@ -80,6 +80,18 @@ function applyGray(doc, gray) {
   doc.setDrawColor(gray, gray, gray);
 }
 
+function anchorX(op) {
+  if (op.align === 'center') {
+    return op.xMm + op.widthMm / 2;
+  }
+
+  if (op.align === 'right') {
+    return op.xMm + op.widthMm;
+  }
+
+  return op.xMm;
+}
+
 function drawText(doc, op) {
   doc.setFont(FONT, op.bold ? FONT_STYLE_BOLD : FONT_STYLE_NORMAL);
   doc.setFontSize(op.fontSizeMm / MM_PER_POINT);
@@ -93,9 +105,10 @@ function drawText(doc, op) {
   }
 
   // A linha e centrada na altura que a geometria reservou, como a altura de
-  // linha faz na tela; o texto centrado tambem parte do meio da caixa.
+  // linha faz na tela; o texto centrado parte do meio da caixa, e o alinhado a
+  // direita parte da borda direita dela.
   const yMm = op.yMm + op.lineHeightMm / 2;
-  const xMm = op.align === 'center' ? op.xMm + op.widthMm / 2 : op.xMm;
+  const xMm = anchorX(op);
 
   doc.text(text, xMm, yMm, { baseline: 'middle', align: op.align });
 }

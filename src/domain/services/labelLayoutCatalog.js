@@ -9,8 +9,13 @@
  * banco fica reservada para o dia em que existirem modelos do proprio usuario.
  *
  * `symbolSizeMm` e o lado da caixa inteira do simbolo, com a zona de silencio
- * ja dentro dela. Os tres modelos ficam acima do alvo de 0,6 mm por modulo, e
- * nao apenas acima do piso de 0,5 mm.
+ * ja dentro dela. A caixa e dimensionada para o maior texto que o simbolo
+ * aceita, 53 modulos com a zona: 27 mm deixam o modulo acima do piso de 0,5 mm
+ * nesse pior caso, e o texto tipico, de 41 modulos, sai com 0,66 mm. A tag
+ * grande tem espaco para 32 mm, e ali o pior caso alcanca o alvo de 0,6 mm.
+ *
+ * A etiqueta pequena tem margem menor porque o simbolo precisa da altura util
+ * inteira: 30 mm de altura menos duas margens de 1,5 mm sao os 27 mm da caixa.
  *
  * Cada modelo e conferido duas vezes no carregamento deste modulo: pelo
  * contrato do modelo e pelo calculo de zonas. Modelo que nao passa derruba o
@@ -28,7 +33,7 @@ const DEFINITIONS = [
     widthMm: 100,
     heightMm: 70,
     paddingMm: 4,
-    symbolSizeMm: 36,
+    symbolSizeMm: 32,
   },
   {
     id: 'etiqueta-media',
@@ -36,15 +41,15 @@ const DEFINITIONS = [
     widthMm: 70,
     heightMm: 50,
     paddingMm: 3,
-    symbolSizeMm: 28,
+    symbolSizeMm: 27,
   },
   {
     id: 'etiqueta-pequena',
     name: 'Etiqueta pequena (50 x 30 mm)',
     widthMm: 50,
     heightMm: 30,
-    paddingMm: 2,
-    symbolSizeMm: 20,
+    paddingMm: 1.5,
+    symbolSizeMm: 27,
   },
 ];
 

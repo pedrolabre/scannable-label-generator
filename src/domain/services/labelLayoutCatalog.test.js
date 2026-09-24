@@ -11,7 +11,9 @@ import {
 } from '../../lib/barcodeSizing.js';
 import { LabelLayoutSchema } from '../schemas/labelLayoutSchema.js';
 
-import { NOMINAL_TOTAL_MODULES, computeLabelGeometry } from './labelGeometry.js';
+import { MAX_SYMBOL_TOTAL_MODULES } from '../../lib/barcodeSymbology.js';
+
+import { computeLabelGeometry } from './labelGeometry.js';
 import {
   DEFAULT_LABEL_LAYOUT_ID,
   LABEL_LAYOUTS,
@@ -55,27 +57,40 @@ describe('catalogo de modelos', () => {
 });
 
 describe('piso de legibilidade do simbolo', () => {
+  // O texto tipico do simbolo tem 61 bytes e cai na versao 4: 41 modulos com a
+  // zona de silencio. O maior texto aceito cai na versao 7: 53 modulos.
+  const TYPICAL_TOTAL_MODULES = 41;
+
   it.each(LABEL_LAYOUTS.map((layout) => [layout.id, layout]))(
-    '%s alcanca o piso de modulo, e tambem o alvo',
+    '%s fica acima do piso no pior caso, e acima do alvo no caso tipico',
     (_id, layout) => {
-      expect(fitsMinimumModuleSize(NOMINAL_TOTAL_MODULES, layout.symbolSizeMm)).toBe(true);
-
-      const side = moduleSizeMm(NOMINAL_TOTAL_MODULES, layout.symbolSizeMm);
-
-      expect(side).toBeGreaterThanOrEqual(MIN_MODULE_SIZE_MM);
-      expect(side).toBeGreaterThanOrEqual(TARGET_MODULE_SIZE_MM);
+      expect(fitsMinimumModuleSize(MAX_SYMBOL_TOTAL_MODULES, layout.symbolSizeMm)).toBe(true);
+      expect(moduleSizeMm(MAX_SYMBOL_TOTAL_MODULES, layout.symbolSizeMm)).toBeGreaterThanOrEqual(
+        MIN_MODULE_SIZE_MM,
+      );
+      expect(moduleSizeMm(TYPICAL_TOTAL_MODULES, layout.symbolSizeMm)).toBeGreaterThanOrEqual(
+        TARGET_MODULE_SIZE_MM,
+      );
     },
   );
 
+  it('a tag grande alcanca o alvo mesmo no pior caso', () => {
+    const grande = findLabelLayout('tag-grande');
+
+    expect(moduleSizeMm(MAX_SYMBOL_TOTAL_MODULES, grande.symbolSizeMm)).toBeGreaterThanOrEqual(
+      TARGET_MODULE_SIZE_MM,
+    );
+  });
+
   it('o piso corresponde ao lado minimo que o simbolo inteiro pode ter', () => {
-    expect(minimumSymbolSizeMm(NOMINAL_TOTAL_MODULES)).toBeCloseTo(
-      NOMINAL_TOTAL_MODULES * MIN_MODULE_SIZE_MM,
+    expect(minimumSymbolSizeMm(MAX_SYMBOL_TOTAL_MODULES)).toBeCloseTo(
+      MAX_SYMBOL_TOTAL_MODULES * MIN_MODULE_SIZE_MM,
       10,
     );
 
     for (const layout of LABEL_LAYOUTS) {
       expect(layout.symbolSizeMm).toBeGreaterThanOrEqual(
-        minimumSymbolSizeMm(NOMINAL_TOTAL_MODULES),
+        minimumSymbolSizeMm(MAX_SYMBOL_TOTAL_MODULES),
       );
     }
   });
@@ -84,16 +99,14 @@ describe('piso de legibilidade do simbolo', () => {
     const tooSmall = {
       id: 'modelo-ilegivel',
       name: 'Modelo ilegível',
-      widthMm: 40,
-      heightMm: 28,
+      widthMm: 60,
+      heightMm: 40,
       paddingMm: 2,
-      symbolSizeMm: minimumSymbolSizeMm(NOMINAL_TOTAL_MODULES) - 0.1,
+      symbolSizeMm: minimumSymbolSizeMm(MAX_SYMBOL_TOTAL_MODULES) - 0.1,
     };
 
     expect(LabelLayoutSchema.safeParse(tooSmall).success).toBe(true);
-    expect(() => computeLabelGeometry(tooSmall)).toThrow(
-      /tamanho minimo de modulo|abaixo do tamanho/i,
-    );
+    expect(() => computeLabelGeometry(tooSmall)).toThrow(/tamanho mínimo de módulo/i);
   });
 });
 
@@ -106,6 +119,7 @@ describe('viabilidade geometrica de cada modelo', () => {
       expect(geometry.column.widthMm).toBeGreaterThan(0);
       expect(geometry.name.lines).toBeGreaterThanOrEqual(1);
       expect(geometry.symbol.sizeMm).toBe(layout.symbolSizeMm);
+      expect(geometry.symbol.totalModules).toBe(MAX_SYMBOL_TOTAL_MODULES);
     },
   );
 });

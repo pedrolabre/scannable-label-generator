@@ -5,6 +5,7 @@ import {
   labelsOnSheet,
   paginateLabels,
 } from '../../domain/services/sheetPagination.js';
+import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
 
 import SheetCanvas from './SheetCanvas.jsx';
 import SheetNavigation from './SheetNavigation.jsx';
@@ -14,8 +15,8 @@ import {
   describeGridShape,
   describeSheetCount,
   describeSheetMargins,
-  distinctSystemCodes,
   resolveSheetSlots,
+  sheetSymbolTexts,
 } from './sheetSlots.js';
 import { useSheetSymbols } from './useSheetSymbols.js';
 
@@ -98,7 +99,8 @@ export default function SheetPreview({
     products,
     grid,
   );
-  const symbols = useSheetSymbols(distinctSystemCodes(slots));
+  const symbols = useSheetSymbols(sheetSymbolTexts(slots));
+  const header = useLabelHeader();
 
   const hasCapacity = grid.perSheet > 0;
   const sheetCountMessage = hasCapacity ? describeSheetCount(pages, grid.perSheet) : null;
@@ -119,6 +121,7 @@ export default function SheetPreview({
               labelLayout={labelLayout}
               slots={slots}
               symbols={symbols}
+              header={header}
               scaleFactor={scaleFactor}
             />
           </div>

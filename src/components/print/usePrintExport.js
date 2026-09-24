@@ -7,16 +7,23 @@ import { describePrintDocument } from '../../domain/services/printDocument.js';
 import {
   buildExportFileName,
   describeExportProgress,
-  listExportSystemCodes,
+  describeSymbolProgress,
+  listExportSymbolTexts,
 } from '../../domain/services/printExport.js';
+import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
 
 /**
  * Estado da exportacao e a sequencia que a executa.
  *
- * A sequencia e sempre a mesma: gerar um simbolo por codigo distinto da
- * tiragem, descrever o documento, gerar os bytes cedendo o laco de eventos
- * entre folhas, e disparar o download. O gerador de simbolo ja tem cache
- * proprio, entao os codigos que a previa desenhou nao sao gerados de novo.
+ * A sequencia e sempre a mesma: gerar um simbolo por exemplar da tiragem,
+ * descrever o documento, gerar os bytes cedendo o laco de eventos entre
+ * folhas, e disparar o download. Cada copia tem texto proprio, entao a tiragem
+ * inteira pede um simbolo por etiqueta; a geracao anda em lotes e cede o laco
+ * de eventos entre eles, com o andamento escrito no mesmo lugar do andamento
+ * das folhas.
+ *
+ * O nome da empresa e o parcelamento sao lidos da configuracao na hora do
+ * clique, os mesmos que a previa desenha.
  *
  * Simbolo recusado nao interrompe a exportacao: ele entra no mapa como falha e
  * a etiqueta correspondente sai com o marcador, como a tela ja mostra.
@@ -34,22 +41,44 @@ export const EXPORT_STATUS = Object.freeze({
   FAILED: 'failed',
 });
 
-async function resolveSymbols(codes) {
-  const entries = await Promise.all(
-    codes.map((code) =>
-      generateSymbol(code)
-        .then((symbol) => [code, { symbol, error: null }])
-        .catch((error) => [code, { symbol: null, error }]),
-    ),
-  );
+/** Simbolos por lote: poucos o bastante para a tela responder entre um lote e outro. */
+const SYMBOL_BATCH_SIZE = 50;
 
-  return new Map(entries);
+function yieldToEventLoop() {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+async function resolveSymbols(texts, onProgress) {
+  const resolved = new Map();
+
+  for (let start = 0; start < texts.length; start += SYMBOL_BATCH_SIZE) {
+    const batch = texts.slice(start, start + SYMBOL_BATCH_SIZE);
+    const entries = await Promise.all(
+      batch.map((text) =>
+        generateSymbol(text)
+          .then((symbol) => [text, { symbol, error: null }])
+          .catch((error) => [text, { symbol: null, error }]),
+      ),
+    );
+
+    entries.forEach(([text, result]) => resolved.set(text, result));
+    onProgress(Math.min(start + batch.length, texts.length), texts.length);
+
+    if (start + SYMBOL_BATCH_SIZE < texts.length) {
+      await yieldToEventLoop();
+    }
+  }
+
+  return resolved;
 }
 
 export function usePrintExport() {
   const [status, setStatus] = useState(EXPORT_STATUS.IDLE);
   const [message, setMessage] = useState(null);
   const runningRef = useRef(false);
+  const header = useLabelHeader();
 
   const exportJob = useCallback(async ({ job, sheet, labelLayout, grid, products }) => {
     if (runningRef.current) {
@@ -61,8 +90,18 @@ export function usePrintExport() {
     setMessage(null);
 
     try {
-      const symbols = await resolveSymbols(listExportSystemCodes(job.items, products));
-      const description = describePrintDocument({ job, sheet, labelLayout, grid, products, symbols });
+      const symbols = await resolveSymbols(listExportSymbolTexts(job.items, products), (done, total) => {
+        setMessage(describeSymbolProgress(done, total));
+      });
+      const description = describePrintDocument({
+        job,
+        sheet,
+        labelLayout,
+        grid,
+        products,
+        symbols,
+        header,
+      });
 
       const bytes = await renderPrintDocument(description, {
         createdAt: new Date(),
@@ -84,7 +123,7 @@ export function usePrintExport() {
     } finally {
       runningRef.current = false;
     }
-  }, []);
+  }, [header]);
 
   return { status, message, exportJob };
 }

@@ -51,6 +51,7 @@ const CATALOGO = [
     displayName: 'Sofá retrátil 3 lugares',
     priceInCentavos: 189900,
     ean: '7890000000017',
+    ncm: '94016100',
   }),
   produto({
     id: TERCEIRO_ID,
@@ -151,6 +152,30 @@ describe('ciclo completo', () => {
 
     expect(lido.issues).toEqual([]);
     expect(lido.file.tables.products).toEqual(CATALOGO);
+  });
+
+  it('preserva o NCM na ida e na volta', () => {
+    const arquivo = buildBackupFile({ products: CATALOGO }, new Date('2026-09-18T12:30:00.000Z'));
+    const lido = readBackupFile(serializeBackupFile(arquivo));
+
+    expect(lido.file.tables.products[1].ncm).toBe('94016100');
+  });
+
+  it('continua aceitando o backup gravado antes de o produto ter NCM', () => {
+    // Arquivo escrito a mao no formato de sempre, sem a chave `ncm` em produto
+    // nenhum: e o arquivo que existe hoje no computador de quem ja usa.
+    const antigo = JSON.stringify({
+      format: BACKUP_FORMAT,
+      formatVersion: 1,
+      databaseVersion: 1,
+      generatedAt: '2026-09-18T12:30:00.000Z',
+      counts: { products: 1, labelLayouts: 0, sheetLayouts: 0, printJobs: 0 },
+      tables: { products: [produto()], labelLayouts: [], sheetLayouts: [], printJobs: [] },
+    });
+    const lido = readBackupFile(antigo);
+
+    expect(lido.issues).toEqual([]);
+    expect(lido.file.tables.products[0]).not.toHaveProperty('ncm');
   });
 
   it('preserva o envelope inteiro na volta', () => {

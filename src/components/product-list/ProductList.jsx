@@ -6,6 +6,7 @@ import { describeStorageError } from '../../storage/storageError.js';
 import ShellColumn from '../layout/ShellColumn.jsx';
 import ConfirmModal from '../ui/ConfirmModal.jsx';
 
+import ClearCatalogButton from './ClearCatalogButton.jsx';
 import ProductCards from './ProductCards.jsx';
 import {
   EmptyCatalogStatus,
@@ -50,6 +51,10 @@ function countHint(visible, total) {
  * nenhum produto para mostrar, o aviso e a nova tentativa ocupam o lugar da
  * lista. Com produtos ja carregados, a ultima lista boa continua na tela.
  *
+ * `Zerar catalogo` fica na faixa fixa, ao lado da busca, e so existe com
+ * produto na lista. O que acontece depois da limpeza com a selecao da folha e
+ * a previa e de quem monta a tela, que recebe o pedido por `onClearCatalog`.
+ *
  * A marcacao para a folha de etiquetas so atravessa esta tela: o conjunto do que
  * esta marcado e o alternador chegam prontos e descem para as duas superficies.
  * A listagem nao guarda essa escolha, porque quem a consome e o painel da folha.
@@ -65,6 +70,7 @@ export default function ProductList({
   onEdit,
   onPreview,
   onRemove,
+  onClearCatalog,
 }) {
   const [query, setQuery] = useState('');
   const [productToRemove, setProductToRemove] = useState(null);
@@ -167,12 +173,18 @@ export default function ProductList({
 
   const header =
     products.length > 0 ? (
-      <div className="border-b border-neutro-borda px-recuo py-3 lg:py-2.5">
-        <ProductSearchField
-          value={query}
-          onChange={setQuery}
-          hint={countHint(visibleProducts.length, products.length)}
-        />
+      <div className="flex items-end gap-3 border-b border-neutro-borda px-recuo py-3 lg:py-2.5">
+        <div className="min-w-0 flex-1">
+          <ProductSearchField
+            value={query}
+            onChange={setQuery}
+            hint={countHint(visibleProducts.length, products.length)}
+          />
+        </div>
+
+        {onClearCatalog ? (
+          <ClearCatalogButton total={products.length} onClear={onClearCatalog} className="shrink-0" />
+        ) : null}
       </div>
     ) : null;
 

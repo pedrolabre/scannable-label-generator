@@ -217,6 +217,22 @@ describe('gravacao', () => {
     expect(resultado).toEqual({ restoredProducts: 2 });
   });
 
+  it('grava o NCM que veio no arquivo', async () => {
+    const replaceAllProducts = vi.fn().mockResolvedValue(1);
+    const conteudo = readBackupFile(texto({ produtos: [produto({ ncm: '84182100' })] })).file;
+
+    await restoreBackup(conteudo, { repository: { replaceAllProducts } });
+
+    expect(replaceAllProducts.mock.calls[0][0][0].ncm).toBe('84182100');
+  });
+
+  it('recusa o arquivo com NCM fora do formato, antes de gravar', () => {
+    const lido = readBackupFile(texto({ produtos: [produto({ ncm: '8418.21.00' })] }));
+
+    expect(lido.file).toBeNull();
+    expect(lido.issues[0].message).toBe('NCM deve ter 8 dígitos, sem ponto');
+  });
+
   it('grava o catalogo vazio quando o arquivo nao traz produto nenhum', async () => {
     const replaceAllProducts = vi.fn().mockResolvedValue(0);
     const conteudo = readBackupFile(texto({ produtos: [] })).file;

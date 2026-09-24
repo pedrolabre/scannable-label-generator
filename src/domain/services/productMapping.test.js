@@ -6,6 +6,7 @@ import { createImportRecord } from './importRecord.js';
 import {
   ISSUE_DISPLAY_NAME_TRUNCATED,
   ISSUE_EAN_UNEXPECTED_LENGTH,
+  ISSUE_NCM_UNEXPECTED_FORMAT,
   ISSUE_PRICE_NEGATIVE,
   ISSUE_PRICE_NOT_UNITARY,
   ISSUE_PRICE_UNREADABLE,
@@ -180,6 +181,39 @@ describe('mapRecordToCandidate, codigo de barras', () => {
   });
 });
 
+describe('mapRecordToCandidate, NCM', () => {
+  it('le o NCM da tag de mesmo nome da nota', () => {
+    expect(candidateFrom(xmlRecord({ ...UNIT_ITEM, NCM: '94035000' })).ncm).toBe('94035000');
+  });
+
+  it('omite o NCM ausente sem aviso, porque ele e opcional', () => {
+    const record = xmlRecord(UNIT_ITEM);
+
+    expect(candidateFrom(record)).not.toHaveProperty('ncm');
+    expect(codesFrom(record)).toEqual([]);
+  });
+
+  it('avisa quando o NCM existe mas nao tem oito digitos, e deixa o campo de fora', () => {
+    for (const ncm of ['9403500', '940350001', '9403500A']) {
+      const record = xmlRecord({ ...UNIT_ITEM, NCM: ncm });
+
+      expect(candidateFrom(record)).not.toHaveProperty('ncm');
+      expect(codesFrom(record)).toEqual([ISSUE_NCM_UNEXPECTED_FORMAT]);
+      expect(issuesFrom(record)[0]).toMatchObject({ field: 'ncm', rawValue: ncm });
+    }
+  });
+
+  it('nao leva nenhum outro campo fiscal da nota', () => {
+    const candidate = candidateFrom(
+      xmlRecord({ ...UNIT_ITEM, NCM: '94035000', CFOP: '5102', CEST: '1234567' }),
+    );
+
+    expect(Object.keys(candidate).sort()).toEqual(
+      ['description', 'displayName', 'ean', 'ncm', 'priceInCentavos', 'systemCode'].sort(),
+    );
+  });
+});
+
 describe('suggestDisplayName', () => {
   it('mantem inteiro o texto que ja cabe no limite', () => {
     expect(suggestDisplayName('PRODUTO INVENTADO CURTO')).toEqual({
@@ -285,9 +319,17 @@ describe('mapRecordToCandidate, planilha e JSON', () => {
   });
 
   it('deixa de fora a coluna que nao esta na lista de nomes reconhecidos', () => {
-    const candidate = candidateFrom(csvRecord({ codigo: 'INV-4', ncm: '00000000', cfop: '5102' }));
+    const candidate = candidateFrom(csvRecord({ codigo: 'INV-4', cfop: '5102', icms: '18' }));
 
     expect(candidate).toEqual({ systemCode: 'INV-4', displayName: '' });
+  });
+
+  it('le o NCM da coluna, com ou sem os pontos do formato da nota', () => {
+    expect(candidateFrom(csvRecord({ codigo: 'INV-4', ncm: '94035000' })).ncm).toBe('94035000');
+    expect(candidateFrom(csvRecord({ codigo: 'INV-4', NCM: '9403.50.00' })).ncm).toBe('94035000');
+    expect(candidateFrom(csvRecord({ codigo: 'INV-4', 'Código NCM': '9403 50 00' })).ncm).toBe(
+      '94035000',
+    );
   });
 
   it('mantem a primeira coluna quando duas apontam para o mesmo campo', () => {

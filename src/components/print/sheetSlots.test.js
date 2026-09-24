@@ -7,12 +7,22 @@ import {
   describeGridShape,
   describeSheetCount,
   describeSheetMargins,
-  distinctSystemCodes,
   resolveSheetSlots,
+  sheetSymbolTexts,
 } from './sheetSlots.js';
 
-const ARMARIO = { id: '11111111-1111-4111-8111-111111111111', systemCode: 'MOV-00412' };
-const GELADEIRA = { id: '22222222-2222-4222-8222-222222222222', systemCode: 'ELE-00713' };
+const ARMARIO = {
+  id: '11111111-1111-4111-8111-111111111111',
+  systemCode: 'MOV-00412',
+  displayName: 'ARMARIO',
+  priceInCentavos: 89990,
+};
+const GELADEIRA = {
+  id: '22222222-2222-4222-8222-222222222222',
+  systemCode: 'ELE-00713',
+  displayName: 'GELADEIRA',
+  priceInCentavos: 329900,
+};
 
 const GRID = {
   perSheet: 2,
@@ -34,8 +44,20 @@ describe('resolveSheetSlots', () => {
     );
 
     expect(slots).toEqual([
-      { cell: GRID.cells[0], product: ARMARIO, copyNumber: 1 },
-      { cell: GRID.cells[1], product: GELADEIRA, copyNumber: 1 },
+      {
+        cell: GRID.cells[0],
+        product: ARMARIO,
+        copyNumber: 1,
+        symbolText: 'LF1|MOV-00412|ARMARIO|89990|||c1',
+        symbolError: null,
+      },
+      {
+        cell: GRID.cells[1],
+        product: GELADEIRA,
+        copyNumber: 1,
+        symbolText: 'LF1|ELE-00713|GELADEIRA|329900|||c1',
+        symbolError: null,
+      },
     ]);
   });
 
@@ -50,16 +72,33 @@ describe('resolveSheetSlots', () => {
   });
 });
 
-describe('distinctSystemCodes', () => {
-  it('pede um simbolo por codigo, e nao por copia', () => {
-    const slots = [
-      { product: ARMARIO },
-      { product: ARMARIO },
-      { product: GELADEIRA },
-      { product: ARMARIO },
-    ];
+describe('sheetSymbolTexts', () => {
+  it('pede um simbolo por exemplar, e nao por codigo', () => {
+    const slots = resolveSheetSlots(
+      [
+        { cellIndex: 0, productId: ARMARIO.id, copyNumber: 1 },
+        { cellIndex: 1, productId: ARMARIO.id, copyNumber: 2 },
+      ],
+      [ARMARIO],
+      GRID,
+    );
 
-    expect(distinctSystemCodes(slots)).toEqual(['MOV-00412', 'ELE-00713']);
+    expect(sheetSymbolTexts(slots)).toEqual([
+      'LF1|MOV-00412|ARMARIO|89990|||c1',
+      'LF1|MOV-00412|ARMARIO|89990|||c2',
+    ]);
+  });
+
+  it('entrega a recusa pronta quando o texto do exemplar nao vale', () => {
+    const slots = resolveSheetSlots(
+      [{ cellIndex: 0, productId: ARMARIO.id, copyNumber: 1 }],
+      [{ ...ARMARIO, displayName: 'A|B' }],
+      GRID,
+    );
+
+    expect(slots[0].symbolText).toBeNull();
+    expect(slots[0].symbolError).toMatchObject({ name: 'BarcodeError' });
+    expect(sheetSymbolTexts(slots)).toEqual([]);
   });
 });
 

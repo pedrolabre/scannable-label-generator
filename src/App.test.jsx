@@ -299,3 +299,88 @@ describe('colunas da listagem', () => {
     expect(container.querySelector('tbody td p + p').textContent).toContain('Móveis de quarto');
   });
 });
+
+describe('zerar o catalogo', () => {
+  const SEGUNDO = {
+    ...PRODUCT,
+    id: '7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
+    systemCode: 'ELE-00713',
+    displayName: 'Geladeira duas portas',
+  };
+
+  // O banco do navegador nao existe nesta suite: a limpeza do armazenamento e
+  // trocada por uma que so esvazia a lista, como o banco vazio faria.
+  const limpar = vi.fn(async () => {
+    useProductStore.setState({ products: [] });
+  });
+
+  async function prepararCatalogoComSelecaoEPrevia() {
+    useProductStore.setState({
+      products: [PRODUCT, SEGUNDO],
+      isLoading: false,
+      loadError: null,
+      clearAllProducts: limpar,
+    });
+    usePrintJobStore.getState().toggleProduct(PRODUCT.id);
+
+    await render();
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+  }
+
+  function dialogo() {
+    return container.querySelector('[role="dialog"]');
+  }
+
+  afterEach(() => {
+    limpar.mockClear();
+  });
+
+  it('pede confirmacao mostrando quantos produtos saem', async () => {
+    await prepararCatalogoComSelecaoEPrevia();
+    await clicar('Zerar catálogo');
+
+    expect(tituloDoDialogo()).toBe('Zerar catálogo');
+    expect(dialogo().querySelector('[data-clear-catalog-total]').dataset.clearCatalogTotal).toBe('2');
+    expect(dialogo().textContent).toContain('2 produtos');
+    expect(dialogo().textContent).toContain('definitiva');
+    expect(limpar).not.toHaveBeenCalled();
+  });
+
+  it('cancelar nao apaga nada', async () => {
+    await prepararCatalogoComSelecaoEPrevia();
+    await clicar('Zerar catálogo');
+
+    await act(async () => {
+      Array.from(dialogo().querySelectorAll('button'))
+        .find((elemento) => elemento.textContent.trim() === 'Cancelar')
+        .click();
+    });
+
+    expect(dialogo()).toBeNull();
+    expect(limpar).not.toHaveBeenCalled();
+    expect(useProductStore.getState().products).toHaveLength(2);
+    expect(usePrintJobStore.getState().selection).toHaveLength(1);
+  });
+
+  it('confirmar zera a lista, a selecao da folha e a previa', async () => {
+    await prepararCatalogoComSelecaoEPrevia();
+
+    expect(container.querySelector('[data-label-surface]')).not.toBeNull();
+
+    await clicar('Zerar catálogo');
+
+    await act(async () => {
+      Array.from(dialogo().querySelectorAll('button'))
+        .filter((elemento) => elemento.textContent.trim() === 'Zerar catálogo')
+        .at(-1)
+        .click();
+    });
+
+    expect(limpar).toHaveBeenCalledTimes(1);
+    expect(dialogo()).toBeNull();
+    expect(useProductStore.getState().products).toEqual([]);
+    expect(usePrintJobStore.getState().selection).toEqual([]);
+    expect(container.querySelector('[data-label-surface]')).toBeNull();
+    expect(container.querySelector('[data-preview-state="empty-catalog"]')).not.toBeNull();
+  });
+});

@@ -6,6 +6,7 @@ import { readNfceProductSources } from './nfceProductMapping.js';
 import {
   ISSUE_DISPLAY_NAME_TRUNCATED,
   ISSUE_EAN_UNEXPECTED_LENGTH,
+  ISSUE_NCM_UNEXPECTED_FORMAT,
   ISSUE_PRICE_NEGATIVE,
   ISSUE_PRICE_UNREADABLE,
   ISSUE_SEVERITY_MISSING,
@@ -203,6 +204,38 @@ function readEan(value, issues) {
   return undefined;
 }
 
+/**
+ * NCM, escrito so quando sobram exatamente oito digitos depois de tirar os
+ * pontos e os espacos com que a nota e as planilhas costumam formata-lo
+ * ("9403.50.00"). Campo vazio e ausencia, e passa sem aviso: o NCM e opcional.
+ * Qualquer outra coisa e defeito na origem, e o aviso guarda o texto cru.
+ */
+function readNcm(value, issues) {
+  const text = toText(value);
+
+  if (text === '') {
+    return undefined;
+  }
+
+  const digits = text.replace(/[.\s]/g, '');
+
+  if (/^\d{8}$/.test(digits)) {
+    return digits;
+  }
+
+  issues.push(
+    createMappingIssue({
+      field: 'ncm',
+      code: ISSUE_NCM_UNEXPECTED_FORMAT,
+      severity: ISSUE_SEVERITY_MISSING,
+      rawValue: text,
+      message: `O NCM "${text}" não tem os 8 dígitos esperados.`,
+    }),
+  );
+
+  return undefined;
+}
+
 function readSourcesFor(record) {
   return record.source.format === IMPORT_FORMAT_XML
     ? readNfceProductSources(record.raw ?? {})
@@ -233,6 +266,12 @@ export function mapRecordToCandidate(record) {
 
   if (ean !== undefined) {
     candidate.ean = ean;
+  }
+
+  const ncm = readNcm(sources.ncm, issues);
+
+  if (ncm !== undefined) {
+    candidate.ncm = ncm;
   }
 
   for (const field of ['description', 'category', 'notes']) {

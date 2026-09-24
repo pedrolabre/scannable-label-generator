@@ -48,7 +48,7 @@ export default function ProductForm({ product = null, onSubmit, onClose }) {
   return (
     <ModalShell
       title={isEditing ? 'Editar produto' : 'Novo produto'}
-      subtitle="O nome e o preço são o que sai impresso. O código do sistema é o conteúdo gravado no símbolo."
+      subtitle="O nome, o preço, os códigos e o NCM saem impressos e gravados no símbolo."
       width={920}
       onClose={onClose}
       footer={

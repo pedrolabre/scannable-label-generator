@@ -12,17 +12,16 @@
  *
  * As medidas sao as mesmas que a tela desenha, porque saem das mesmas funcoes:
  * `computeSheetGrid` para a posicao na folha, `computeLabelGeometry` para as
- * zonas da etiqueta, e `fitNameLines`, `fitPriceText` e `fitCodeText` para o
- * texto. Uma segunda regra de corte para o papel faria a previa deixar de
- * prever o papel.
+ * zonas da etiqueta, e `describeLabelContent` para o texto. Uma segunda regra
+ * de corte para o papel faria a previa deixar de prever o papel.
  */
 
 import { readSymbolPath, scaleSymbolPath } from '../../lib/symbolPath.js';
-import { formatCentavosAsBRL } from '../../lib/currency.js';
 
+import { describeLabelContent } from './labelContent.js';
 import { computeLabelGeometry } from './labelGeometry.js';
-import { fitCodeText, fitNameLines, fitPriceText } from './labelText.js';
 import { labelsOnSheet, paginateLabels } from './sheetPagination.js';
+import { describeProductSymbolSupport } from './symbolContent.js';
 
 /** Traco do contorno da etiqueta: fino, cinza claro, so como guia de corte. */
 const OUTLINE_WIDTH_MM = 0.1;
@@ -70,65 +69,34 @@ function textOp({ text, xMm, yMm, widthMm, lineHeightMm, fontSizeMm, bold, align
 /**
  * Operacoes de uma etiqueta, ja deslocadas para a posicao dela na folha.
  *
- * O simbolo entra como caminho preenchido, na escala da propria caixa, com a
+ * O texto sai de `describeLabelContent`, a mesma lista que a tela desenha. O
+ * simbolo entra como caminho preenchido, na escala da propria caixa, com a
  * zona de silencio que o gerador ja embutiu. Quando o simbolo falta, entra o
  * mesmo marcador que a tela desenha, e o restante do conteudo sai igual.
  */
-function describeLabel({ product, geometry, origin, symbol, symbolError }) {
+function describeLabel({ product, geometry, origin, symbol, symbolError, header }) {
   const ops = [
     whiteRect(origin.xMm, origin.yMm, geometry.widthMm, geometry.heightMm),
     outline(origin.xMm, origin.yMm, geometry.widthMm, geometry.heightMm, OUTLINE_GRAY, null),
   ];
 
-  const name = fitNameLines(product.displayName, geometry.name);
-
-  name.lines.forEach((line, index) => {
+  describeLabelContent({ product, geometry, ...header }).forEach((item) => {
     ops.push(
       textOp({
-        text: line.toLocaleUpperCase('pt-BR'),
-        xMm: origin.xMm + geometry.name.xMm,
-        yMm: origin.yMm + geometry.name.yMm + index * geometry.name.lineHeightMm,
-        widthMm: geometry.name.widthMm,
-        lineHeightMm: geometry.name.lineHeightMm,
-        fontSizeMm: geometry.name.fontSizeMm,
-        bold: true,
-        align: 'left',
-        trim: true,
+        text: item.uppercase ? item.text.toLocaleUpperCase('pt-BR') : item.text,
+        xMm: origin.xMm + item.xMm,
+        yMm: origin.yMm + item.yMm,
+        widthMm: item.widthMm,
+        lineHeightMm: item.lineHeightMm,
+        fontSizeMm: item.fontSizeMm,
+        bold: item.bold,
+        align: item.align,
+        // O preco e o codigo ja foram medidos por degrau de corpo e nunca sao
+        // cortados; o resto ganha a segunda guarda, com a largura real da fonte.
+        trim: item.role !== 'price' && item.role !== 'code',
       }),
     );
   });
-
-  const price = fitPriceText(formatCentavosAsBRL(product.priceInCentavos) ?? '', geometry.price);
-
-  ops.push(
-    textOp({
-      text: price.text,
-      xMm: origin.xMm + geometry.price.xMm,
-      yMm: origin.yMm + geometry.price.yMm,
-      widthMm: geometry.price.widthMm,
-      lineHeightMm: geometry.price.heightMm,
-      fontSizeMm: price.fontSizeMm,
-      bold: true,
-      align: 'left',
-      trim: false,
-    }),
-  );
-
-  const code = fitCodeText(product.systemCode, geometry.code);
-
-  ops.push(
-    textOp({
-      text: code.text,
-      xMm: origin.xMm + geometry.code.xMm,
-      yMm: origin.yMm + geometry.code.yMm,
-      widthMm: geometry.code.widthMm,
-      lineHeightMm: geometry.code.heightMm,
-      fontSizeMm: code.fontSizeMm,
-      bold: false,
-      align: 'left',
-      trim: false,
-    }),
-  );
 
   const zone = {
     xMm: origin.xMm + geometry.symbol.xMm,
@@ -144,6 +112,7 @@ function describeLabel({ product, geometry, origin, symbol, symbolError }) {
     ops.push(
       Object.freeze({
         type: 'path',
+        symbolText: symbol.text,
         subpaths: Object.freeze(
           scaleSymbolPath(readSymbolPath(symbol.svg), zone).map((points) => Object.freeze(points)),
         ),
@@ -179,14 +148,29 @@ function describeLabel({ product, geometry, origin, symbol, symbolError }) {
  * que o operador marcou os produtos, com as copias de cada produto juntas e a
  * folha preenchida por linha.
  *
- * `symbols` e um mapa de codigo do sistema para `{ symbol, error }`. Codigo
- * ausente do mapa e tratado como codigo sem simbolo: a etiqueta sai com o
- * marcador de falha, e nunca em branco.
+ * Cada copia e um exemplar com simbolo proprio. `symbols` e um mapa do texto do
+ * simbolo para `{ symbol, error }`; texto ausente do mapa, ou exemplar cujo
+ * texto o contrato recusa, sai com o marcador de falha, e nunca em branco.
+ *
+ * `header` leva o nome da empresa e o parcelamento ja resolvidos, os mesmos da
+ * previa.
  */
-export function describePrintDocument({ job, sheet, labelLayout, grid, products, symbols }) {
+export function describePrintDocument({
+  job,
+  sheet,
+  labelLayout,
+  grid,
+  products,
+  symbols,
+  header = {},
+}) {
   const geometry = computeLabelGeometry(labelLayout);
   const byId = new Map(products.map((product) => [product.id, product]));
   const { totalSheets } = paginateLabels(job.items, grid.perSheet);
+  const labelHeader = {
+    companyName: header.companyName ?? null,
+    installmentText: header.installmentText ?? null,
+  };
   const pages = [];
 
   for (let sheetIndex = 0; sheetIndex < totalSheets; sheetIndex += 1) {
@@ -200,14 +184,16 @@ export function describePrintDocument({ job, sheet, labelLayout, grid, products,
         return;
       }
 
-      const resolved = symbols?.get(product.systemCode);
+      const content = describeProductSymbolSupport(product, slot.copyNumber);
+      const resolved = content.supported ? symbols?.get(content.text) : null;
 
       describeLabel({
         product,
         geometry,
         origin: { xMm: cell.xMm, yMm: cell.yMm },
         symbol: resolved?.symbol ?? null,
-        symbolError: resolved?.error ?? null,
+        symbolError: content.error ?? resolved?.error ?? null,
+        header: labelHeader,
       }).forEach((op) => ops.push(op));
     });
 
