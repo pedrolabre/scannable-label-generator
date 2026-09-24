@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { computeLabelGeometry } from '../domain/services/labelGeometry.js';
 import { findLabelLayout } from '../domain/services/labelLayoutCatalog.js';
 import { describePrintDocument } from '../domain/services/printDocument.js';
+import { buildSymbolText } from '../domain/services/symbolContent.js';
 import { computeSheetGrid } from '../domain/services/sheetGrid.js';
 import { findSheetLayout } from '../domain/services/sheetLayoutCatalog.js';
 
@@ -59,19 +60,22 @@ async function buildDescription({ items, sheet = RETRATO, labelLayout = GRANDE, 
   const grid = computeSheetGrid(sheet, labelLayout);
   const symbols = new Map();
 
-  for (const product of PRODUCTS) {
-    if (failed.includes(product.systemCode)) {
-      symbols.set(product.systemCode, {
-        symbol: null,
-        error: new BarcodeError(BARCODE_ERROR_CODES.UNSUPPORTED_CHARACTER, 'Sem símbolo.'),
-      });
-      continue;
-    }
+  for (const item of items) {
+    const product = PRODUCTS.find((candidate) => candidate.id === item.productId);
 
-    symbols.set(product.systemCode, {
-      symbol: await generateSymbol(product.systemCode),
-      error: null,
-    });
+    for (let copy = 1; copy <= item.copies; copy += 1) {
+      const text = buildSymbolText(product, copy);
+
+      symbols.set(
+        text,
+        failed.includes(product.systemCode)
+          ? {
+              symbol: null,
+              error: new BarcodeError(BARCODE_ERROR_CODES.UNSUPPORTED_CHARACTER, 'Sem símbolo.'),
+            }
+          : { symbol: await generateSymbol(text), error: null },
+      );
+    }
   }
 
   return describePrintDocument({
@@ -168,12 +172,13 @@ describe('simbolo impresso', () => {
     const box = boundingBox(readSubpaths(content).flat());
     const width = box.right - box.left;
     const height = box.bottom - box.top;
+    const symbol = await generateSymbol(buildSymbolText(ARMARIO, 1));
 
     expect(width).toBeCloseTo(height, 6);
 
-    // A caixa do simbolo tem 36 mm com a zona de silencio; o desenho ocupa os
-    // 21 modulos do meio, isto e, 21 de 29 do lado.
-    const drawnMm = (geometry.symbol.sizeMm * 21) / 29;
+    // A caixa do simbolo tem o lado do modelo com a zona de silencio; o desenho
+    // ocupa os modulos do meio, sem os quatro de cada lado.
+    const drawnMm = (geometry.symbol.sizeMm * symbol.moduleCount) / symbol.totalModules;
 
     expect(width).toBeCloseTo(drawnMm * POINTS_PER_MM, 3);
   });

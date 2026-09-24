@@ -16,7 +16,9 @@ import { normalizeSearchText } from './productSearch.js';
  * chega aqui.
  *
  * A nota nao traz origem para `category` nem para `notes`, entao esses dois
- * campos ficam de fora do candidato vindo de XML.
+ * campos ficam de fora do candidato vindo de XML. O NCM vem da tag de mesmo
+ * nome, que a nota traz em todo item; os demais campos fiscais da nota
+ * continuam de fora.
  */
 
 /**
@@ -74,6 +76,7 @@ export function readNfceProductSources(raw) {
       displayName: raw.xProd,
       description: raw.xProd,
       ean: raw.cEAN,
+      ncm: raw.NCM,
       // Preco de unidade continua fica de fora com o motivo ja escrito acima;
       // deixa-lo passar imprimiria o preco do quilo numa etiqueta de unidade.
       priceInCentavos: unitary ? raw.vUnCom : undefined,

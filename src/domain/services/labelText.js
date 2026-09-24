@@ -21,6 +21,13 @@
 /** Avanco medio de um caractere de texto corrido, em fracao do corpo. */
 export const TEXT_ADVANCE_RATIO = 0.58;
 
+/**
+ * Avanco medio de texto em caixa alta e negrito, em fracao do corpo. O nome da
+ * etiqueta sai assim, e com a media do texto corrido a linha estimada passaria
+ * da largura real e o corte cairia no meio da linha, e nao no fim do nome.
+ */
+export const UPPERCASE_BOLD_ADVANCE_RATIO = 0.7;
+
 /** Avanco de um algarismo em fonte de numeros tabulares, em fracao do corpo. */
 export const DIGIT_ADVANCE_RATIO = 0.6;
 
@@ -158,4 +165,28 @@ export function fitCodeText(systemCode, zone) {
   const budget = charBudget(zone.widthMm, fontSizeMm, DIGIT_ADVANCE_RATIO);
 
   return { text: cutWithEllipsis(text, budget), fontSizeMm, step, truncated: true };
+}
+
+/**
+ * Avanco medio de texto corrido em caixa baixa e peso normal. A media geral
+ * serve ao nome, que mistura caixa alta; a linha de apoio e quase toda em caixa
+ * baixa, e com a media geral ela seria cortada com folga sobrando.
+ */
+export const LOWERCASE_ADVANCE_RATIO = 0.5;
+
+/**
+ * Texto de uma linha so, cortado com reticencias quando passa da largura. Vale
+ * para o que e apoio na etiqueta — a empresa, o parcelamento, a linha fiscal —
+ * e que continua servindo pela metade. A estimativa e a primeira guarda; a tela
+ * recorta a zona e o arquivo impresso mede a largura real, como no nome.
+ */
+export function fitSingleLine(text, zone, advanceRatio = LOWERCASE_ADVANCE_RATIO) {
+  const value = typeof text === 'string' ? text.trim() : '';
+  const budget = charBudget(zone.widthMm, zone.fontSizeMm, advanceRatio);
+
+  if (value.length <= budget) {
+    return { text: value, truncated: false };
+  }
+
+  return { text: cutWithEllipsis(value, budget), truncated: true };
 }

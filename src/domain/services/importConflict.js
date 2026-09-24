@@ -61,6 +61,7 @@ const COMPARED_FIELDS = [
   'description',
   'priceInCentavos',
   'ean',
+  'ncm',
   'category',
   'notes',
 ];

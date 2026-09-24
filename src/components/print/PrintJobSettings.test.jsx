@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MAX_EXPORT_LABELS } from '../../domain/services/printExport.js';
-import { MAX_NUMERIC_LENGTH } from '../../lib/barcodeSymbology.js';
+import { MAX_SYMBOL_TEXT_BYTES } from '../../lib/barcodeSymbology.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import PrintJobSettings from './PrintJobSettings.jsx';
@@ -42,11 +42,11 @@ const GELADEIRA = {
   priceInCentavos: 329900,
 };
 
-// Comprimento e a unica porta por onde a impossibilidade entra: todo caractere
-// aceito pelo contrato do produto e codificavel.
+// Comprimento e a porta por onde a impossibilidade entra: o texto do simbolo
+// tem teto, e o codigo do sistema sozinho passa dele.
 const SEM_SIMBOLO = {
   id: '33333333-3333-4333-8333-333333333333',
-  systemCode: '9'.repeat(MAX_NUMERIC_LENGTH + 1),
+  systemCode: '9'.repeat(MAX_SYMBOL_TEXT_BYTES + 1),
   displayName: 'Fogão cinco bocas',
   priceInCentavos: 219900,
 };

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import {
+  clearAllProducts as clearStoredProducts,
   createProduct,
   deleteProduct,
   listProducts,
@@ -87,5 +88,13 @@ export const useProductStore = create((set, get) => ({
     await writeAndReconcileOnFailure(() => deleteProduct(id), get().loadProducts);
 
     set({ products: get().products.filter((product) => product.id !== id) });
+  },
+
+  // Depois de uma limpeza que falhou, a lista em memoria deixa de ser
+  // confiavel: ela e relida antes de o erro subir, como na remocao.
+  clearAllProducts: async () => {
+    await writeAndReconcileOnFailure(() => clearStoredProducts(), get().loadProducts);
+
+    set({ products: [] });
   },
 }));

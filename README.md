@@ -9,13 +9,37 @@ MVP funcional.
 ## Funcionamento
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
-- Geração de QR Code com os dados da etiqueta, legíveis por leitor óptico sem necessidade de conexão.
-- Layouts de etiqueta padronizados em milímetros reais, com diagramação e prévia instantâneas.
-- Montagem automática em grade de folha A4 com ajuste de margens e aproveitamento de papel.
+- Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
+- Etiqueta com cabeçalho (código e empresa), preço, parcelamento, EAN, NCM e símbolo 2D no canto inferior.
+- Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
 - Exportação em PDF vetorial com escala física 1:1.
-- Interface em janela única com modais dedicados e tokens de marca, sem rolagem global.
-- Persistência local no IndexedDB com exportação e restauração total de backup.
+- Interface em janela única com modais dedicados e adaptação fluida de densidade.
+- Persistência local no IndexedDB com backup total e opção de zerar catálogo.
 - PWA instalável e utilizável offline.
+
+## Formato `LF1`
+
+Texto posicional, campos separados por barra vertical, ordem fixa:
+
+| Posição | Campo | Regra |
+| --- | --- | --- |
+| 0 | versão | `LF1` |
+| 1 | código do sistema | obrigatório, letras, números e hífen |
+| 2 | nome | obrigatório, como cadastrado |
+| 3 | preço em centavos | obrigatório, inteiro |
+| 4 | código de barras | opcional, 8, 12, 13 ou 14 dígitos |
+| 5 | NCM | opcional, 8 dígitos |
+| 6 | exemplar | `c1`, `c2`, ... na ordem da cópia |
+
+```text
+LF1|118789|CANTINHO CAFE RUBI|85990|7899075420416|94035000|c1
+LF1|118789|CANTINHO CAFE RUBI|85990|||c1
+```
+
+- Campo opcional ausente mantém a posição, vazio.
+- Não há escape: barra vertical e quebra de linha não ocorrem dentro de campo.
+- Texto com acento é lido pela declaração de UTF-8 do próprio QR Code.
+- Símbolo gerado com nível de correção M e zona de silêncio de 4 módulos.
 
 ## Stack
 
@@ -105,8 +129,11 @@ scannable-label-generator/
         LabelPreviewPanel.test.jsx
         LabelScalePicker.jsx
         LabelSurface.jsx
+        LabelTextSettings.jsx
+        LabelTextSettings.test.jsx
         ProductLabel.jsx
         ProductLabel.test.jsx
+        SavedTextSetting.jsx
         previewSelection.js
         previewSelection.test.js
         useProductSymbol.js
@@ -145,8 +172,10 @@ scannable-label-generator/
         ProductForm.jsx
         ProductFormFields.jsx
         productFormValues.js
+        productFormValues.test.js
         useProductForm.js
       product-list/
+        ClearCatalogButton.jsx
         ProductCards.jsx
         ProductItemActions.jsx
         ProductList.jsx
@@ -177,7 +206,9 @@ scannable-label-generator/
         backupFileSchema.js
         backupFileSchema.test.js
         commonFields.js
+        labelSettingsSchema.js
         productSchema.js
+        productSchema.test.js
         labelLayoutSchema.js
         sheetLayoutSchema.js
         sheetLayoutSchema.test.js
@@ -207,6 +238,8 @@ scannable-label-generator/
         importWriter.js
         importWriter.test.js
         jsonParser.js
+        labelContent.js
+        labelContent.test.js
         labelGeometry.js
         labelGeometry.test.js
         labelLayoutCatalog.js
@@ -234,6 +267,8 @@ scannable-label-generator/
         sheetLayoutCatalog.js
         sheetPagination.js
         sheetPagination.test.js
+        symbolContent.js
+        symbolContent.test.js
         tabularProductMapping.js
     lib/
       app-meta.js
@@ -270,12 +305,16 @@ scannable-label-generator/
     storage/
       backupRepository.js
       indexed-db.js
+      labelSettingsStorage.js
       productRepository.js
+      productRepository.test.js
       storageError.js
     store/
       useImportStore.js
+      useLabelSettingsStore.js
       usePrintJobStore.js
       useProductStore.js
+      useProductStore.test.js
     styles/
       brandClasses.test.js
       global.css

@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 
-import { canEncodeSystemCode } from '../../lib/barcodeSymbology.js';
 import { findLabelLayout } from '../../domain/services/labelLayoutCatalog.js';
 import {
   buildPrintJob,
@@ -9,6 +8,7 @@ import {
 } from '../../domain/services/printJobBuilder.js';
 import { computeSheetGrid, describeEmptyGrid } from '../../domain/services/sheetGrid.js';
 import { paginateLabels } from '../../domain/services/sheetPagination.js';
+import { describeProductSymbolSupport } from '../../domain/services/symbolContent.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import { SHEET_FIELDS, parseCopies, parseMillimeters } from './printInputs.js';
@@ -39,11 +39,18 @@ export function describePrintJobState({
   sheetLayoutId,
   sheetAdjustments = {},
 }) {
-  const items = resolvePrintItems(products, selection).map((entry) => ({
-    ...entry,
-    parsed: parseCopies(entry.copies),
-    hasSymbol: canEncodeSystemCode(entry.product.systemCode),
-  }));
+  // A ultima copia e o exemplar de texto mais longo: se ela tem simbolo, a
+  // tiragem inteira do produto tem.
+  const items = resolvePrintItems(products, selection).map((entry) => {
+    const parsed = parseCopies(entry.copies);
+    const lastCopy = parsed.error === null ? parsed.value : 1;
+
+    return {
+      ...entry,
+      parsed,
+      hasSymbol: describeProductSymbolSupport(entry.product, lastCopy).supported,
+    };
+  });
 
   // Os seis numeros da folha sao lidos do texto antes de chegarem ao contrato.
   // Campo que nao le mantem o valor do modelo na montagem: o erro dele ja

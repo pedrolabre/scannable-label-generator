@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
+import { buildSymbolText } from '../../domain/services/symbolContent.js';
 import {
   DEFAULT_LABEL_LAYOUT_ID,
   findLabelLayout,
@@ -152,14 +153,14 @@ describe('troca de modelo', () => {
     );
   });
 
-  it('nao gera o simbolo de novo ao trocar de modelo, porque o codigo nao mudou', async () => {
+  it('nao gera o simbolo de novo ao trocar de modelo, porque o texto do exemplar nao mudou', async () => {
     generateSymbol.mockResolvedValue(SYMBOL);
 
     await render(<Painel product={PRODUCT} hasProducts />);
     await choose('modelo-etiqueta', MENOR.id);
 
     expect(generateSymbol).toHaveBeenCalledTimes(1);
-    expect(generateSymbol).toHaveBeenCalledWith(PRODUCT.systemCode);
+    expect(generateSymbol).toHaveBeenCalledWith(buildSymbolText(PRODUCT, 1));
   });
 });
 

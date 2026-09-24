@@ -25,6 +25,7 @@ const COLUMN_ALIASES = {
   description: ['description', 'descricao', 'descricao completa'],
   priceInCentavos: ['price', 'preco', 'preco unitario', 'preco de venda', 'valor'],
   ean: ['ean', 'gtin', 'codigo de barras', 'codigo ean', 'barras'],
+  ncm: ['ncm', 'codigo ncm', 'ncm/sh', 'classificacao fiscal'],
   category: ['category', 'categoria', 'grupo'],
   notes: ['notes', 'observacoes', 'observacao', 'obs'],
 };

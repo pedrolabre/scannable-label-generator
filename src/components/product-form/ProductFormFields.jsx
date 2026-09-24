@@ -1,6 +1,7 @@
 import {
   DESCRIPTION_MAX_LENGTH,
   DISPLAY_NAME_MAX_LENGTH,
+  NCM_LENGTH,
 } from '../../domain/schemas/productSchema.js';
 
 import Field, { Textarea, TextInput } from '../ui/Field.jsx';
@@ -16,7 +17,7 @@ function counterHint(text, limit) {
 }
 
 /**
- * Os sete campos do produto. O grupo superior reune o que sai impresso na
+ * Os oito campos do produto. O grupo superior reune o que sai impresso na
  * etiqueta, o do meio os codigos de identificacao e o preco, e o inferior a
  * informacao de apoio.
  */
@@ -61,7 +62,7 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
         )}
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Field id={fieldId('systemCode')} label="Código do sistema" error={errors.systemCode}>
           {(control) => (
             <TextInput
@@ -85,6 +86,27 @@ export default function ProductFormFields({ values, errors, formattedPrice, onCh
               value={values.ean}
               onChange={handle('ean')}
               placeholder="7891234567895"
+              inputMode="numeric"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          )}
+        </Field>
+
+        <Field
+          id={fieldId('ncm')}
+          label="NCM"
+          hint={`${NCM_LENGTH} dígitos`}
+          error={errors.ncm}
+          optional
+        >
+          {(control) => (
+            <TextInput
+              {...control}
+              focus="code"
+              value={values.ncm}
+              onChange={handle('ncm')}
+              placeholder="94035000"
               inputMode="numeric"
               autoComplete="off"
               spellCheck={false}

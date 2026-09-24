@@ -25,6 +25,7 @@ export const ISSUE_PRICE_NOT_UNITARY = 'priceNotUnitary';
 export const ISSUE_PRICE_UNREADABLE = 'priceUnreadable';
 export const ISSUE_PRICE_NEGATIVE = 'priceNegative';
 export const ISSUE_EAN_UNEXPECTED_LENGTH = 'eanUnexpectedLength';
+export const ISSUE_NCM_UNEXPECTED_FORMAT = 'ncmUnexpectedFormat';
 
 export function createMappingIssue({ field, code, severity, rawValue, message }) {
   return { field, code, severity, rawValue, message };

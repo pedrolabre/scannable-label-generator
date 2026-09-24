@@ -5,15 +5,16 @@
  * componente, porque e a mesma conta que desabilita o botao e que recusa a
  * geracao: duas contas em dois lugares acabariam divergindo.
  *
- * O teto existe por causa do custo linear da geracao. Cada etiqueta custa
- * fracao de milissegundo e cerca de um quilobyte de arquivo, e a selecao nao
- * tem teto: 999 copias em algumas dezenas de produtos chegam a centenas de
- * milhares de etiquetas, o que produziria um arquivo de centenas de megabytes
- * depois de muitos segundos de espera. O teto e alto o bastante para a tiragem
- * real de um estoque e baixo o bastante para caber num arquivo que abre.
+ * O teto existe por causa do custo linear da geracao. Cada etiqueta tem
+ * simbolo proprio, que custa alguns milissegundos para gerar e alguns
+ * quilobytes de arquivo, e a selecao nao tem teto: 999 copias em algumas
+ * dezenas de produtos chegam a centenas de milhares de etiquetas. O teto e alto
+ * o bastante para a tiragem real de um estoque e baixo o bastante para caber
+ * num arquivo que abre.
  */
 
 import { countCopies } from './printJobBuilder.js';
+import { describeProductSymbolSupport } from './symbolContent.js';
 
 /** Teto de etiquetas por exportacao. */
 export const MAX_EXPORT_LABELS = 5000;
@@ -62,26 +63,39 @@ export function buildExportFileName(date, labelLayoutId) {
   return `${FILE_NAME_PREFIX}-${day}-${labelLayoutId}.pdf`;
 }
 
+/** Andamento da geracao dos simbolos, antes das folhas. */
+export function describeSymbolProgress(done, total) {
+  const format = (value) => value.toLocaleString('pt-BR');
+
+  return `Gerando símbolos: ${format(done)} de ${format(total)}…`;
+}
+
 /**
- * Codigos distintos da tiragem inteira, na ordem em que os produtos foram
- * marcados. E por aqui que a exportacao pede um simbolo por codigo, e nao um
- * por etiqueta: mil copias de um produto compartilham o mesmo desenho.
+ * Textos de simbolo da tiragem inteira, um por exemplar, na ordem em que os
+ * produtos foram marcados e as copias foram numeradas. Cada copia tem texto
+ * proprio, entao a tiragem de mil etiquetas pede mil simbolos. O exemplar cujo
+ * texto o contrato recusa fica de fora: a etiqueta dele sai com o marcador de
+ * falha.
  */
-export function listExportSystemCodes(items, products) {
+export function listExportSymbolTexts(items, products) {
   const byId = new Map(products.map((product) => [product.id, product]));
-  const codes = [];
-  const seen = new Set();
+  const texts = [];
 
   items.forEach((item) => {
     const product = byId.get(item.productId);
 
-    if (!product || seen.has(product.systemCode)) {
+    if (!product) {
       return;
     }
 
-    seen.add(product.systemCode);
-    codes.push(product.systemCode);
+    for (let copy = 1; copy <= item.copies; copy += 1) {
+      const content = describeProductSymbolSupport(product, copy);
+
+      if (content.supported) {
+        texts.push(content.text);
+      }
+    }
   });
 
-  return codes;
+  return texts;
 }

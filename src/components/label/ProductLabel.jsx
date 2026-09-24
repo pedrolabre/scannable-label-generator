@@ -1,11 +1,13 @@
 import { describeBarcodeError } from '../../lib/barcodeError.js';
+import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
 import InlineAlert from '../ui/InlineAlert.jsx';
 
 import LabelSurface from './LabelSurface.jsx';
 import { useProductSymbol } from './useProductSymbol.js';
 
 /**
- * Etiqueta de um produto, com o simbolo resolvido aqui dentro.
+ * Etiqueta de um produto, com o simbolo do primeiro exemplar resolvido aqui
+ * dentro e o cabecalho lido da configuracao da etiqueta.
  *
  * A etiqueta com simbolo recusado continua desenhando nome, preco e codigo: a
  * tela e onde o operador descobre qual produto falhou, e apagar tudo esconderia
@@ -16,6 +18,7 @@ import { useProductSymbol } from './useProductSymbol.js';
  */
 export default function ProductLabel({ product, layout, scaleFactor = 1, className }) {
   const { symbol, error } = useProductSymbol(product);
+  const { companyName, installmentText } = useLabelHeader();
 
   return (
     <div className={className}>
@@ -24,6 +27,8 @@ export default function ProductLabel({ product, layout, scaleFactor = 1, classNa
         layout={layout}
         symbol={symbol}
         symbolError={error}
+        companyName={companyName}
+        installmentText={installmentText}
         scaleFactor={scaleFactor}
       />
 

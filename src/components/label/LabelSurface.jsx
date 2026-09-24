@@ -1,16 +1,18 @@
 import { useMemo } from 'react';
 
-import { formatCentavosAsBRL } from '../../lib/currency.js';
+import { cx } from '../../lib/cx.js';
+import { describeLabelContent } from '../../domain/services/labelContent.js';
 import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
-import { fitCodeText, fitNameLines, fitPriceText } from '../../domain/services/labelText.js';
 
 /**
  * Desenho da etiqueta em milimetros reais.
  *
- * O componente e puro: recebe o produto, o modelo e o simbolo ja resolvido, e
- * nao gera simbolo nenhum. E isso que permite a montagem de uma folha gerar um
- * simbolo por codigo distinto e reaproveita-lo em todas as copias, em vez de
- * disparar uma geracao por etiqueta.
+ * O componente e puro: recebe o produto, o modelo e o simbolo do exemplar ja
+ * resolvido, e nao gera simbolo nenhum. Quem gera e quem sabe qual exemplar a
+ * etiqueta e — a previa individual mostra o primeiro, a folha mostra cada um.
+ *
+ * O que vai escrito e onde sai de `describeLabelContent`, a mesma lista que o
+ * arquivo impresso desenha. Aqui ela so vira elemento posicionado.
  *
  * As medidas saem por `style` em milimetro nativo do CSS. O milimetro do CSS e
  * definido pela propria especificacao da linguagem, e e ele que o navegador
@@ -73,9 +75,37 @@ function SymbolZone({ zone, symbol, symbolError }) {
       className="bg-etiqueta-papel [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
       data-symbol-state="ready"
       role="img"
-      aria-label={`Código ${symbol.systemCode} em QR Code`}
+      aria-label={`QR Code com o conteúdo ${symbol.text}`}
+      data-symbol-text={symbol.text}
       dangerouslySetInnerHTML={{ __html: symbol.svg }}
     />
+  );
+}
+
+function TextLine({ item }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: toMm(item.xMm),
+        top: toMm(item.yMm),
+        width: toMm(item.widthMm),
+        height: toMm(item.lineHeightMm),
+        fontSize: toMm(item.fontSizeMm),
+        lineHeight: toMm(item.lineHeightMm),
+      }}
+      className={cx(
+        'overflow-hidden text-ellipsis whitespace-nowrap',
+        item.bold ? 'font-bold' : 'font-normal',
+        item.face === 'display' ? 'font-display' : 'font-sans',
+        item.digits && 'tabular-nums',
+        item.uppercase && 'uppercase',
+        item.align === 'right' ? 'text-right' : 'text-left',
+      )}
+      data-label-zone={item.role}
+    >
+      {item.text}
+    </div>
   );
 }
 
@@ -84,6 +114,8 @@ export default function LabelSurface({
   layout,
   symbol = null,
   symbolError = null,
+  companyName = null,
+  installmentText = null,
   scaleFactor = 1,
   className,
 }) {
@@ -98,12 +130,10 @@ export default function LabelSurface({
       return { geometry: null, error };
     }
 
-    const name = fitNameLines(product?.displayName, geometry.name);
-    const price = fitPriceText(formatCentavosAsBRL(product?.priceInCentavos) ?? '', geometry.price);
-    const code = fitCodeText(product?.systemCode, geometry.code);
+    const content = describeLabelContent({ product, geometry, companyName, installmentText });
 
-    return { geometry, error: null, name, price, code };
-  }, [layout, product]);
+    return { geometry, error: null, content };
+  }, [layout, product, companyName, installmentText]);
 
   if (rendered.error) {
     return (
@@ -113,7 +143,7 @@ export default function LabelSurface({
     );
   }
 
-  const { geometry, name, price, code } = rendered;
+  const { geometry, content } = rendered;
 
   return (
     <div
@@ -128,6 +158,7 @@ export default function LabelSurface({
         data-label-surface=""
         data-label-width-mm={geometry.widthMm}
         data-label-height-mm={geometry.heightMm}
+        data-label-arrangement={geometry.arrangement}
         style={{
           width: toMm(geometry.widthMm),
           height: toMm(geometry.heightMm),
@@ -136,46 +167,11 @@ export default function LabelSurface({
         }}
         // O traco da borda sai por `outline` e nao por `border`: borda entraria
         // na caixa e encolheria a etiqueta em fracao de milimetro.
-        className="relative overflow-hidden bg-etiqueta-papel font-sans text-etiqueta-tinta outline outline-1 outline-neutro-bordaForte"
+        className="relative overflow-hidden bg-etiqueta-papel text-etiqueta-tinta outline outline-1 outline-neutro-bordaForte"
       >
-        <div style={zoneStyle(geometry.name)} className="overflow-hidden">
-          {name.lines.map((line, index) => (
-            <div
-              key={`${index}-${line}`}
-              style={{
-                fontSize: toMm(geometry.name.fontSizeMm),
-                lineHeight: toMm(geometry.name.lineHeightMm),
-              }}
-              className="truncate font-semibold uppercase"
-            >
-              {line}
-            </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            ...zoneStyle(geometry.price),
-            fontSize: toMm(price.fontSizeMm),
-            lineHeight: toMm(geometry.price.heightMm),
-          }}
-          className="overflow-hidden whitespace-nowrap font-bold tabular-nums"
-          data-label-zone="price"
-        >
-          {price.text}
-        </div>
-
-        <div
-          style={{
-            ...zoneStyle(geometry.code),
-            fontSize: toMm(code.fontSizeMm),
-            lineHeight: toMm(geometry.code.heightMm),
-          }}
-          className="overflow-hidden whitespace-nowrap tabular-nums"
-          data-label-zone="code"
-        >
-          {code.text}
-        </div>
+        {content.map((item) => (
+          <TextLine key={`${item.role}-${item.yMm}`} item={item} />
+        ))}
 
         <SymbolZone zone={geometry.symbol} symbol={symbol} symbolError={symbolError} />
       </div>

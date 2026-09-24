@@ -219,10 +219,12 @@ describe('parseNfceDocument', () => {
       'description',
       'displayName',
       'ean',
+      'ncm',
       'priceInCentavos',
       'systemCode',
     ]);
     expect(first.candidate.priceInCentavos).toBe(1250);
+    expect(first.candidate.ncm).toBe('00000000');
     expect(second.candidate).not.toHaveProperty('ean');
   });
 

@@ -44,6 +44,14 @@ export function deleteProduct(id) {
 }
 
 /**
+ * Apaga todos os produtos de uma vez. Toca so a tabela de produtos: os modelos
+ * sao constante de codigo, e a configuracao da etiqueta vive fora do banco.
+ */
+export function clearAllProducts() {
+  return db.products.clear();
+}
+
+/**
  * Roda um conjunto de escritas numa transacao unica da tabela de produtos.
  *
  * Existe para que a gravacao em lote possa fechar um grupo de registros de uma

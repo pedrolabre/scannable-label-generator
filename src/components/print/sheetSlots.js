@@ -1,7 +1,10 @@
+import { describeProductSymbolSupport } from '../../domain/services/symbolContent.js';
+import { toBarcodeError } from '../../lib/barcodeError.js';
+
 /**
  * Liga as etiquetas de uma folha aos produtos da lista atual e as posicoes da
  * grade. O dominio responde por identificador; a tela precisa do produto para
- * escrever nome, preco e codigo.
+ * escrever nome, preco e codigo, e do texto do simbolo daquele exemplar.
  *
  * Funcoes puras, sem DOM e sem React.
  */
@@ -18,14 +21,28 @@ export function resolveSheetSlots(slots, products, grid) {
       const product = byId.get(slot.productId);
       const cell = grid.cells[slot.cellIndex];
 
-      return product && cell ? { cell, product, copyNumber: slot.copyNumber } : null;
+      if (!product || !cell) {
+        return null;
+      }
+
+      // O exemplar cujo texto o contrato recusa chega com a falha pronta: nao
+      // ha o que gerar, e a etiqueta mostra o marcador desde o primeiro desenho.
+      const content = describeProductSymbolSupport(product, slot.copyNumber);
+
+      return {
+        cell,
+        product,
+        copyNumber: slot.copyNumber,
+        symbolText: content.text,
+        symbolError: content.error ? toBarcodeError(content.error) : null,
+      };
     })
     .filter(Boolean);
 }
 
-/** Codigos distintos de uma folha, na ordem em que aparecem. */
-export function distinctSystemCodes(resolvedSlots) {
-  return [...new Set(resolvedSlots.map((slot) => slot.product.systemCode))];
+/** Textos de simbolo de uma folha, um por exemplar, na ordem da grade. */
+export function sheetSymbolTexts(resolvedSlots) {
+  return resolvedSlots.map((slot) => slot.symbolText).filter(Boolean);
 }
 
 /** Aviso de tiragem que passa de uma folha, ou nulo quando cabe numa so. */
