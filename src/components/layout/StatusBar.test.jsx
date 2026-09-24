@@ -87,19 +87,25 @@ describe('linha de estado', () => {
     expect(container.textContent).toContain('1 selecionado');
     expect(sheets().textContent).toBe('1 folha');
 
-    // Tag grande em A4 retrato: 3 por folha; 4 + 3 = 7 etiquetas, 3 folhas.
+    // Etiqueta de 10 por folha na folha de 10: 7 + 5 = 12 etiquetas, 2 folhas.
     await update((store) => store.toggleProduct(GELADEIRA.id));
-    await update((store) => store.setCopies(ARMARIO.id, '4'));
-    await update((store) => store.setCopies(GELADEIRA.id, '3'));
+    await update((store) => store.setCopies(ARMARIO.id, '7'));
+    await update((store) => store.setCopies(GELADEIRA.id, '5'));
 
-    expect(sheets().textContent).toBe('3 folhas');
+    expect(sheets().textContent).toBe('2 folhas');
   });
 
   it('acompanha o modelo de etiqueta e o de folha escolhidos', async () => {
     await update((store) => store.toggleProduct(ARMARIO.id));
     await update((store) => store.setCopies(ARMARIO.id, '25'));
 
-    // 25 etiquetas grandes, 3 por folha em retrato: 9 folhas.
+    // 25 etiquetas de 10 por folha: 3 folhas.
+    expect(sheets().dataset.statusSheets).toBe('3');
+
+    // A tag grande rende 3 por folha em retrato: 25 pedem 9.
+    await update((store) => store.setLabelLayoutId('tag-grande'));
+    await update((store) => store.setSheetLayoutId('a4-retrato'));
+
     expect(sheets().dataset.statusSheets).toBe('9');
 
     // A etiqueta pequena rende 24 por folha em retrato: 25 pedem 2.

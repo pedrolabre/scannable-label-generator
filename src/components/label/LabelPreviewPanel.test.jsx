@@ -20,7 +20,7 @@ vi.mock('../../lib/barcode.js', () => ({ generateSymbol }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const PADRAO = findLabelLayout('tag-grande');
+const PADRAO = findLabelLayout('etiqueta-media-10');
 const MENOR = findLabelLayout('etiqueta-pequena');
 
 const PRODUCT = {
@@ -112,7 +112,8 @@ describe('previa sem produto escolhido', () => {
   it('mantem o seletor de modelo utilizavel antes da escolha', async () => {
     await render(<Painel product={null} hasProducts />);
 
-    expect(container.querySelectorAll('input[name="modelo-etiqueta"]')).toHaveLength(3);
+    expect(container.querySelectorAll('input[name="modelo-etiqueta"]')).toHaveLength(4);
+    expect(PADRAO.id).toBe(DEFAULT_LABEL_LAYOUT_ID);
     expect(
       container.querySelector(`input[name="modelo-etiqueta"][value="${PADRAO.id}"]`).checked,
     ).toBe(true);

@@ -10,13 +10,23 @@ import { isCompactSheet } from './printInputs.js';
  * dela, e e isso que abre a coluna a mais: a Tag grande em A4 retrato passa de
  * uma para duas colunas, e de tres para oito etiquetas por folha.
  *
+ * O atalho so aparece quando rende mais etiquetas por folha do que as margens
+ * do modelo. Com a etiqueta media em A4 retrato, por exemplo, a grade continua
+ * duas por cinco com qualquer uma das margens, e o botao some. Quem ja esta no
+ * ajuste encostado ve sempre o caminho de volta, mesmo que tenha trocado para um
+ * par de modelos em que o atalho nao rende.
+ *
  * O botao so troca os seis numeros. Os campos continuam a vista e editaveis
  * logo abaixo, e quem precisa de 6 mm porque a impressora nao chega a 5 ajusta
  * a partir dali. Com o ajuste ligado, a linha de apoio diz o risco: abaixo da
  * borda que a impressora imprime, a etiqueta sai cortada.
  */
-export default function SheetFitToggle({ adjustments, onCompact, onRestore }) {
+export default function SheetFitToggle({ adjustments, available = true, onCompact, onRestore }) {
   const isCompact = isCompactSheet(adjustments);
+
+  if (!isCompact && !available) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-1.5" data-sheet-fit={isCompact ? 'compact' : 'layout'}>

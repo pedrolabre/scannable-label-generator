@@ -15,6 +15,8 @@
  * ruido.
  */
 
+import { computeSheetGrid } from '../../domain/services/sheetGrid.js';
+
 export const DEFAULT_COPIES = 1;
 export const MAX_COPIES = 999;
 
@@ -65,6 +67,31 @@ export function isCompactSheet(adjustments) {
       parseMillimeters(adjustments?.[key], { label: '', max: Infinity }).value ===
       Number(COMPACT_SHEET_ADJUSTMENTS[key]),
   );
+}
+
+/**
+ * Diz se o ajuste que aproveita a folha rende mais etiquetas por folha do que
+ * as margens do modelo, para a etiqueta escolhida. O atalho so vale a oferta
+ * quando abre uma coluna ou uma linha a mais: se a grade continua a mesma, a
+ * margem de 5 mm so aproxima a etiqueta da borda sem ganho nenhum. A conta parte
+ * dos numeros do modelo de folha, e nao do que esta digitado, porque o outro
+ * lado do atalho e voltar a eles.
+ */
+export function describeCompactGain(sheetLayout, labelLayout) {
+  if (!sheetLayout || !labelLayout) {
+    return { layoutPerSheet: 0, compactPerSheet: 0, gains: false };
+  }
+
+  const compactSheet = { ...sheetLayout };
+
+  SHEET_FIELDS.forEach(({ key }) => {
+    compactSheet[key] = Number(COMPACT_SHEET_ADJUSTMENTS[key]);
+  });
+
+  const layoutPerSheet = computeSheetGrid(sheetLayout, labelLayout).perSheet;
+  const compactPerSheet = computeSheetGrid(compactSheet, labelLayout).perSheet;
+
+  return { layoutPerSheet, compactPerSheet, gains: compactPerSheet > layoutPerSheet };
 }
 
 export function findSheetField(key) {

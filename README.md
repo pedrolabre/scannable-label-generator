@@ -17,6 +17,28 @@ MVP funcional.
 - Persistência local no IndexedDB com backup total e opção de zerar catálogo.
 - PWA instalável e utilizável offline.
 
+## Modelos de etiqueta e folha
+
+A aplicação abre com a `Etiqueta 10 (84,7 x 46,6 mm)` na folha `A4 10 etiquetas (2 x 5)`: 10 etiquetas por folha A4 comum, impressa a 100% e recortada à tesoura.
+
+| Folha | Margens | Entre colunas | Entre linhas |
+| --- | --- | --- | --- |
+| A4 10 etiquetas (2 x 5) | 12,7 mm | 13,9 mm | 6,5 mm |
+| A4 retrato (210 x 297 mm) | 10 mm | 3 mm | 3 mm |
+| A4 paisagem (297 x 210 mm) | 10 mm | 3 mm | 3 mm |
+
+| Etiqueta | Na folha de 10 | Em A4 retrato |
+| --- | --- | --- |
+| Etiqueta 10 (84,7 x 46,6 mm) | 10 | 10 |
+| Tag grande (100 x 70 mm) | 3 | 3 |
+| Etiqueta média (70 x 50 mm) | 8 | 10 |
+| Etiqueta pequena (50 x 30 mm) | 21 | 24 |
+
+- A grade parte do canto superior esquerdo; a sobra fica à direita e embaixo.
+- As seis medidas da folha são editáveis e voltam às do modelo quando a folha é trocada.
+- `Aproveitar a folha` (margem de 5 mm e etiquetas encostadas) só aparece quando abre uma coluna ou uma linha a mais.
+- Na etiqueta de 10 por folha o nome do produto ocupa uma linha, cortada com reticências quando não cabe.
+
 ## Formato `LF1`
 
 Texto posicional, campos separados por barra vertical, ordem fixa:
@@ -265,6 +287,7 @@ scannable-label-generator/
         sheetGrid.js
         sheetGrid.test.js
         sheetLayoutCatalog.js
+        sheetLayoutCatalog.test.js
         sheetPagination.js
         sheetPagination.test.js
         symbolContent.js

@@ -52,8 +52,10 @@ describe('corte do nome da etiqueta', () => {
     expect(fitted.lines[0].startsWith(LONGEST_NAME.slice(0, 10))).toBe(true);
   });
 
-  it('o nome de comprimento maximo cabe inteiro nos modelos maiores', () => {
-    const larger = LABEL_LAYOUTS.filter((layout) => layout.id !== SMALLEST_LAYOUT.id);
+  it('o nome de comprimento maximo cabe inteiro nos modelos maiores de varias linhas', () => {
+    const larger = LABEL_LAYOUTS.filter(
+      (layout) => layout.id !== SMALLEST_LAYOUT.id && computeLabelGeometry(layout).name.lines > 1,
+    );
 
     expect(larger.length).toBeGreaterThan(0);
 
@@ -62,6 +64,17 @@ describe('corte do nome da etiqueta', () => {
 
       expect(fitted.truncated).toBe(false);
     }
+  });
+
+  it('a etiqueta de 10 por folha corta o nome de comprimento maximo na unica linha', () => {
+    const geometry = computeLabelGeometry(LABEL_LAYOUTS.find((l) => l.id === 'etiqueta-media-10'));
+    const fitted = fitNameLines(LONGEST_NAME, geometry.name);
+
+    expect(geometry.name.lines).toBe(1);
+    expect(fitted.truncated).toBe(true);
+    expect(fitted.lines).toHaveLength(1);
+    expect(fitted.lines[0].endsWith(ELLIPSIS)).toBe(true);
+    expect(fitNameLines('Guarda-roupa casal seis portas', geometry.name).truncated).toBe(false);
   });
 
   it('quebra a palavra que nao cabe numa linha, sem estourar a largura', () => {

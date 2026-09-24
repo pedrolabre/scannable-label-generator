@@ -14,6 +14,10 @@
  * nesse pior caso, e o texto tipico, de 41 modulos, sai com 0,66 mm. A tag
  * grande tem espaco para 32 mm, e ali o pior caso alcanca o alvo de 0,6 mm.
  *
+ * A etiqueta de 10 por folha tem a medida do formulario de preco que a
+ * operacao ja usa, 84,7 x 46,6 mm, para sair no mesmo lugar da folha antiga.
+ * Nessa altura o nome do produto fica numa linha so, acima do simbolo.
+ *
  * A etiqueta pequena tem margem menor porque o simbolo precisa da altura util
  * inteira: 30 mm de altura menos duas margens de 1,5 mm sao os 27 mm da caixa.
  *
@@ -27,6 +31,14 @@ import { LabelLayoutSchema } from '../schemas/labelLayoutSchema.js';
 import { computeLabelGeometry } from './labelGeometry.js';
 
 const DEFINITIONS = [
+  {
+    id: 'etiqueta-media-10',
+    name: 'Etiqueta 10 (84,7 x 46,6 mm)',
+    widthMm: 84.7,
+    heightMm: 46.6,
+    paddingMm: 2.5,
+    symbolSizeMm: 27,
+  },
   {
     id: 'tag-grande',
     name: 'Tag grande (100 x 70 mm)',
@@ -72,10 +84,11 @@ function buildCatalog() {
 export const LABEL_LAYOUTS = Object.freeze(buildCatalog());
 
 /**
- * O perfil real de produto e movel e eletrodomestico, entao a tag grande e o
- * ponto de partida; os tamanhos menores sao a excecao escolhida a mao.
+ * A etiqueta de 10 por folha e o ponto de partida porque e a que a operacao ja
+ * recorta da folha A4; os outros tamanhos sao a excecao escolhida a mao. O
+ * modelo padrao vem primeiro na lista, que e a ordem dos botoes.
  */
-export const DEFAULT_LABEL_LAYOUT_ID = 'tag-grande';
+export const DEFAULT_LABEL_LAYOUT_ID = 'etiqueta-media-10';
 
 export function listLabelLayouts() {
   return LABEL_LAYOUTS;

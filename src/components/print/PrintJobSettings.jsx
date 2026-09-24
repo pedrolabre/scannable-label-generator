@@ -90,6 +90,7 @@ export default function PrintJobSettings({
     labelLayout,
     grid,
     totalSheets,
+    canCompact,
   } = printState;
 
   const exportRequest = isReady ? { job, sheet, labelLayout, grid, products } : null;
@@ -147,6 +148,7 @@ export default function PrintJobSettings({
 
         <SheetFitToggle
           adjustments={sheetAdjustments}
+          available={canCompact}
           onCompact={() => setSheetAdjustments(COMPACT_SHEET_ADJUSTMENTS)}
           onRestore={restoreSheetAdjustments}
         />
