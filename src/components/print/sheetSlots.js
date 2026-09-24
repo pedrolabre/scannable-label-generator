@@ -44,3 +44,31 @@ export function describeCapacity({ totalLabels }, perSheet) {
 
   return `${totalLabels} ${labels} numa folha que comporta ${perSheet} ${capacity}.`;
 }
+
+/** Colunas por linhas da grade, como o operador conta a folha. */
+export function describeGridShape(grid) {
+  return `${grid.columns} × ${grid.rows}`;
+}
+
+function formatMm(value) {
+  return String(value).replace('.', ',');
+}
+
+/**
+ * As quatro margens numa leitura so. Quando sao iguais, um numero basta; quando
+ * nao sao, a ordem e a do relogio a partir do topo, a mesma dos campos.
+ */
+export function describeSheetMargins(sheet) {
+  const margins = [
+    sheet.marginTopMm,
+    sheet.marginRightMm,
+    sheet.marginBottomMm,
+    sheet.marginLeftMm,
+  ];
+
+  if (margins.every((value) => value === margins[0])) {
+    return `${formatMm(margins[0])} mm`;
+  }
+
+  return `${margins.map(formatMm).join(' · ')} mm`;
+}

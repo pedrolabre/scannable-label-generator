@@ -126,14 +126,83 @@ describe('os quatro gatilhos', () => {
   });
 });
 
-describe('um dialogo por vez', () => {
-  it('nunca deixa dois abertos ao mesmo tempo', async () => {
+describe('as duas previas', () => {
+  it('abre a folha pela coluna da esquerda, e a etiqueta pela da direita', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+    usePrintJobStore.getState().toggleProduct(PRODUCT.id);
+
+    await render();
+    await clicar('Prévia da folha');
+
+    expect(tituloDoDialogo()).toBe('Prévia da folha');
+    expect(container.querySelector('[role="dialog"] [data-sheet-surface]')).not.toBeNull();
+
+    await clicar('Fechar');
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+    await clicar('Ampliar');
+
+    expect(tituloDoDialogo()).toBe(PRODUCT.displayName);
+    expect(container.querySelector('[role="dialog"] [data-sheet-surface]')).toBeNull();
+    expect(container.querySelector('[role="dialog"] [data-label-surface]')).not.toBeNull();
+  });
+
+  it('usa a mesma ampliacao na coluna e no dialogo da etiqueta', async () => {
     useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
 
     await render();
     await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
 
-    for (const gatilho of ['Novo produto', 'Importar', 'Backup', 'Ampliar prévia']) {
+    await act(async () => {
+      container.querySelector('input[name="ampliacao-etiqueta"][value="2"]').click();
+    });
+
+    await clicar('Ampliar');
+
+    const dialogo = container.querySelector('[role="dialog"]');
+
+    expect(dialogo.querySelector('input[name="ampliacao-etiqueta"][value="2"]').checked).toBe(true);
+    expect(dialogo.querySelector('[data-label-surface]').style.transform).toBe('scale(2)');
+
+    await act(async () => {
+      dialogo.querySelector('input[name="ampliacao-etiqueta"][value="1.5"]').click();
+    });
+    await clicar('Fechar');
+
+    const coluna = container.querySelector('[data-label-preview]');
+
+    expect(coluna.querySelector('[data-label-surface]').style.transform).toBe('scale(1.5)');
+  });
+
+  it('conta as folhas na linha de estado', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+
+    await render();
+
+    expect(container.querySelector('[data-status-sheets]').textContent).toBe('0 folhas');
+
+    await act(async () => {
+      usePrintJobStore.getState().toggleProduct(PRODUCT.id);
+    });
+
+    expect(container.querySelector('[data-status-sheets]').textContent).toBe('1 folha');
+  });
+});
+
+describe('um dialogo por vez', () => {
+  it('nunca deixa dois abertos ao mesmo tempo', async () => {
+    useProductStore.setState({ products: [PRODUCT], isLoading: false, loadError: null });
+    usePrintJobStore.getState().toggleProduct(PRODUCT.id);
+
+    await render();
+    await clicar(`Ver etiqueta de ${PRODUCT.displayName}`);
+
+    for (const gatilho of [
+      'Novo produto',
+      'Importar',
+      'Backup',
+      'Ampliar prévia',
+      'Prévia da folha',
+    ]) {
       if (dialogos().length > 0) {
         await clicar('Fechar');
       }

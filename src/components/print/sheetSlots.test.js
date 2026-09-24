@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   describeCapacity,
+  describeGridShape,
   describeSheetCount,
+  describeSheetMargins,
   distinctSystemCodes,
   resolveSheetSlots,
 } from './sheetSlots.js';
@@ -76,5 +78,23 @@ describe('avisos de quantidade', () => {
     expect(describeCapacity({ totalLabels: 1 }, 1)).toBe(
       '1 etiqueta numa folha que comporta 1 etiqueta.',
     );
+  });
+});
+
+describe('ficha da folha', () => {
+  it('le a grade como colunas por linhas', () => {
+    expect(describeGridShape({ columns: 3, rows: 8 })).toBe('3 × 8');
+  });
+
+  it('diz a margem uma vez quando as quatro sao iguais', () => {
+    const sheet = { marginTopMm: 10, marginRightMm: 10, marginBottomMm: 10, marginLeftMm: 10 };
+
+    expect(describeSheetMargins(sheet)).toBe('10 mm');
+  });
+
+  it('lista as quatro a partir do topo quando diferem, com virgula decimal', () => {
+    const sheet = { marginTopMm: 8, marginRightMm: 10, marginBottomMm: 8, marginLeftMm: 12.5 };
+
+    expect(describeSheetMargins(sheet)).toBe('8 · 10 · 8 · 12,5 mm');
   });
 });

@@ -244,3 +244,55 @@ describe('largura', () => {
     expect(container.querySelector('[role="dialog"]').style.width).toBe('680px');
   });
 });
+
+describe('dialogo com regiao rolavel propria', () => {
+  it('fixa a altura pedida e continua parando no teto da janela', () => {
+    render(
+      <ModalShell title="Prévia da folha" width={1160} height={760} onClose={vi.fn()}>
+        conteúdo
+      </ModalShell>,
+    );
+
+    const painel = container.querySelector('[role="dialog"]');
+
+    expect(painel.style.height).toBe('760px');
+    expect(painel.className).toContain('max-h-[calc(100dvh-96px)]');
+  });
+
+  it('entrega o corpo sem rolagem quando o conteudo ja rola por dentro', () => {
+    render(
+      <ModalShell title="Prévia da folha" scrollBody={false} onClose={vi.fn()}>
+        <div data-mesa="" className="overflow-auto">
+          mesa
+        </div>
+      </ModalShell>,
+    );
+
+    const corpo = container.querySelector('[role="dialog"]').children[1];
+
+    expect(corpo.className).not.toContain('overflow-y-auto');
+    expect(corpo.className).toContain('overflow-hidden');
+    expect(corpo.className).toContain('min-h-0');
+  });
+
+  it('poe o controle do cabecalho antes do botao de fechar', () => {
+    render(
+      <ModalShell
+        title="Prévia da folha"
+        headerActions={<button type="button">Tamanho</button>}
+        onClose={vi.fn()}
+      >
+        conteúdo
+      </ModalShell>,
+    );
+
+    const cabecalho = container.querySelector('[role="dialog"] header');
+    const botoes = [...cabecalho.querySelectorAll('button')];
+
+    expect(botoes.map((botao) => botao.getAttribute('aria-label') ?? botao.textContent)).toEqual([
+      'Tamanho',
+      'Fechar',
+    ]);
+    expect(document.activeElement).toBe(fecharButton());
+  });
+});

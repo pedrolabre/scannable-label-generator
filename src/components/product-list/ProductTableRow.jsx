@@ -9,17 +9,17 @@ import ProductItemActions from './ProductItemActions.jsx';
 // coluna em vez de abrir um buraco na linha.
 const NO_VALUE = '-';
 
-const CELL_BASE = 'border-b border-slate-200 px-3 py-2.5 align-middle dark:border-slate-800';
+const CELL_BASE = 'border-b border-neutro-divisor px-2 py-2.5 align-middle';
 
-// Tom de venda do texto. O verde mais claro da paleta fica em 4,43 para 1 sobre
-// o fundo branco, logo abaixo do minimo para texto; este e o tom vizinho, ja
-// nomeado pelo padrao visual, e fecha em 5,42.
-const PRICE_TEXT = 'text-[#0f7a3d] dark:text-[#4bd486]';
+// Celula de uma linha so. A largura da coluna e fixa, entao o texto que nao
+// cabe termina em reticencias em vez de alargar a tabela.
+const SINGLE_LINE = 'overflow-hidden text-ellipsis whitespace-nowrap';
 
 /**
  * Uma linha da tabela de produtos. O nome carrega a categoria numa segunda
- * linha muda, os dois codigos ficam em tom neutro e o preco leva o tom de venda
- * alinhado a direita.
+ * linha muda, os dois codigos ficam em tom neutro e o preco fica em peso de
+ * destaque, alinhado a direita. O verde e reservado a confirmacao, e preco nao
+ * e confirmacao de nada.
  *
  * A caixa de marcacao da primeira celula decide se o produto entra na folha de
  * etiquetas. Ela e independente da acao de ver a etiqueta: uma responde "o que
@@ -35,7 +35,7 @@ export default function ProductTableRow({
   onRemove,
 }) {
   return (
-    <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
+    <tr className="transition-colors hover:bg-neutro-superficie">
       <td className={cx(CELL_BASE, 'w-px text-center')}>
         <Checkbox
           label={`Imprimir etiqueta de ${product.displayName}`}
@@ -44,34 +44,34 @@ export default function ProductTableRow({
         />
       </td>
 
-      <td className={cx(CELL_BASE, 'max-w-[15rem]')}>
-        <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
+      <td className={CELL_BASE}>
+        <p className="truncate font-semibold text-neutro-tinta" title={product.displayName}>
           {product.displayName}
         </p>
         {product.category ? (
-          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{product.category}</p>
+          <p className="truncate text-xs text-neutro-tintaFraca">{product.category}</p>
         ) : null}
       </td>
 
-      <td className={cx(CELL_BASE, 'whitespace-nowrap tabular-nums text-slate-600 dark:text-slate-300')}>
+      <td className={cx(CELL_BASE, SINGLE_LINE, 'tabular-nums text-neutro-tintaMedia')}>
         {product.systemCode}
       </td>
 
-      <td className={cx(CELL_BASE, 'whitespace-nowrap tabular-nums text-slate-500 dark:text-slate-400')}>
+      <td className={cx(CELL_BASE, SINGLE_LINE, 'tabular-nums text-neutro-tintaFraca')}>
         {product.ean ?? NO_VALUE}
       </td>
 
       <td
         className={cx(
           CELL_BASE,
-          'whitespace-nowrap text-right font-semibold tabular-nums',
-          PRICE_TEXT,
+          SINGLE_LINE,
+          'text-right font-semibold tabular-nums text-neutro-tintaMedia',
         )}
       >
         {formatCentavosAsBRL(product.priceInCentavos)}
       </td>
 
-      <td className={cx(CELL_BASE, 'w-px whitespace-nowrap')}>
+      <td className={cx(CELL_BASE, 'whitespace-nowrap')}>
         <ProductItemActions
           product={product}
           isSelected={isSelected}

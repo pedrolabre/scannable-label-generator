@@ -113,22 +113,26 @@ scannable-label-generator/
         ShellColumn.jsx
         ShellColumn.test.jsx
         StatusBar.jsx
+        StatusBar.test.jsx
       print/
         PrintExportButton.jsx
         PrintExportControls.jsx
         PrintExportControls.test.jsx
         PrintJobItemRow.jsx
-        PrintJobPanel.jsx
-        PrintJobPanel.test.jsx
+        PrintJobSettings.jsx
+        PrintJobSettings.test.jsx
         SheetCanvas.jsx
         SheetLayoutPicker.jsx
         SheetMarginFields.jsx
         SheetNavigation.jsx
         SheetPreview.jsx
         SheetPreview.test.jsx
+        SheetPreviewDialog.jsx
+        SheetPreviewDialog.test.jsx
         SheetScalePicker.jsx
         printInputs.js
         printInputs.test.js
+        printJobState.js
         printSelection.js
         printSelection.test.js
         sheetSlots.js

@@ -82,7 +82,7 @@ afterEach(async () => {
   generateSymbol.mockReset();
 });
 
-async function render({ items, sheet = RETRATO, labelLayout = GRANDE }) {
+async function render({ items, sheet = RETRATO, labelLayout = GRANDE, scaleFactor }) {
   const grid = computeSheetGrid(sheet, labelLayout);
   const job = { labelLayoutId: labelLayout.id, sheetLayoutId: sheet.id, items };
 
@@ -94,6 +94,7 @@ async function render({ items, sheet = RETRATO, labelLayout = GRANDE }) {
         labelLayout={labelLayout}
         grid={grid}
         products={PRODUCTS}
+        scaleFactor={scaleFactor}
       />,
     );
   });
@@ -144,16 +145,25 @@ describe('folha desenhada', () => {
     expect(container.querySelectorAll('[data-symbol-state="ready"]')).toHaveLength(5);
   });
 
-  it('muda para tamanho real sem mexer na medida da folha', async () => {
-    await render({ items: [{ productId: ARMARIO.id, copies: 1 }] });
-
-    await click(container.querySelector('input[name="escala-folha"][value="1"]'));
+  it('desenha em tamanho real sem mexer na medida da folha', async () => {
+    await render({ items: [{ productId: ARMARIO.id, copies: 1 }], scaleFactor: 1 });
 
     const sheet = container.querySelector('[data-sheet-surface]');
 
     expect(sheet.style.transform).toBe('scale(1)');
     expect(sheet.style.width).toBe('210mm');
     expect(sheet.parentElement.style.width).toBe('210mm');
+  });
+
+  it('resume a folha na ficha ao lado da mesa', async () => {
+    await render({ items: [{ productId: ARMARIO.id, copies: 2 }], labelLayout: PEQUENA });
+
+    const ficha = container.querySelector('aside[aria-label="Ficha da folha"]');
+
+    expect(ficha.textContent).toContain(RETRATO.name);
+    expect(ficha.querySelector('[data-sheet-grid]').textContent).toBe('3 × 8');
+    expect(ficha.querySelector('[data-sheet-labels]').textContent).toBe('2');
+    expect(ficha.textContent).toContain('10 mm');
   });
 
   it('mostra a capacidade quando a selecao cabe numa folha', async () => {

@@ -3,55 +3,53 @@ import { describeExportLimit } from '../../domain/services/printExport.js';
 import InlineAlert from '../ui/InlineAlert.jsx';
 
 import PrintExportButton from './PrintExportButton.jsx';
-import { EXPORT_STATUS, usePrintExport } from './usePrintExport.js';
+import { EXPORT_STATUS } from './usePrintExport.js';
 
 /**
- * Linha de estado do trabalho com a acao de exportar ao lado.
+ * Pe de acoes do trabalho de impressao: o que impede ou acompanha a exportacao,
+ * a acao que vem antes dela e o botao de exportar.
  *
- * Fica junto porque e a mesma informacao: o texto diz o que sera exportado, o
- * botao exporta, e enquanto a geracao corre o texto passa a dizer em que folha
- * ela esta. Sem biblioteca de notificacao e sem toast — a resposta aparece onde
- * o clique aconteceu.
+ * Ele aparece em dois lugares, no rodape da coluna da esquerda e na ficha do
+ * dialogo da folha, e os dois recebem o mesmo `exporter`, criado uma vez por
+ * quem monta a tela. Nao existe segundo caminho de exportacao: o clique num
+ * lugar e o progresso lido no outro sao o mesmo estado, e duas exportacoes ao
+ * mesmo tempo continuam impedidas por quem executa.
  *
- * O teto de exportacao aparece aqui e so aqui: ele nao bloqueia o trabalho nem
- * esconde a previa, porque a selecao continua valida; o que ele impede e gerar
- * um arquivo que ninguem conseguiria abrir.
+ * `request` e o trabalho pronto para sair, ou nulo quando a configuracao ainda
+ * nao vale. O botao continua a vista nos dois casos, desabilitado no segundo:
+ * sumir com ele mudaria o rodape de altura a cada campo em edicao.
+ *
+ * O teto de exportacao aparece aqui, acima dos botoes, e so aqui: ele nao
+ * bloqueia o trabalho nem esconde a previa, porque a selecao continua valida; o
+ * que ele impede e gerar um arquivo que ninguem conseguiria abrir.
+ *
+ * `leadingAction` e o botao que fica acima do de exportar — a previa da folha
+ * na coluna, o fechar no dialogo.
  */
-
-export default function PrintExportControls({
-  job,
-  sheet,
-  labelLayout,
-  grid,
-  products,
-  readyMessage,
-  canExport,
-}) {
-  const { status, message, exportJob } = usePrintExport();
+export default function PrintExportControls({ exporter, request = null, leadingAction = null }) {
+  const { status, message, exportJob } = exporter;
 
   const running = status === EXPORT_STATUS.RUNNING;
-  const limitMessage = describeExportLimit(job.items);
+  const limitMessage = request ? describeExportLimit(request.job.items) : null;
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p
-          data-print-status={running ? 'exporting' : 'ready'}
-          className="text-sm text-slate-600 dark:text-slate-300"
-        >
-          {running && message ? message : readyMessage}
-        </p>
-
-        <PrintExportButton
-          running={running}
-          disabled={!canExport || Boolean(limitMessage)}
-          onExport={() => exportJob({ job, sheet, labelLayout, grid, products })}
-        />
-      </div>
-
+    <div className="flex flex-col gap-2" data-export-controls="">
       {limitMessage ? (
-        <p data-export-limit="" className="text-xs text-[#8a5a00] dark:text-[#f4c95f]">
+        <p
+          data-export-limit=""
+          className="border border-marca-amareloBorda bg-marca-amareloTenue p-3 text-xs leading-snug text-marca-amareloTexto"
+        >
           {limitMessage}
+        </p>
+      ) : null}
+
+      {running && message ? (
+        <p
+          data-export-progress=""
+          aria-live="polite"
+          className="text-xs tabular-nums text-neutro-tintaFraca"
+        >
+          {message}
         </p>
       ) : null}
 
@@ -60,6 +58,15 @@ export default function PrintExportControls({
           <InlineAlert>{message}</InlineAlert>
         </div>
       ) : null}
+
+      {leadingAction}
+
+      <PrintExportButton
+        className="w-full"
+        running={running}
+        disabled={!request || Boolean(limitMessage)}
+        onExport={() => exportJob(request)}
+      />
     </div>
   );
 }
