@@ -24,14 +24,12 @@ export default function BackupExportSection({ productCount }) {
     <div className="space-y-3">
       <h3 className="text-base font-semibold">Exportar</h3>
 
-      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      <p className="text-sm leading-relaxed text-neutro-tintaMedia">
         Gera um arquivo com todo o conteúdo gravado neste dispositivo. Guarde-o fora do aparelho ou
         leve-o para outro, onde ele reconstrói o mesmo ambiente.
       </p>
 
-      {sizeWarning ? (
-        <p className="text-sm text-slate-600 dark:text-slate-300">{sizeWarning}</p>
-      ) : null}
+      {sizeWarning ? <p className="text-sm text-neutro-tintaMedia">{sizeWarning}</p> : null}
 
       <Button type="button" variant="primary" onClick={exportBackup} disabled={isRunning}>
         {isRunning ? (

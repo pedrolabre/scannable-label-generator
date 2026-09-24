@@ -9,13 +9,17 @@ import {
 } from '../../pwa/updateState.js';
 
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 
 /**
- * Aviso de versao nova, no topo da pagina.
+ * Aviso de versao nova.
  *
- * Nao usa o `InlineAlert` de proposito: aquele carrega a cor de perigo e a
- * semantica de erro, e aqui nao houve erro nem acao do operador que tenha
+ * Ele flutua acima da linha de estado, a direita, em vez de ocupar uma faixa no
+ * fluxo: nao ha mais fluxo onde entrar. Com a aplicacao presa a altura da
+ * janela, um aviso que empurrasse o conteudo encolheria as tres colunas por
+ * causa de uma informacao que o operador atende quando quiser.
+ *
+ * Nao usa o `InlineAlert` de proposito: aquele carrega a cor de erro e a
+ * semantica de falha, e aqui nao houve erro nem acao do operador que tenha
  * falhado. O que ha e uma informacao com uma acao opcional ao lado.
  *
  * O componente nao guarda estado proprio: le o sinalizador do modulo de
@@ -37,25 +41,21 @@ export default function UpdateNotice() {
   }
 
   return (
-    <Card className="p-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <RefreshCw
-          className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400"
-          aria-hidden="true"
-        />
-        <div className="min-w-[16rem] flex-1 space-y-1">
-          <p className="text-sm font-semibold">
-            Uma nova versão do {APP_NAME} está disponível.
-          </p>
-          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+    <div className="fixed bottom-16 right-6 z-40 w-[22rem] max-w-[calc(100vw-3rem)] border border-neutro-borda bg-neutro-branco p-4 shadow-modal">
+      <div className="flex items-start gap-3">
+        <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-neutro-tintaFraca" aria-hidden="true" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-sm font-semibold">Uma nova versão do {APP_NAME} está disponível.</p>
+          <p className="text-sm leading-relaxed text-neutro-tintaMedia">
             A folha em preparo não é mantida ao recarregar. Atualize quando terminar o que está
             fazendo.
           </p>
         </div>
-        <Button variant="secondary" onClick={handleUpdate}>
-          Atualizar agora
-        </Button>
       </div>
-    </Card>
+
+      <Button variant="secondary" onClick={handleUpdate} className="mt-3 w-full">
+        Atualizar agora
+      </Button>
+    </div>
   );
 }

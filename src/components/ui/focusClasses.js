@@ -10,19 +10,20 @@ import { cx } from '../../lib/cx.js';
  * avulso esta descartado pelo padrao visual, entao a forma certa e a
  * constante compartilhada.
  *
+ * Com o canto reto do produto, o contorno do navegador ja acompanha a forma do
+ * controle. O que continua sendo nosso e a cor e a espessura.
+ *
  * A cor acompanha o papel do controle, e nao o componente: marca na acao
- * principal, neutro nas acoes de apoio, perigo no que remove dados e branco
- * sobre a faixa de marca do cabecalho dos dialogos.
+ * principal, neutro nas acoes de apoio, erro no que remove dados.
  */
 export const FOCUS_OUTLINE = cx(
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
 );
 
 export const FOCUS_OUTLINE_COLORS = Object.freeze({
-  brand: 'focus-visible:outline-[#cf1026]',
-  neutral: 'focus-visible:outline-slate-400',
-  danger: 'focus-visible:outline-[#b93a20]',
-  inverse: 'focus-visible:outline-white',
+  brand: 'focus-visible:outline-marca-vermelho',
+  neutral: 'focus-visible:outline-neutro-tintaFraca',
+  danger: 'focus-visible:outline-marca-vermelhoTexto',
 });
 
 /**
@@ -35,8 +36,8 @@ export const PEER_FOCUS_OUTLINE = cx(
 );
 
 export const PEER_FOCUS_OUTLINE_COLORS = Object.freeze({
-  brand: 'peer-focus-visible:outline-[#cf1026]',
-  neutral: 'peer-focus-visible:outline-slate-400',
+  brand: 'peer-focus-visible:outline-marca-vermelho',
+  neutral: 'peer-focus-visible:outline-neutro-tintaFraca',
 });
 
 /**

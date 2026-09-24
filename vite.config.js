@@ -26,7 +26,10 @@ const UNUSED_PDF_MODULES = ['html2canvas', 'dompurify', 'canvg'];
  * — e a promessa e que nenhuma funcao essencial dependa de rede.
  *
  * Nenhum recurso externo e guardado porque nao existe nenhum: depois de
- * carregada, a aplicacao nao faz chamada de rede.
+ * carregada, a aplicacao nao faz chamada de rede. As duas faces de texto sao
+ * servidas pela propria aplicacao justamente por isso, e entram na lista pelo
+ * mesmo motivo que os motores: a etiqueta sai em milimetro real, e a face que
+ * falta muda a largura do texto dentro dela.
  *
  * O arquivo de metadados e os icones entram na lista uma vez so. O primeiro e
  * inscrito pelo proprio plugin, entao fica fora do varredor de arquivos; os
@@ -43,7 +46,7 @@ const PWA_OPTIONS = {
   manifestFilename: 'manifest.webmanifest',
   includeManifestIcons: false,
   workbox: {
-    globPatterns: ['**/*.{js,css,html,svg,png}'],
+    globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
     navigateFallback: 'index.html',
     cleanupOutdatedCaches: true,
   },

@@ -1,8 +1,8 @@
 import { Save } from 'lucide-react';
 
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import InlineAlert from '../ui/InlineAlert.jsx';
+import ModalShell from '../ui/ModalShell.jsx';
 
 import ProductFormFields from './ProductFormFields.jsx';
 import { useProductForm } from './useProductForm.js';
@@ -15,10 +15,23 @@ import { useProductForm } from './useProductForm.js';
  * criacao do registro original. Sem `product`, cada envio produz um registro
  * novo e limpa os campos.
  *
+ * Ele vive num dialogo porque cadastrar nao e a tela: e um desvio de quem esta
+ * conferindo etiquetas. Antes ele ocupava altura permanente no meio da pagina
+ * para uma tarefa que acontece algumas vezes por dia.
+ *
+ * O dialogo fecha no clique fora. Um formulario a medio preencher e trabalho em
+ * andamento, mas o texto digitado nao vem de arquivo nenhum e refaze-lo custa o
+ * que custou: nada alem de digitar de novo. O que nao fecha no clique fora e o
+ * que consumiu leitura de arquivo — a importacao e a restauracao.
+ *
+ * O titulo e as acoes ficam no dialogo, e nao no formulario: quem decide o que
+ * e cadastro e o que e edicao e o produto recebido, e o dialogo le isso do
+ * mesmo lugar.
+ *
  * O produto validado vai para `onSubmit`, que decide o que fazer com ele. Para
  * trocar o produto em edicao, remonte o componente com uma `key` diferente.
  */
-export default function ProductForm({ product = null, onSubmit, onCancel }) {
+export default function ProductForm({ product = null, onSubmit, onClose }) {
   const {
     values,
     errors,
@@ -28,22 +41,29 @@ export default function ProductForm({ product = null, onSubmit, onCancel }) {
     submitError,
     handleChange,
     handleSubmit,
-    reset,
   } = useProductForm({ product, onSubmit });
 
-  return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} noValidate className="space-y-6">
-        <header className="space-y-1">
-          <h2 className="text-lg font-semibold">
-            {isEditing ? 'Editar produto' : 'Cadastrar produto'}
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            O nome da etiqueta e o preço são o que aparece impresso. O código do sistema alimenta o
-            código 2D.
-          </p>
-        </header>
+  const formId = 'produto-form';
 
+  return (
+    <ModalShell
+      title={isEditing ? 'Editar produto' : 'Novo produto'}
+      subtitle="O nome e o preço são o que sai impresso. O código do sistema é o conteúdo gravado no símbolo."
+      width={920}
+      onClose={onClose}
+      footer={
+        <>
+          <Button type="button" onClick={onClose} disabled={isSubmitting}>
+            Cancelar
+          </Button>
+          <Button type="submit" form={formId} variant="primary" disabled={isSubmitting}>
+            <Save className="h-4 w-4" aria-hidden="true" />
+            {isEditing ? 'Salvar alterações' : 'Cadastrar produto'}
+          </Button>
+        </>
+      }
+    >
+      <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-6">
         <ProductFormFields
           values={values}
           errors={errors}
@@ -52,17 +72,7 @@ export default function ProductForm({ product = null, onSubmit, onCancel }) {
         />
 
         {submitError ? <InlineAlert>{submitError}</InlineAlert> : null}
-
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" onClick={onCancel ?? reset} disabled={isSubmitting}>
-            {onCancel ? 'Cancelar' : 'Limpar campos'}
-          </Button>
-          <Button type="submit" variant="primary" disabled={isSubmitting}>
-            <Save className="h-4 w-4" aria-hidden="true" />
-            {isEditing ? 'Salvar alterações' : 'Cadastrar produto'}
-          </Button>
-        </div>
       </form>
-    </Card>
+    </ModalShell>
   );
 }

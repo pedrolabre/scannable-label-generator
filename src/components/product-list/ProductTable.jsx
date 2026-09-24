@@ -2,14 +2,16 @@ import { cx } from '../../lib/cx.js';
 
 import ProductTableRow from './ProductTableRow.jsx';
 
+// A faixa de colunas e a unica parte da tabela que nao rola: ela gruda no topo
+// do corpo da coluna, para que quem desce trezentos produtos continue sabendo o
+// que cada coluna diz. `sticky` no proprio `th` e o que faz isso funcionar
+// dentro de uma tabela — `thead` nao aceita posicionamento em todos os
+// navegadores, e a celula aceita.
 const HEAD_CELL_BASE = cx(
-  'px-3 py-2 text-left text-[0.66rem] font-bold uppercase tracking-wide text-white',
+  'sticky top-0 z-10 bg-neutro-superficie px-3 py-2.5 text-left',
+  'border-b border-neutro-borda text-[11px] font-semibold uppercase',
+  'tracking-[0.07em] text-neutro-tintaFraca',
 );
-
-// O cabecalho carrega a cor por grupo de coluna: a cor de marca nas colunas
-// gerais e o tom de venda na coluna que mostra dinheiro.
-const HEAD_GENERAL = 'bg-[#cf1026]';
-const HEAD_PRICE = 'bg-[#23824a]';
 
 /**
  * Tabela da listagem, usada a partir de `sm:`. As linhas nao alternam cor de
@@ -33,22 +35,22 @@ export default function ProductTable({
     <table className="w-full border-collapse text-sm">
       <thead>
         <tr>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL, 'w-px whitespace-nowrap')}>
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-px whitespace-nowrap')}>
             Imprimir
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
+          <th scope="col" className={HEAD_CELL_BASE}>
             Produto
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
+          <th scope="col" className={HEAD_CELL_BASE}>
             Código
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
+          <th scope="col" className={HEAD_CELL_BASE}>
             Cód. barras
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_PRICE, 'text-right')}>
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'text-right')}>
             Preço
           </th>
-          <th scope="col" className={cx(HEAD_CELL_BASE, HEAD_GENERAL)}>
+          <th scope="col" className={HEAD_CELL_BASE}>
             <span className="sr-only">Ações</span>
           </th>
         </tr>

@@ -328,9 +328,15 @@ describe('falha no meio do lote', () => {
   });
 
   // O limite de tempo e ampliado so aqui: montar e gravar duzentos mil produtos
-  // passa de seis segundos no ambiente da suite, e o custo dominante e gerar um
-  // identificador por produto. E o unico teste do arquivo que e longo por
-  // natureza, entao o limite padrao continua valendo para todos os outros.
+  // e o custo dominante e gerar um identificador por produto. E o unico teste
+  // do arquivo que e longo por natureza, entao o limite padrao continua valendo
+  // para todos os outros.
+  //
+  // O limite anterior media a duracao deste caso quase colada nele, e quem o
+  // estourava nao era o caso: era a maquina, quando os outros arquivos da suite
+  // correm ao mesmo tempo. Um limite que depende de quantos vizinhos rodam
+  // junto nao prova nada sobre o codigo — so avisa que o computador estava
+  // ocupado. O dobro devolve a folga.
   it('grava centenas de milhares de registros em fatias, uma transacao por fatia', async () => {
     const total = 200_000;
     const sliceSize = 500;
@@ -343,5 +349,5 @@ describe('falha no meio do lote', () => {
     expect(result).toMatchObject({ created: total, notAttempted: 0, blocked: 0, total });
     expect(repository.transactions).toBe(total / sliceSize);
     expect(repository.written).toHaveLength(total);
-  }, 30_000);
+  }, 60_000);
 });

@@ -51,8 +51,8 @@ describe('janela da aplicacao', () => {
   it('leva a cor de marca e o fundo claro da aplicacao', () => {
     expect(appManifest.theme_color).toBe(THEME_COLOR);
     expect(appManifest.background_color).toBe(BACKGROUND_COLOR);
-    expect(THEME_COLOR).toBe('#cf1026');
-    expect(BACKGROUND_COLOR).toBe('#f8fafc');
+    expect(THEME_COLOR).toBe('#C1121F');
+    expect(BACKGROUND_COLOR).toBe('#FAFAFA');
   });
 });
 

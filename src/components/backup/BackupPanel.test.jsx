@@ -181,7 +181,7 @@ describe('arquivo recusado', () => {
     render();
     await escolherArquivo(conteudoDeArquivo([produto({ priceInCentavos: '2.899,00' })]));
 
-    expect(container.querySelector('[role="dialog"]')).toBe(null);
+    expect(confirmacao()).toBe(null);
     expect(writeBackupTables).not.toHaveBeenCalled();
   });
 
@@ -195,12 +195,28 @@ describe('arquivo recusado', () => {
   });
 });
 
+/**
+ * A confirmacao da restauracao, e nao a janela do backup que a contem.
+ *
+ * Desde que o backup virou dialogo, `[role="dialog"]` casa com dois elementos
+ * aninhados, e o primeiro e sempre a janela de fora. Perguntar pelo titulo e o
+ * que distingue "a confirmacao esta fechada" de "a tela inteira sumiu".
+ */
+function confirmacao() {
+  return (
+    Array.from(container.querySelectorAll('[role="dialog"]')).find(
+      (dialogo) => dialogo.querySelector('h2')?.textContent === 'Restaurar este backup?',
+    ) ?? null
+  );
+}
+
 describe('confirmacao', () => {
+
   it('mostra a data de geracao, os dois numeros e o que acontece com os atuais', async () => {
     render({ productCount: 3 });
     await escolherArquivo(conteudoDeArquivo([produto(), produto({ id: SEGUNDO_ID })]));
 
-    const dialogo = container.querySelector('[role="dialog"]');
+    const dialogo = confirmacao();
 
     expect(dialogo.textContent).toContain('Arquivo gerado em 18/09/2026 às 16:07.');
     expect(dialogo.textContent).toContain(
@@ -215,9 +231,7 @@ describe('confirmacao', () => {
     render();
     await escolherArquivo(conteudoDeArquivo([produto()]), 'copia-do-pen-drive.json');
 
-    expect(container.querySelector('[role="dialog"]').textContent).toContain(
-      'copia-do-pen-drive.json',
-    );
+    expect(confirmacao().textContent).toContain('copia-do-pen-drive.json');
   });
 
   it('cancelar fecha o dialogo sem gravar', async () => {
@@ -225,7 +239,7 @@ describe('confirmacao', () => {
     await escolherArquivo(conteudoDeArquivo([produto()]));
     await clicar('Cancelar');
 
-    expect(container.querySelector('[role="dialog"]')).toBe(null);
+    expect(confirmacao()).toBe(null);
     expect(writeBackupTables).not.toHaveBeenCalled();
   });
 });
@@ -244,7 +258,7 @@ describe('restauracao confirmada', () => {
     expect(writeBackupTables.mock.calls[0][0].products).toHaveLength(2);
     expect(onRestored).toHaveBeenCalledTimes(1);
     expect(container.textContent).toContain('2 produtos restaurados a partir do arquivo.');
-    expect(container.querySelector('[role="dialog"]')).toBe(null);
+    expect(confirmacao()).toBe(null);
   });
 
   it('mantem o dialogo aberto e oferece nova tentativa quando a gravacao falha', async () => {
@@ -257,7 +271,7 @@ describe('restauracao confirmada', () => {
     await escolherArquivo(conteudoDeArquivo([produto()]));
     await clicar('Restaurar e substituir');
 
-    const dialogo = container.querySelector('[role="dialog"]');
+    const dialogo = confirmacao();
 
     expect(dialogo).not.toBe(null);
     expect(dialogo.textContent).toContain('O armazenamento deste dispositivo está cheio.');

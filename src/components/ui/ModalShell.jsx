@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 import { cx } from '../../lib/cx.js';
 
-import { FOCUS_OUTLINE, FOCUS_OUTLINE_COLORS } from './focusClasses.js';
+import IconButton from './IconButton.jsx';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -14,34 +14,68 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-// Um elemento desabilitado no meio do caminho ou escondido por `hidden` nao
-// recebe foco; `getClientRects()` vazio e o sinal de que ele nao esta na tela.
+// Nem todo ambiente calcula layout. No navegador, `getClientRects()` vazio e o
+// sinal de que o elemento nao esta na tela — escondido por `hidden`, por um
+// ancestral sem caixa, ou fora de qualquer fluxo. Num ambiente sem layout, o
+// mesmo teste devolve vazio para tudo, e a lista de focaveis vira uma lista
+// vazia: o cerco do foco existiria no codigo e nao valeria em teste nenhum.
+//
+// Entao a pergunta vem antes: este documento desenha? O corpo da pagina sempre
+// tem caixa onde ha layout, e nunca tem onde nao ha. So quando ha e que a
+// medida de cada elemento diz alguma coisa.
+function documentHasLayout(element) {
+  const body = element?.ownerDocument?.body;
+
+  return Boolean(body) && body.getClientRects().length > 0;
+}
+
 function focusableElementsOf(container) {
   if (!container) {
     return [];
   }
 
-  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-    (element) => element.getClientRects().length > 0,
-  );
+  const candidates = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR));
+
+  if (!documentHasLayout(container)) {
+    return candidates;
+  }
+
+  return candidates.filter((element) => element.getClientRects().length > 0);
 }
 
 /**
- * Estrutura compartilhada dos dialogos da aplicacao: sobreposicao escura,
- * painel de canto reto, cabecalho na cor de marca, corpo rolavel e rodape de
- * acoes.
+ * Estrutura compartilhada dos dialogos da aplicacao: cortina escura, painel de
+ * canto reto, cabecalho fixo, corpo rolavel e rodape de acoes.
  *
  * Enquanto o dialogo esta aberto ele e o unico alvo do teclado: `Tab` circula
- * entre os controles do painel sem escapar para a pagina atras, `Esc` fecha,
- * clique iniciado na sobreposicao fecha, e o documento por baixo para de rolar.
- * O foco entra no botao de fechar quando o dialogo aparece e volta para o
- * elemento que o abriu quando ele sai, de modo que quem navega por teclado
- * retoma de onde parou. O titulo nomeia o dialogo para leitores de tela.
+ * entre os controles do painel sem escapar para a tela atras, `Esc` fecha, e o
+ * documento por baixo ja nao rola, porque nada na aplicacao rola alem dos
+ * corpos nomeados. O foco entra no botao de fechar quando o dialogo aparece e
+ * volta para o elemento que o abriu quando ele sai, de modo que quem navega por
+ * teclado retoma de onde parou. O titulo nomeia o dialogo para leitores de
+ * tela.
+ *
+ * `width` e a largura do painel em pixel, porque cada dialogo tem a sua e a
+ * medida vem do desenho, nao de uma escala de tamanhos. A altura nao e
+ * parametro: o painel para em `calc(100dvh - 96px)` e quem cresce e o corpo,
+ * pelo mesmo padrao das colunas. Dialogo que precisaria de mais altura perde
+ * conteudo para o corpo rolavel, nunca para a janela.
+ *
+ * `closeOnBackdrop` fica em `false` onde ha trabalho em andamento —
+ * importacao e restauracao. Clique fora nao descarta um arquivo ja conferido.
  *
  * `footer` recebe os botoes de acao ja montados, para que cada dialogo decida o
  * proprio conjunto sem que esta estrutura precise conhece-lo.
  */
-export default function ModalShell({ title, subtitle, onClose, footer, children }) {
+export default function ModalShell({
+  title,
+  subtitle,
+  width = 560,
+  closeOnBackdrop = true,
+  onClose,
+  footer,
+  children,
+}) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
   const titleId = useId();
@@ -55,17 +89,6 @@ export default function ModalShell({ title, subtitle, onClose, footer, children 
       if (previouslyFocused instanceof HTMLElement) {
         previouslyFocused.focus();
       }
-    };
-  }, []);
-
-  useEffect(() => {
-    const { style } = document.body;
-    const previousOverflow = style.overflow;
-
-    style.overflow = 'hidden';
-
-    return () => {
-      style.overflow = previousOverflow;
     };
   }, []);
 
@@ -118,17 +141,17 @@ export default function ModalShell({ title, subtitle, onClose, footer, children 
     };
   }, [onClose]);
 
-  // O clique so fecha quando nasce na propria sobreposicao: arrastar uma
-  // selecao de dentro do painel e soltar fora nao deve descartar o dialogo.
+  // O clique so fecha quando nasce na propria cortina: arrastar uma selecao de
+  // dentro do painel e soltar fora nao deve descartar o dialogo.
   function handleOverlayMouseDown(event) {
-    if (event.target === event.currentTarget) {
+    if (closeOnBackdrop && event.target === event.currentTarget) {
       onClose();
     }
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutro-cortina p-4"
       onMouseDown={handleOverlayMouseDown}
     >
       <div
@@ -136,45 +159,34 @@ export default function ModalShell({ title, subtitle, onClose, footer, children 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        style={{ width, maxWidth: '100%' }}
         className={cx(
-          'flex max-h-full w-full max-w-lg flex-col rounded-none border shadow-none',
-          'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900',
+          'flex max-h-[calc(100dvh-96px)] flex-col rounded border',
+          'border-neutro-borda bg-neutro-branco shadow-modal',
         )}
       >
-        <header className="flex items-start gap-4 bg-[#cf1026] px-5 py-4 text-white">
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <h2 id={titleId} className="text-base font-semibold leading-tight">
+        <header className="flex flex-none items-start justify-between gap-4 border-b border-neutro-borda px-6 py-5">
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2
+              id={titleId}
+              className="font-display text-xl font-bold leading-tight tracking-[-0.015em] text-neutro-tinta"
+            >
               {title}
             </h2>
-            {subtitle ? <p className="text-sm leading-snug text-white/80">{subtitle}</p> : null}
+            {subtitle ? (
+              <p className="text-[13px] leading-snug text-neutro-tintaFraca">{subtitle}</p>
+            ) : null}
           </div>
 
-          <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            title="Fechar"
-            className={cx(
-              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-none',
-              'border border-white/40 text-white transition-colors hover:bg-white/15',
-              FOCUS_OUTLINE,
-              FOCUS_OUTLINE_COLORS.inverse,
-            )}
-          >
+          <IconButton ref={closeButtonRef} label="Fechar" onClick={onClose}>
             <X className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </IconButton>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
 
         {footer ? (
-          <footer
-            className={cx(
-              'flex flex-col-reverse gap-2 border-t px-5 py-4 sm:flex-row sm:justify-end',
-              'border-slate-200 dark:border-slate-800',
-            )}
-          >
+          <footer className="flex flex-none flex-col-reverse gap-2 border-t border-neutro-borda px-6 py-4 sm:flex-row sm:justify-end">
             {footer}
           </footer>
         ) : null}

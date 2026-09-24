@@ -15,10 +15,10 @@ export const APP_DESCRIPTION =
   'Gerador de etiquetas com código 2D que funciona inteiramente no navegador.';
 
 /** Cor de marca, a mesma da acao principal da interface. */
-export const THEME_COLOR = '#cf1026';
+export const THEME_COLOR = '#C1121F';
 
 /** Fundo claro da aplicacao, usado na tela de abertura. */
-export const BACKGROUND_COLOR = '#f8fafc';
+export const BACKGROUND_COLOR = '#FAFAFA';
 
 export const ICON_BASE_PATH = '/icons';
 

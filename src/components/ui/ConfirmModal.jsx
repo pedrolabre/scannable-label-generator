@@ -12,6 +12,9 @@ import ModalShell from './ModalShell.jsx';
  * `error` mantem o dialogo aberto depois de uma confirmacao que falhou: o aviso
  * aparece acima do rodape, o botao de confirmar volta a ficar ativo e serve de
  * nova tentativa, e cancelar continua descartando a acao.
+ *
+ * Ele fecha no clique fora porque nao ha trabalho em andamento para descartar:
+ * o que se perde e uma pergunta ainda sem resposta.
  */
 export default function ConfirmModal({
   title,
@@ -28,6 +31,7 @@ export default function ConfirmModal({
     <ModalShell
       title={title}
       subtitle={subtitle}
+      width={480}
       onClose={onCancel}
       footer={
         <>
@@ -43,15 +47,13 @@ export default function ConfirmModal({
       <div className="space-y-4">
         <div className="flex items-start gap-4">
           <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fff1ea] text-[#b93a20] dark:bg-[#3b211b] dark:text-[#ffb8a7]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-marca-vermelhoBorda bg-marca-vermelhoTenue text-marca-vermelhoTexto"
             aria-hidden="true"
           >
             <AlertTriangle className="h-5 w-5" />
           </span>
 
-          <div className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            {children}
-          </div>
+          <div className="space-y-2 text-sm leading-relaxed text-neutro-tintaMedia">{children}</div>
         </div>
 
         {error ? <InlineAlert>{error}</InlineAlert> : null}
