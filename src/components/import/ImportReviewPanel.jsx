@@ -21,7 +21,7 @@ import { formatCount, pluralize } from './importCounts.js';
  *
  * O teto de linhas nao e enfeite. Um lote inteiro pode ser recusado de uma vez
  * — basta uma planilha com os nomes de coluna errados — e ai a lista de motivos
- * tem o tamanho do lote. O botao abre mais um bloco por vez.
+ * tem o tamanho do lote. O botao abre mais um trecho por vez.
  *
  * A gravacao e a acao em massa sobre os conflitos entram acima da lista, e nao
  * dentro dela: as duas valem para o lote inteiro, e ficariam escondidas abaixo de

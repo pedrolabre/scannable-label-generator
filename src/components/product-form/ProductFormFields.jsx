@@ -16,7 +16,7 @@ function counterHint(text, limit) {
 }
 
 /**
- * Os sete campos do produto. O bloco superior reune o que sai impresso na
+ * Os sete campos do produto. O grupo superior reune o que sai impresso na
  * etiqueta, o do meio os codigos de identificacao e o preco, e o inferior a
  * informacao de apoio.
  */

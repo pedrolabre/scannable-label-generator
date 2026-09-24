@@ -1,7 +1,5 @@
 // @vitest-environment node
 
-import { inflateSync } from 'node:zlib';
-
 import { describe, expect, it } from 'vitest';
 
 import { computeLabelGeometry } from '../domain/services/labelGeometry.js';
@@ -13,6 +11,16 @@ import { findSheetLayout } from '../domain/services/sheetLayoutCatalog.js';
 import { generateSymbol } from './barcode.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from './barcodeError.js';
 import { renderPrintDocument } from './pdf.js';
+import {
+  area,
+  asLatin1,
+  boundingBox,
+  isSquare,
+  readContent,
+  readMediaBoxes,
+  readSubpaths,
+  windingNumber,
+} from './pdfBytes.js';
 
 /**
  * Estes testes leem o arquivo gerado, e nao a descricao que o originou: a
@@ -82,100 +90,6 @@ async function renderBytes(options, renderOptions = {}) {
   return renderPrintDocument(description, { createdAt: CREATED_AT, ...renderOptions });
 }
 
-/** O arquivo lido como texto de um byte por caractere, sem reinterpretar acento. */
-function asLatin1(bytes) {
-  return Buffer.from(bytes).toString('latin1');
-}
-
-/** Fluxos de conteudo descomprimidos e concatenados. */
-function readContent(bytes) {
-  const raw = asLatin1(bytes);
-
-  return [...raw.matchAll(/stream\r?\n([\s\S]*?)endstream/g)]
-    .map((match) => {
-      try {
-        return inflateSync(Buffer.from(match[1], 'latin1')).toString('latin1');
-      } catch {
-        return '';
-      }
-    })
-    .join('\n');
-}
-
-function readMediaBoxes(bytes) {
-  return [...asLatin1(bytes).matchAll(/\/MediaBox \[([^\]]*)\]/g)].map((match) =>
-    match[1].trim().split(/\s+/).map(Number),
-  );
-}
-
-/** Subcaminhos fechados do fluxo de conteudo, em ponto. */
-function readSubpaths(content) {
-  const subpaths = [];
-  let current = null;
-
-  content.split('\n').forEach((line) => {
-    const move = line.match(/^(-?[\d.]+) (-?[\d.]+) m$/);
-    const draw = line.match(/^(-?[\d.]+) (-?[\d.]+) l$/);
-
-    if (move) {
-      current = [{ x: Number(move[1]), y: Number(move[2]) }];
-      return;
-    }
-
-    if (draw && current) {
-      current.push({ x: Number(draw[1]), y: Number(draw[2]) });
-      return;
-    }
-
-    if (line.trim() === 'h' && current) {
-      subpaths.push(current);
-      current = null;
-    }
-  });
-
-  return subpaths;
-}
-
-/**
- * Numero de voltas do conjunto de subcaminhos em torno de um ponto. Zero
- * significa area vazada pela regra nao nula, que e a regra com que o simbolo e
- * preenchido.
- */
-function windingNumber(subpaths, point) {
-  return subpaths.reduce((total, points) => {
-    let winding = 0;
-
-    points.forEach((from, index) => {
-      const to = points[(index + 1) % points.length];
-
-      if (from.y <= point.y) {
-        if (to.y > point.y && side(from, to, point) > 0) {
-          winding += 1;
-        }
-      } else if (to.y <= point.y && side(from, to, point) < 0) {
-        winding -= 1;
-      }
-    });
-
-    return total + winding;
-  }, 0);
-}
-
-function side(from, to, point) {
-  return (to.x - from.x) * (point.y - from.y) - (point.x - from.x) * (to.y - from.y);
-}
-
-function boundingBox(points) {
-  const xs = points.map((point) => point.x);
-  const ys = points.map((point) => point.y);
-
-  return {
-    left: Math.min(...xs),
-    right: Math.max(...xs),
-    top: Math.min(...ys),
-    bottom: Math.max(...ys),
-  };
-}
 
 describe('tamanho da pagina', () => {
   it('sai em A4 retrato, com a medida em ponto calculada do milimetro', async () => {
@@ -399,15 +313,3 @@ describe('arquivo gerado', () => {
     ]);
   });
 });
-
-function area(points) {
-  const box = boundingBox(points);
-
-  return (box.right - box.left) * (box.bottom - box.top);
-}
-
-function isSquare(points) {
-  const box = boundingBox(points);
-
-  return Math.abs(box.right - box.left - (box.bottom - box.top)) < 1e-6;
-}

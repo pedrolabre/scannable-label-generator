@@ -18,7 +18,7 @@
  * A importacao em lote grava em fatias porque precisa ceder o turno para
  * informar progresso, e transacao que cede o turno fecha sozinha. Aqui nao ha o
  * que informar no meio: a restauracao nao e interrompivel por decisao, porque
- * parar no meio e exatamente o estado corrompido que o bloco existe para evitar.
+ * parar no meio e exatamente o estado corrompido que a transacao unica evita.
  *
  * Em transacao unica, uma falha no meio desfaz tudo o que ela tinha feito, e o
  * conteudo anterior continua exatamente como estava. E a resposta mais forte

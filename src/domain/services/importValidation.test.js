@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { describe, expect, it } from 'vitest';
 
 import { DESCRIPTION_MAX_LENGTH } from '../schemas/productSchema.js';

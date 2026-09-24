@@ -25,7 +25,7 @@ import ImportRecordIssueList from './ImportRecordIssueList.jsx';
 /**
  * Tres rotulos, duas cores: o vermelho suave e a recusa, que nao se resolve nesta
  * tela, e o ambar cobre o que ainda depende de alguem — decidir o codigo repetido
- * e conferir um aviso. A diferenca entre esses dois esta no rotulo e no bloco de
+ * e conferir um aviso. A diferenca entre esses dois esta no rotulo e na area de
  * decisao logo abaixo, e nao numa terceira cor inventada para a ocasiao.
  */
 const BADGE_LABEL = new Map([
