@@ -74,7 +74,7 @@ export default function ClearCatalogButton({ total, onClear, className }) {
           </p>
           <p>
             A perda é definitiva: sem um arquivo de backup, não há como trazer os produtos de
-            volta. O nome da empresa e o parcelamento continuam guardados.
+            volta. O logotipo, o nome da empresa, o cartão e o crediário continuam guardados.
           </p>
         </ConfirmModal>
       ) : null}

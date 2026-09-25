@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 
 import { cx } from '../../lib/cx.js';
-import { describeLabelContent, describeLabelLogo } from '../../domain/services/labelContent.js';
+import {
+  describeLabelBand,
+  describeLabelContent,
+  describeLabelLogo,
+} from '../../domain/services/labelContent.js';
 import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
 
 /**
@@ -12,8 +16,9 @@ import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
  * etiqueta e — a previa individual mostra o primeiro, a folha mostra cada um.
  *
  * O que vai escrito e onde sai de `describeLabelContent`, a mesma lista que o
- * arquivo impresso desenha, e a caixa do logotipo sai de `describeLabelLogo`.
- * Aqui elas so viram elemento posicionado.
+ * arquivo impresso desenha; a caixa do logotipo sai de `describeLabelLogo`, e
+ * a faixa da base, de `describeLabelBand`. Aqui elas so viram elemento
+ * posicionado.
  *
  * As medidas saem por `style` em milimetro nativo do CSS. O milimetro do CSS e
  * definido pela propria especificacao da linguagem, e e ele que o navegador
@@ -23,7 +28,8 @@ import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
  *
  * A etiqueta e sempre preta sobre branco, mesmo com a aplicacao em modo
  * escuro: ela e a previsao de um objeto impresso, nao uma superficie da
- * interface, e o alto contraste e regra do contrato visual.
+ * interface, e o alto contraste e regra do contrato visual. A unica cor e a
+ * faixa da base, que chega com a cor escrita no conteudo, a mesma do arquivo.
  */
 
 const FAILED_SYMBOL_LABEL = 'Sem símbolo';
@@ -102,6 +108,23 @@ function LogoImage({ item }) {
   );
 }
 
+function Band({ item }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: toMm(item.xMm),
+        top: toMm(item.yMm),
+        width: toMm(item.widthMm),
+        height: toMm(item.heightMm),
+        backgroundColor: item.color.hex,
+      }}
+      data-label-zone={item.role}
+    />
+  );
+}
+
 function TextLine({ item }) {
   return (
     <div
@@ -135,7 +158,8 @@ export default function LabelSurface({
   symbol = null,
   symbolError = null,
   companyName = null,
-  installmentText = null,
+  card = null,
+  credit = null,
   logo = null,
   scaleFactor = 1,
   className,
@@ -151,10 +175,16 @@ export default function LabelSurface({
       return { geometry: null, error };
     }
 
-    const content = describeLabelContent({ product, geometry, companyName, installmentText, logo });
+    const content = describeLabelContent({ product, geometry, companyName, card, credit, logo });
 
-    return { geometry, error: null, content, logoItem: describeLabelLogo({ geometry, logo }) };
-  }, [layout, product, companyName, installmentText, logo]);
+    return {
+      geometry,
+      error: null,
+      content,
+      logoItem: describeLabelLogo({ geometry, logo }),
+      band: describeLabelBand({ geometry }),
+    };
+  }, [layout, product, companyName, card, credit, logo]);
 
   if (rendered.error) {
     return (
@@ -164,7 +194,7 @@ export default function LabelSurface({
     );
   }
 
-  const { geometry, content, logoItem } = rendered;
+  const { geometry, content, logoItem, band } = rendered;
 
   return (
     <div
@@ -195,6 +225,8 @@ export default function LabelSurface({
         ))}
 
         {logoItem ? <LogoImage item={logoItem} /> : null}
+
+        {band ? <Band item={band} /> : null}
 
         <SymbolZone zone={geometry.symbol} symbol={symbol} symbolError={symbolError} />
       </div>

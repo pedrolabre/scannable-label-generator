@@ -55,15 +55,15 @@ describe('zonas fixas da etiqueta', () => {
 
     expect(geometry.priceLabel.yMm).toBeGreaterThanOrEqual(zoneBounds(geometry.name).bottom);
     expect(geometry.price.yMm).toBeCloseTo(zoneBounds(geometry.priceLabel).bottom, 10);
-    expect(geometry.installment.yMm).toBeCloseTo(zoneBounds(geometry.price).bottom, 10);
+    expect(geometry.card.yMm).toBeCloseTo(zoneBounds(geometry.price).bottom, 10);
     expect(zoneBounds(geometry.fiscal).bottom).toBeCloseTo(zoneBounds(geometry.usable).bottom, 10);
   });
 
-  it('na etiqueta compacta, empilha tudo ao lado do simbolo e tira parcelamento e linha fiscal', () => {
+  it('na etiqueta compacta, empilha tudo ao lado do simbolo e tira cartao e linha fiscal', () => {
     const geometry = computeLabelGeometry(findLabelLayout('etiqueta-pequena'));
 
     expect(geometry.arrangement).toBe(LABEL_ARRANGEMENTS.COMPACT);
-    expect(geometry.installment).toBeNull();
+    expect(geometry.card).toBeNull();
     expect(geometry.fiscal).toBeNull();
     expect(geometry.company.yMm).toBeCloseTo(zoneBounds(geometry.code).bottom, 10);
     expect(zoneBounds(geometry.price).bottom).toBeCloseTo(zoneBounds(geometry.usable).bottom, 10);

@@ -257,13 +257,14 @@ describe('exportacao', () => {
     expect(downloadBlob).not.toHaveBeenCalled();
   });
 
-  it('leva ao documento o nome da empresa e o parcelamento guardados', async () => {
+  it('leva ao documento o nome da empresa e o cartao guardados', async () => {
     useLabelSettingsStore.setState({
       settings: {
+        ...DEFAULT_LABEL_SETTINGS,
         companyName: 'Loja Inventada',
         showCompanyName: true,
-        installmentText: '10x no cartão',
-        showInstallmentText: true,
+        cardInstallments: 10,
+        showCardInstallments: true,
       },
     });
 
@@ -274,7 +275,7 @@ describe('exportacao', () => {
     const texts = description.pages[0].ops.filter((op) => op.type === 'text').map((op) => op.text);
 
     expect(texts).toContain('Loja Inventada');
-    expect(texts).toContain('10x no cartão');
+    expect(texts).toContain('10x sem juros no cartão');
 
     await act(async () => {
       useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS } });

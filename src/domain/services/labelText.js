@@ -176,7 +176,7 @@ export const LOWERCASE_ADVANCE_RATIO = 0.5;
 
 /**
  * Texto de uma linha so, cortado com reticencias quando passa da largura. Vale
- * para o que e apoio na etiqueta — a empresa, o parcelamento, a linha fiscal —
+ * para o que e apoio na etiqueta — a empresa, o cartao, a linha fiscal —
  * e que continua servindo pela metade. A estimativa e a primeira guarda; a tela
  * recorta a zona e o arquivo impresso mede a largura real, como no nome.
  */

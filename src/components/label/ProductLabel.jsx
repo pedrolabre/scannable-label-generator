@@ -18,7 +18,7 @@ import { useProductSymbol } from './useProductSymbol.js';
  */
 export default function ProductLabel({ product, layout, scaleFactor = 1, className }) {
   const { symbol, error } = useProductSymbol(product);
-  const { companyName, installmentText, logo } = useLabelHeader();
+  const { companyName, card, credit, logo } = useLabelHeader();
 
   return (
     <div className={className}>
@@ -28,7 +28,8 @@ export default function ProductLabel({ product, layout, scaleFactor = 1, classNa
         symbol={symbol}
         symbolError={error}
         companyName={companyName}
-        installmentText={installmentText}
+        card={card}
+        credit={credit}
         logo={logo}
         scaleFactor={scaleFactor}
       />

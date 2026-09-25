@@ -173,25 +173,6 @@ describe('nome da empresa', () => {
   });
 });
 
-describe('parcelamento', () => {
-  it('salva e aparece na area comercial da etiqueta', async () => {
-    await mount();
-    await typeInto(setting('Parcelamento'), '10x no cartão, juros de 8% a.m.');
-    await click(buttonIn(setting('Parcelamento'), 'Salvar'));
-
-    expect(zone('installment').textContent).toBe('10x no cartão, juros de 8% a.m.');
-  });
-
-  it('sai da etiqueta pela caixa de marcacao', async () => {
-    await mount();
-    await typeInto(setting('Parcelamento'), '10x no cartão');
-    await click(buttonIn(setting('Parcelamento'), 'Salvar'));
-    await click(setting('Parcelamento').querySelector('input[type="checkbox"]'));
-
-    expect(zone('installment')).toBeNull();
-  });
-});
-
 describe('armazenamento', () => {
   it('abre com os textos em branco quando o valor guardado esta corrompido', () => {
     window.localStorage.setItem(LABEL_SETTINGS_STORAGE_KEY, '{nao e json');

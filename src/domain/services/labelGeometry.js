@@ -11,16 +11,7 @@
  *
  * O simbolo ocupa o canto inferior direito da area util. O resto se arranja de
  * um de dois jeitos, e qual deles vale e decidido pela altura que sobra acima
- * do simbolo:
- *
- * - **Larga.** Cabecalho na largura inteira, com o codigo do sistema de um lado
- *   e o nome da empresa do outro; o nome da etiqueta logo abaixo, tambem na
- *   largura inteira; e, a esquerda do simbolo, a area comercial — "a vista", o
- *   preco, o parcelamento — com a linha fiscal rente a base.
- * - **Compacta.** Quando o simbolo toma a altura inteira, tudo vai para a
- *   coluna a esquerda dele: o codigo, a empresa embaixo do codigo, o nome, e o
- *   preco rente a base. O parcelamento e a linha fiscal ficam de fora, porque a
- *   coluna nao tem largura para eles serem lidos.
+ * do simbolo; as zonas de cada arranjo moram em `labelArrangements.js`.
  *
  * O logotipo tem zona propria so no arranjo largo: a caixa inteira do lugar da
  * empresa no cabecalho, na altura da linha do codigo. Ele e alternativa ao nome
@@ -28,24 +19,36 @@
  * so uma delas e desenhada. No arranjo compacto a linha da empresa tem menos de
  * 2 mm de altura, pouco para uma imagem, e a zona fica nula.
  *
+ * O crediario — linha da parcela e linha da taxa — e a faixa de cor da base
+ * existem nos modelos em que a operacao imprime o crediario: a etiqueta de 10
+ * por folha e a tag grande. Nos outros essas zonas sao nulas e o resto da
+ * etiqueta fica como era. A linha do cartao existe em todo arranjo largo.
+ *
  * As proporcoes sao constantes do modulo, e nao numeros por modelo. Um modelo
  * novo entra no catalogo declarando largura, altura, margem e lado do simbolo:
  * todo o resto e derivado, e os mesmos testes que protegem os modelos de hoje
- * passam a proteger o novo.
+ * passam a proteger o novo. A unica lista por modelo e a dos que levam
+ * crediario, porque ela e escolha da operacao, e nao medida.
  */
 
 import { MAX_SYMBOL_TOTAL_MODULES } from '../../lib/barcodeSymbology.js';
 import { fitsMinimumModuleSize, moduleSizeMm } from '../../lib/barcodeSizing.js';
 
+import {
+  LINE_HEIGHT_RATIO,
+  LabelGeometryError,
+  clamp,
+  compactZones,
+  wideZones,
+} from './labelArrangements.js';
 import { DIGIT_ADVANCE_RATIO } from './labelText.js';
+
+export { LINE_HEIGHT_RATIO, LabelGeometryError } from './labelArrangements.js';
 
 export const LABEL_ARRANGEMENTS = Object.freeze({ WIDE: 'larga', COMPACT: 'compacta' });
 
-/** Altura de linha comum a todos os textos da etiqueta. */
-export const LINE_HEIGHT_RATIO = 1.15;
-
-/** Largura do codigo do sistema dentro do cabecalho largo; o resto e da empresa. */
-const HEADER_CODE_SHARE = 0.45;
+/** Modelos com crediario e faixa de cor na base. */
+export const CREDIT_LAYOUT_IDS = Object.freeze(['etiqueta-media-10', 'tag-grande']);
 
 const CODE_SIZE_RATIO = 0.055;
 const CODE_SIZE_MIN_MM = 2.4;
@@ -55,14 +58,20 @@ const COMPANY_TO_CODE = 0.62;
 const NAME_SIZE_RATIO = 0.05;
 const NAME_SIZE_MIN_MM = 2.2;
 const NAME_SIZE_MAX_MM = 5;
-const NAME_MAX_LINES = 3;
 
 /** Piso do texto miudo: o bastante para a leitura de perto. */
 const SMALL_TEXT_MIN_MM = 1.6;
 const FISCAL_TEXT_MIN_MM = 1.5;
 const PRICE_LABEL_TO_NAME = 0.55;
-const INSTALLMENT_TO_NAME = 0.6;
+/** Cartao e taxa do crediario: linhas de apoio, abaixo do preco. */
+const SUPPORT_TO_NAME = 0.6;
 const FISCAL_TO_NAME = 0.5;
+
+/**
+ * A parcela e a segunda informacao comercial da etiqueta: vem logo abaixo do
+ * preco, em corpo menor que ele e maior que as linhas de apoio.
+ */
+const CREDIT_INSTALLMENT_TO_NAME = 0.8;
 
 /**
  * O preco e o maior texto da etiqueta. Ele nasce no dobro do nome e so encolhe
@@ -83,23 +92,6 @@ const TEXT_GAP_MIN_MM = 0.8;
  */
 const SYMBOL_GAP_MIN_MM = 1.5;
 const SYMBOL_GAP_MODULES = 2;
-
-export class LabelGeometryError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'LabelGeometryError';
-  }
-}
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function line(xMm, yMm, widthMm, fontSizeMm) {
-  const lineHeightMm = fontSizeMm * LINE_HEIGHT_RATIO;
-
-  return { xMm, yMm, widthMm, heightMm: lineHeightMm, fontSizeMm, lineHeightMm };
-}
 
 function freezeAll(zones) {
   Object.values(zones).forEach((zone) => {
@@ -124,119 +116,13 @@ function typeScale(usable, columnWidthMm) {
     code: codeFontSizeMm,
     company: Math.max(SMALL_TEXT_MIN_MM, codeFontSizeMm * COMPANY_TO_CODE),
     name: nameFontSizeMm,
+    nameMin: NAME_SIZE_MIN_MM,
     priceLabel: Math.max(SMALL_TEXT_MIN_MM, nameFontSizeMm * PRICE_LABEL_TO_NAME),
     price: priceFontSizeMm,
-    installment: Math.max(SMALL_TEXT_MIN_MM, nameFontSizeMm * INSTALLMENT_TO_NAME),
+    creditInstallment: Math.max(SMALL_TEXT_MIN_MM, nameFontSizeMm * CREDIT_INSTALLMENT_TO_NAME),
+    support: Math.max(SMALL_TEXT_MIN_MM, nameFontSizeMm * SUPPORT_TO_NAME),
     fiscal: Math.max(FISCAL_TEXT_MIN_MM, nameFontSizeMm * FISCAL_TO_NAME),
     gap: Math.max(TEXT_GAP_MIN_MM, nameFontSizeMm * TEXT_GAP_RATIO),
-  };
-}
-
-function nameZone(xMm, yMm, widthMm, fontSizeMm, availableMm) {
-  const lineHeightMm = fontSizeMm * LINE_HEIGHT_RATIO;
-  const lines = clamp(Math.floor(availableMm / lineHeightMm), 1, NAME_MAX_LINES);
-
-  return { xMm, yMm, widthMm, heightMm: lines * lineHeightMm, fontSizeMm, lineHeightMm, lines };
-}
-
-function wideZones({ usable, symbol, gapMm, sizes, symbolTopMm }) {
-  const header = line(usable.xMm, usable.yMm, usable.widthMm, sizes.code);
-  const codeWidthMm = usable.widthMm * HEADER_CODE_SHARE;
-  const code = { ...header, widthMm: codeWidthMm };
-  // A empresa divide a linha com o codigo, em corpo menor, centrada na mesma
-  // altura: a linha do cabecalho e a do codigo, e nao a dela.
-  const company = {
-    xMm: usable.xMm + codeWidthMm + sizes.gap,
-    yMm: header.yMm,
-    widthMm: usable.widthMm - codeWidthMm - sizes.gap,
-    heightMm: header.heightMm,
-    fontSizeMm: sizes.company,
-    lineHeightMm: header.heightMm,
-  };
-
-  const logo = {
-    xMm: company.xMm,
-    yMm: header.yMm,
-    widthMm: company.widthMm,
-    heightMm: header.heightMm,
-  };
-
-  const nameTopMm = header.yMm + header.heightMm + sizes.gap;
-  const name = nameZone(
-    usable.xMm,
-    nameTopMm,
-    usable.widthMm,
-    sizes.name,
-    symbolTopMm - gapMm - nameTopMm,
-  );
-
-  const columnTopMm = name.yMm + name.heightMm + sizes.gap;
-  const column = {
-    xMm: usable.xMm,
-    yMm: columnTopMm,
-    widthMm: usable.widthMm - symbol.sizeMm - gapMm,
-    heightMm: usable.yMm + usable.heightMm - columnTopMm,
-  };
-
-  const priceLabel = line(column.xMm, column.yMm, column.widthMm, sizes.priceLabel);
-  const price = line(column.xMm, priceLabel.yMm + priceLabel.heightMm, column.widthMm, sizes.price);
-  const installment = line(column.xMm, price.yMm + price.heightMm, column.widthMm, sizes.installment);
-  const fiscalLine = line(column.xMm, 0, column.widthMm, sizes.fiscal);
-  const fiscal = { ...fiscalLine, yMm: column.yMm + column.heightMm - fiscalLine.heightMm };
-
-  if (installment.yMm + installment.heightMm > fiscal.yMm) {
-    throw new LabelGeometryError(
-      'A área comercial não comporta o preço, o parcelamento e a linha fiscal neste modelo.',
-    );
-  }
-
-  return { header, code, company, logo, name, column, priceLabel, price, installment, fiscal };
-}
-
-function compactZones({ usable, symbol, gapMm, sizes }) {
-  const column = {
-    xMm: usable.xMm,
-    yMm: usable.yMm,
-    widthMm: usable.widthMm - symbol.sizeMm - gapMm,
-    heightMm: usable.heightMm,
-  };
-
-  const code = line(column.xMm, column.yMm, column.widthMm, sizes.code);
-  const company = line(column.xMm, code.yMm + code.heightMm, column.widthMm, sizes.company);
-  const header = {
-    xMm: column.xMm,
-    yMm: column.yMm,
-    widthMm: column.widthMm,
-    heightMm: code.heightMm + company.heightMm,
-  };
-
-  const priceLine = line(column.xMm, 0, column.widthMm, sizes.price);
-  const price = { ...priceLine, yMm: column.yMm + column.heightMm - priceLine.heightMm };
-  const labelLine = line(column.xMm, 0, column.widthMm, sizes.priceLabel);
-  const priceLabel = { ...labelLine, yMm: price.yMm - labelLine.heightMm };
-
-  const nameTopMm = header.yMm + header.heightMm + sizes.gap;
-  const available = priceLabel.yMm - sizes.gap - nameTopMm;
-
-  if (available < sizes.name * LINE_HEIGHT_RATIO) {
-    throw new LabelGeometryError(
-      'A coluna ao lado do símbolo não comporta o código, o nome e o preço neste modelo.',
-    );
-  }
-
-  const name = nameZone(column.xMm, nameTopMm, column.widthMm, sizes.name, available);
-
-  return {
-    header,
-    code,
-    company,
-    logo: null,
-    name,
-    column,
-    priceLabel,
-    price,
-    installment: null,
-    fiscal: null,
   };
 }
 
@@ -293,8 +179,9 @@ export function computeLabelGeometry(layout, totalModules = MAX_SYMBOL_TOTAL_MOD
   const fitsWide = symbol.yMm - gapMm - usable.yMm >= headerMm + sizes.gap + nameLineMm;
   const arrangement = fitsWide ? LABEL_ARRANGEMENTS.WIDE : LABEL_ARRANGEMENTS.COMPACT;
 
+  const withCredit = CREDIT_LAYOUT_IDS.includes(layout.id);
   const zones = fitsWide
-    ? wideZones({ usable, symbol, gapMm, sizes, symbolTopMm: symbol.yMm })
+    ? wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit })
     : compactZones({ usable, symbol, gapMm, sizes });
 
   return freezeAll({
@@ -311,7 +198,9 @@ export function computeLabelGeometry(layout, totalModules = MAX_SYMBOL_TOTAL_MOD
 /**
  * Zonas de texto e o simbolo, na ordem de leitura, para quem confere
  * sobreposicao. O logotipo fica de fora porque ocupa o lugar da empresa: quem
- * confere o logotipo compara a zona dele com estas, menos a da empresa.
+ * confere o logotipo compara a zona dele com estas, menos a da empresa. A
+ * faixa da base tambem fica de fora: ela mora na margem, fora da area util, e
+ * quem a confere compara a zona dela com estas e com a borda da etiqueta.
  */
 export function listLabelZones(geometry) {
   return [
@@ -320,7 +209,9 @@ export function listLabelZones(geometry) {
     ['name', geometry.name],
     ['priceLabel', geometry.priceLabel],
     ['price', geometry.price],
-    ['installment', geometry.installment],
+    ['card', geometry.card],
+    ['creditInstallment', geometry.creditInstallment],
+    ['creditRate', geometry.creditRate],
     ['fiscal', geometry.fiscal],
     ['symbol', geometry.symbol],
   ].filter(([, zone]) => zone !== null);

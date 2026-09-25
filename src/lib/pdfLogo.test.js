@@ -39,7 +39,7 @@ function describeTen(logo) {
     grid: computeSheetGrid(SHEET, LABEL),
     products: [ARMARIO],
     symbols: new Map(),
-    header: { companyName: 'Loja Inventada', installmentText: null, logo },
+    header: { companyName: 'Loja Inventada', logo },
   });
 }
 
