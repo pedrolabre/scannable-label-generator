@@ -85,7 +85,8 @@ export default function SheetCanvas({
                 symbol={resolved?.symbol ?? null}
                 symbolError={resolved?.error ?? null}
                 companyName={header.companyName ?? null}
-                installmentText={header.installmentText ?? null}
+                card={header.card ?? null}
+                credit={header.credit ?? null}
                 logo={header.logo ?? null}
               />
             </div>

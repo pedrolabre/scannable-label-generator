@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { pngDataUrl } from '../../lib/logoFixtures.js';
 
 import {
+  LABEL_BAND_COLOR,
   PRICE_LABEL_TEXT,
   describeFiscalLine,
+  describeLabelBand,
   describeLabelContent,
   describeLabelLogo,
   formatNcm,
@@ -23,7 +25,7 @@ const PRODUCT = {
   ncm: '94035000',
 };
 
-const HEADER = { companyName: 'Loja Inventada', installmentText: '10x no cartão' };
+const HEADER = { companyName: 'Loja Inventada', card: { installments: 10 } };
 
 function roles(items) {
   return items.map((item) => item.role);
@@ -54,20 +56,21 @@ describe('conteudo da etiqueta larga', () => {
       'name',
       'priceLabel',
       'price',
-      'installment',
+      'card',
       'fiscal',
     ]);
+    expect(items.find((item) => item.role === 'card').text).toBe('10x sem juros no cartão');
     expect(items.find((item) => item.role === 'priceLabel').text).toBe(PRICE_LABEL_TEXT);
     expect(items.find((item) => item.role === 'price').text).toBe('R$ 859,90');
     expect(items.find((item) => item.role === 'company').align).toBe('right');
     expect(items.find((item) => item.role === 'code')).toMatchObject({ bold: true, face: 'display' });
   });
 
-  it('deixa de fora a empresa e o parcelamento desligados', () => {
+  it('deixa de fora a empresa e o cartao desligados', () => {
     const items = describeLabelContent({ product: PRODUCT, geometry });
 
     expect(roles(items)).not.toContain('company');
-    expect(roles(items)).not.toContain('installment');
+    expect(roles(items)).not.toContain('card');
   });
 
   it('deixa de fora a linha fiscal do produto sem EAN e sem NCM', () => {
@@ -94,11 +97,11 @@ describe('conteudo da etiqueta larga', () => {
 });
 
 describe('conteudo da etiqueta compacta', () => {
-  it('mantem codigo, empresa, nome e preco, sem parcelamento nem linha fiscal', () => {
+  it('mantem codigo, empresa, nome e preco, sem cartao nem linha fiscal', () => {
     const geometry = computeLabelGeometry(findLabelLayout('etiqueta-pequena'));
     const items = describeLabelContent({ product: PRODUCT, geometry, ...HEADER });
 
-    expect(roles(items)).not.toContain('installment');
+    expect(roles(items)).not.toContain('card');
     expect(roles(items)).not.toContain('fiscal');
     expect(roles(items)).toContain('company');
     expect(items.find((item) => item.role === 'company').align).toBe('left');
@@ -132,7 +135,7 @@ describe('logotipo', () => {
     const items = describeLabelContent({ product: PRODUCT, geometry: WIDE, ...HEADER, logo: WORDMARK });
 
     expect(roles(items)).not.toContain('company');
-    expect(roles(items)).toEqual(['code', 'name', 'priceLabel', 'price', 'installment', 'fiscal']);
+    expect(roles(items)).toEqual(['code', 'name', 'priceLabel', 'price', 'card', 'fiscal']);
   });
 
   it('deixa o nome da empresa na etiqueta pequena, que nao tem zona para a imagem', () => {
@@ -167,5 +170,141 @@ describe('logotipo', () => {
     const fillsHeight = Math.abs(item.heightMm - WIDE.logo.heightMm) < 1e-9;
 
     expect(fillsWidth || fillsHeight).toBe(true);
+  });
+});
+
+describe('cartao e crediario', () => {
+  const TEN = computeLabelGeometry(findLabelLayout('etiqueta-media-10'));
+  const TAG = computeLabelGeometry(findLabelLayout('tag-grande'));
+  const MEDIUM = computeLabelGeometry(findLabelLayout('etiqueta-media'));
+  const CREDIT = { rateHundredths: 800, interest: 'simples', installments: 10, roundToNinetyCents: false };
+  const text = (items, role) => items.find((item) => item.role === role)?.text;
+
+  it('escreve cartao, parcela do crediario e taxa abaixo do preco, nessa ordem', () => {
+    const items = describeLabelContent({ product: PRODUCT, geometry: TEN, ...HEADER, credit: CREDIT });
+
+    expect(roles(items)).toEqual([
+      'code',
+      'company',
+      'name',
+      'priceLabel',
+      'price',
+      'card',
+      'creditInstallment',
+      'creditRate',
+      'fiscal',
+    ]);
+    expect(text(items, 'card')).toBe('10x sem juros no cartão');
+    // 859,90 x (1 + 0,08 x 10) / 10 = 154,782, que fica 154,78.
+    expect(text(items, 'creditInstallment')).toBe('Crediário: 10x de R$ 154,78');
+    expect(text(items, 'creditRate')).toBe('Taxa de Juros: 8% a.m.');
+    expect(items.find((item) => item.role === 'creditInstallment')).toMatchObject({ bold: true, digits: true });
+  });
+
+  it('faz a conta composta e o arredondamento para ,90', () => {
+    const compound = describeLabelContent({
+      product: PRODUCT,
+      geometry: TAG,
+      credit: { ...CREDIT, interest: 'composto', roundToNinetyCents: true },
+    });
+
+    // 859,90 x 0,08 / (1 - 1,08^-10) = 128,15; no mesmo real com ,90: 128,90.
+    expect(text(compound, 'creditInstallment')).toBe('Crediário: 10x de R$ 128,90');
+  });
+
+  it('com Nenhum, leva so a taxa, sem valor a prazo', () => {
+    const items = describeLabelContent({
+      product: PRODUCT,
+      geometry: TEN,
+      ...HEADER,
+      credit: { ...CREDIT, interest: 'nenhum', installments: null },
+    });
+
+    expect(roles(items)).not.toContain('creditInstallment');
+    expect(text(items, 'creditRate')).toBe('Taxa de Juros: 8% a.m.');
+  });
+
+  it('sobe a linha de baixo para o lugar da que nao saiu', () => {
+    const priceBottom = TEN.price.yMm + TEN.price.heightMm;
+    const withoutCard = describeLabelContent({ product: PRODUCT, geometry: TEN, credit: CREDIT });
+    const installment = withoutCard.find((item) => item.role === 'creditInstallment');
+    const rate = withoutCard.find((item) => item.role === 'creditRate');
+
+    expect(installment.yMm).toBeCloseTo(priceBottom, 10);
+    expect(rate.yMm).toBeCloseTo(priceBottom + installment.lineHeightMm, 10);
+
+    const onlyRate = describeLabelContent({
+      product: PRODUCT,
+      geometry: TEN,
+      credit: { ...CREDIT, interest: 'nenhum' },
+    });
+
+    expect(onlyRate.find((item) => item.role === 'creditRate').yMm).toBeCloseTo(priceBottom, 10);
+  });
+
+  it('sem crediario, a etiqueta sai so com o cartao', () => {
+    const items = describeLabelContent({ product: PRODUCT, geometry: TAG, ...HEADER });
+
+    expect(roles(items)).toEqual(['code', 'company', 'name', 'priceLabel', 'price', 'card', 'fiscal']);
+  });
+
+  it('nao leva crediario aos modelos sem crediario, e mantem o cartao neles', () => {
+    const items = describeLabelContent({ product: PRODUCT, geometry: MEDIUM, ...HEADER, credit: CREDIT });
+
+    expect(roles(items)).not.toContain('creditInstallment');
+    expect(roles(items)).not.toContain('creditRate');
+    expect(text(items, 'card')).toBe('10x sem juros no cartão');
+  });
+
+  it('mantem a taxa no produto cujo preco nao da um centavo por parcela', () => {
+    const items = describeLabelContent({
+      product: { ...PRODUCT, priceInCentavos: 1 },
+      geometry: TEN,
+      credit: CREDIT,
+    });
+
+    expect(roles(items)).not.toContain('creditInstallment');
+    expect(roles(items)).toContain('creditRate');
+  });
+
+  it.each([
+    ['etiqueta-media-10', TEN],
+    ['tag-grande', TAG],
+  ])('toda linha, com tudo ligado, fica dentro da area util em %s', (_id, geometry) => {
+    const usable = zoneBounds(geometry.usable);
+    const items = describeLabelContent({
+      product: { ...PRODUCT, priceInCentavos: 999999 },
+      geometry,
+      companyName: 'Loja Inventada',
+      card: { installments: 24 },
+      credit: { rateHundredths: 1999, interest: 'composto', installments: 24, roundToNinetyCents: false },
+    });
+
+    for (const item of items) {
+      expect(item.xMm + item.widthMm).toBeLessThanOrEqual(usable.right + 1e-9);
+      expect(item.yMm + item.lineHeightMm).toBeLessThanOrEqual(usable.bottom + 1e-9);
+    }
+
+    const fiscal = items.find((item) => item.role === 'fiscal');
+    const rate = items.find((item) => item.role === 'creditRate');
+
+    expect(rate.yMm + rate.lineHeightMm).toBeLessThanOrEqual(fiscal.yMm + 1e-9);
+  });
+});
+
+describe('faixa da base', () => {
+  it('sai na cor da marca nos modelos com crediario, e em nenhum outro', () => {
+    for (const layout of LABEL_LAYOUTS) {
+      const geometry = computeLabelGeometry(layout);
+      const band = describeLabelBand({ geometry });
+
+      if (geometry.band) {
+        expect(band).toMatchObject({ role: 'band', xMm: geometry.band.xMm, yMm: geometry.band.yMm, color: LABEL_BAND_COLOR });
+      } else {
+        expect(band).toBeNull();
+      }
+    }
+
+    expect(LABEL_BAND_COLOR).toEqual({ hex: '#C1121F', red: 193, green: 18, blue: 31 });
   });
 });

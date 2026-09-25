@@ -22,8 +22,8 @@ import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
  * de eventos entre eles, com o andamento escrito no mesmo lugar do andamento
  * das folhas.
  *
- * O logotipo, o nome da empresa e o parcelamento sao lidos da configuracao na
- * hora do clique, os mesmos que a previa desenha.
+ * O logotipo, o nome da empresa, o cartao e o crediario sao lidos da
+ * configuracao na hora do clique, os mesmos que a previa desenha.
  *
  * Simbolo recusado nao interrompe a exportacao: ele entra no mapa como falha e
  * a etiqueta correspondente sai com o marcador, como a tela ja mostra.

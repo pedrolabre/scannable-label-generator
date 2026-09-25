@@ -16,6 +16,9 @@
  * nome da imagem vem da descricao, e e ele que faz a biblioteca guardar a
  * imagem uma vez so no arquivo, e nao uma por etiqueta.
  *
+ * A faixa da base e a unica cor da etiqueta. Ela chega com a cor escrita na
+ * propria operacao, e o adaptador so a repassa: quem decide cor e a descricao.
+ *
  * A saida e deterministica. A data de criacao chega de fora e o identificador
  * do documento sai do proprio conteudo, entao a mesma entrada produz o mesmo
  * arquivo byte a byte, e dois conteudos diferentes nao compartilham
@@ -122,6 +125,12 @@ function drawPage(doc, page) {
   page.ops.forEach((op) => {
     if (op.type === 'rect') {
       doc.setFillColor(255, 255, 255);
+      doc.rect(op.xMm, op.yMm, op.widthMm, op.heightMm, 'F');
+      return;
+    }
+
+    if (op.type === 'band') {
+      doc.setFillColor(op.color.red, op.color.green, op.color.blue);
       doc.rect(op.xMm, op.yMm, op.widthMm, op.heightMm, 'F');
       return;
     }

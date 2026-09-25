@@ -19,7 +19,7 @@
 
 import { readSymbolPath, scaleSymbolPath } from '../../lib/symbolPath.js';
 
-import { describeLabelContent, describeLabelLogo } from './labelContent.js';
+import { describeLabelBand, describeLabelContent, describeLabelLogo } from './labelContent.js';
 import { computeLabelGeometry } from './labelGeometry.js';
 import { labelsOnSheet, paginateLabels } from './sheetPagination.js';
 import { describeProductSymbolSupport } from './symbolContent.js';
@@ -41,6 +41,8 @@ const FAILED_SYMBOL_SIZE_DIVISOR = 8;
  * que a folha tenha.
  */
 export const LOGO_IMAGE_ALIAS = 'logotipo';
+
+const UNTRIMMED_ROLES = Object.freeze(['price', 'creditInstallment', 'code']);
 
 function whiteRect(xMm, yMm, widthMm, heightMm) {
   return Object.freeze({ type: 'rect', xMm, yMm, widthMm, heightMm, fill: 'white' });
@@ -99,12 +101,30 @@ function describeLabel({ product, geometry, origin, symbol, symbolError, header 
         fontSizeMm: item.fontSizeMm,
         bold: item.bold,
         align: item.align,
-        // O preco e o codigo ja foram medidos por degrau de corpo e nunca sao
-        // cortados; o resto ganha a segunda guarda, com a largura real da fonte.
-        trim: item.role !== 'price' && item.role !== 'code',
+        // O preco, a parcela e o codigo ja foram medidos por degrau de corpo e
+        // nunca sao cortados; o resto ganha a segunda guarda, com a largura
+        // real da fonte.
+        trim: !UNTRIMMED_ROLES.includes(item.role),
       }),
     );
   });
+
+  const band = describeLabelBand({ geometry });
+
+  if (band) {
+    // A faixa e a unica cor da etiqueta, e vai com a cor escrita na operacao:
+    // o adaptador nao escolhe cor nenhuma.
+    ops.push(
+      Object.freeze({
+        type: 'band',
+        xMm: origin.xMm + band.xMm,
+        yMm: origin.yMm + band.yMm,
+        widthMm: band.widthMm,
+        heightMm: band.heightMm,
+        color: band.color,
+      }),
+    );
+  }
 
   const logo = describeLabelLogo({ geometry, logo: header.logo });
 
@@ -177,8 +197,8 @@ function describeLabel({ product, geometry, origin, symbol, symbolError, header 
  * simbolo para `{ symbol, error }`; texto ausente do mapa, ou exemplar cujo
  * texto o contrato recusa, sai com o marcador de falha, e nunca em branco.
  *
- * `header` leva o logotipo, o nome da empresa e o parcelamento ja resolvidos,
- * os mesmos da previa.
+ * `header` leva o logotipo, o nome da empresa, o cartao e o crediario ja
+ * resolvidos, os mesmos da previa.
  */
 export function describePrintDocument({
   job,
@@ -194,7 +214,8 @@ export function describePrintDocument({
   const { totalSheets } = paginateLabels(job.items, grid.perSheet);
   const labelHeader = {
     companyName: header.companyName ?? null,
-    installmentText: header.installmentText ?? null,
+    card: header.card ?? null,
+    credit: header.credit ?? null,
     logo: header.logo ?? null,
   };
   const pages = [];

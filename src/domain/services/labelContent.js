@@ -6,9 +6,15 @@
  * etiqueta. Um segundo lugar decidindo o que entra na etiqueta seria um segundo
  * lugar para a previa deixar de prever o papel.
  *
- * O nome da empresa e o parcelamento chegam de fora, ja resolvidos: `null`
- * quando o operador nao quer a linha na etiqueta. A etiqueta sem eles continua
- * valida, e a zona fica em branco.
+ * O nome da empresa e o cartao chegam de fora, ja resolvidos: `null` quando o
+ * operador nao quer a linha na etiqueta. A etiqueta sem eles continua valida.
+ *
+ * O crediario tambem chega resolvido, com a taxa, o jeito de calcular e as
+ * parcelas; a parcela e calculada aqui, com o preco do produto. A taxa sai
+ * sempre que o crediario existe; a parcela, so quando ha calculo. Abaixo do
+ * preco as linhas de apoio — cartao, parcela do crediario e taxa — sobem para
+ * ocupar o lugar da que nao saiu, na ordem de leitura, e nunca passam da zona
+ * reservada para a ultima delas.
  *
  * O logotipo tambem chega resolvido, com formato e medida em pixels. Onde o
  * modelo tem zona para ele, a imagem toma o lugar do nome da empresa; onde nao
@@ -19,16 +25,30 @@
 
 import { formatCentavosAsBRL } from '../../lib/currency.js';
 
+import {
+  computeInstallmentPlan,
+  describeCardText,
+  describeInstallmentText,
+  describeRateText,
+} from './installmentPlan.js';
 import { LABEL_ARRANGEMENTS } from './labelGeometry.js';
 import {
   UPPERCASE_BOLD_ADVANCE_RATIO,
   fitCodeText,
+  fitFontSizeMm,
   fitNameLines,
   fitPriceText,
   fitSingleLine,
 } from './labelText.js';
 
 export const PRICE_LABEL_TEXT = 'À VISTA';
+
+/**
+ * Cor da faixa da base: o vermelho da marca, o mesmo `marca.vermelho` da
+ * interface. Fica escrita aqui porque a tela e o arquivo impresso desenham a
+ * faixa com o mesmo valor, e o arquivo nao le o tema.
+ */
+export const LABEL_BAND_COLOR = Object.freeze({ hex: '#C1121F', red: 193, green: 18, blue: 31 });
 
 const FISCAL_SEPARATOR = ' · ';
 
@@ -110,6 +130,63 @@ export function describeLabelLogo({ geometry, logo = null }) {
   });
 }
 
+/** Faixa de cor da base, ou nula no modelo que nao tem faixa. */
+export function describeLabelBand({ geometry }) {
+  const zone = geometry.band;
+
+  if (!zone) {
+    return null;
+  }
+
+  return Object.freeze({
+    role: 'band',
+    xMm: zone.xMm,
+    yMm: zone.yMm,
+    widthMm: zone.widthMm,
+    heightMm: zone.heightMm,
+    color: LABEL_BAND_COLOR,
+  });
+}
+
+/**
+ * Linhas de apoio abaixo do preco, na ordem de leitura: o cartao, a parcela do
+ * crediario e a taxa. A primeira que sai ocupa o lugar logo abaixo do preco, e
+ * cada uma das seguintes vem logo abaixo da anterior, no proprio corpo.
+ */
+function supportLines({ product, geometry, card, credit }) {
+  const wanted = [];
+
+  if (card && geometry.card) {
+    wanted.push(['card', describeCardText(card.installments), {}]);
+  }
+
+  if (credit && geometry.creditInstallment) {
+    const plan = computeInstallmentPlan({ priceInCentavos: product?.priceInCentavos, ...credit });
+
+    if (plan) {
+      const text = describeInstallmentText(plan);
+      const { widthMm, fontSizeMm } = geometry.creditInstallment;
+
+      const fit = fitFontSizeMm(text, widthMm, fontSizeMm);
+
+      wanted.push(['creditInstallment', text, { fontSizeMm: fit.fontSizeMm, bold: true, digits: true }]);
+    }
+
+    wanted.push(['creditRate', describeRateText(credit.rateHundredths), {}]);
+  }
+
+  let topMm = geometry.price.yMm + geometry.price.heightMm;
+
+  return wanted.map(([role, text, style]) => {
+    const zone = { ...geometry[role], yMm: topMm };
+    const fitted = role === 'creditInstallment' ? text : fitSingleLine(text, zone).text;
+
+    topMm += zone.lineHeightMm;
+
+    return textItem(role, zone, fitted, style);
+  });
+}
+
 /**
  * Linhas de texto da etiqueta, na ordem de leitura. Linha vazia fica de fora
  * da lista em vez de entrar como texto vazio.
@@ -118,7 +195,8 @@ export function describeLabelContent({
   product,
   geometry,
   companyName = null,
-  installmentText = null,
+  card = null,
+  credit = null,
   logo = null,
 }) {
   const items = [];
@@ -166,7 +244,7 @@ export function describeLabelContent({
         face: 'display',
         digits: true,
       }),
-      optionalLine('installment', geometry.installment, installmentText),
+      ...supportLines({ product, geometry, card, credit }),
       optionalLine('fiscal', geometry.fiscal, describeFiscalLine(product)),
     ].filter(Boolean),
   );

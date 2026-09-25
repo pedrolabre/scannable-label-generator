@@ -29,7 +29,7 @@ export const useLabelSettingsStore = create((set, get) => ({
   },
 }));
 
-/** Logotipo, nome da empresa e parcelamento como saem na etiqueta, ou nulos. */
+/** Logotipo, nome da empresa, cartao e crediario como saem na etiqueta, ou nulos. */
 export function useLabelHeader() {
   const settings = useLabelSettingsStore((state) => state.settings);
 

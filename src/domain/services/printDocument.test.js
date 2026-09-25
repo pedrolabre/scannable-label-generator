@@ -138,7 +138,7 @@ describe('conteudo de uma etiqueta', () => {
     ]);
   });
 
-  it('escreve a empresa, o parcelamento e a linha fiscal quando existem', async () => {
+  it('escreve a empresa, o cartao e a linha fiscal quando existem', async () => {
     const products = [{ ...FOGAO, ean: '7899075420416', ncm: '94035000' }];
     const items = [{ productId: FOGAO.id, copies: 1 }];
     const grid = computeSheetGrid(RETRATO, GRANDE);
@@ -149,7 +149,7 @@ describe('conteudo de uma etiqueta', () => {
       grid,
       products,
       symbols: await symbolsFor(listExportSymbolTexts(items, products)),
-      header: { companyName: 'Loja Inventada', installmentText: 'Taxa de juros: 8% a.m.' },
+      header: { companyName: 'Loja Inventada', card: { installments: 10 } },
     });
 
     expect(textsOf(document.pages[0])).toEqual([
@@ -158,7 +158,7 @@ describe('conteudo de uma etiqueta', () => {
       'FOGÃO CINCO BOCAS',
       'À VISTA',
       'R$ 2.199,00',
-      'Taxa de juros: 8% a.m.',
+      '10x sem juros no cartão',
       'EAN 7899075420416 · NCM 9403.50.00',
     ]);
     expect(opsOfType(document.pages[0], 'text')[1].align).toBe('right');
@@ -266,7 +266,7 @@ describe('logotipo no documento', () => {
   const FOLHA_10 = findSheetLayout('a4-10-etiquetas');
   const ETIQUETA_10 = findLabelLayout('etiqueta-media-10');
   const LOGO = resolveLogo(pngDataUrl(300, 60));
-  const HEADER = { companyName: 'Loja Inventada', installmentText: '10x no cartão' };
+  const HEADER = { companyName: 'Loja Inventada', card: { installments: 10 } };
   const TEN = [{ productId: ARMARIO.id, copies: 10 }];
 
   it('traz uma operacao de imagem por etiqueta, dentro da zona do logotipo de cada uma', async () => {

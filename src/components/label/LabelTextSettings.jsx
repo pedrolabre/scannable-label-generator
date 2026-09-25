@@ -1,18 +1,23 @@
 import {
   COMPANY_NAME_MAX_LENGTH,
-  INSTALLMENT_TEXT_MAX_LENGTH,
+  EMPTY_CARD_SETTINGS,
+  EMPTY_CREDIT_SETTINGS,
 } from '../../domain/schemas/labelSettingsSchema.js';
 import { useLabelSettingsStore } from '../../store/useLabelSettingsStore.js';
 
+import LabelCardSetting from './LabelCardSetting.jsx';
+import LabelCreditSetting from './LabelCreditSetting.jsx';
 import LabelLogoSetting from './LabelLogoSetting.jsx';
 import SavedTextSetting from './SavedTextSetting.jsx';
 
 /**
  * O que a etiqueta leva e nao pertence a produto nenhum: o logotipo e o nome
- * da empresa, no cabecalho, e o parcelamento, na area comercial.
+ * da empresa, no cabecalho; e o cartao sem juros e o crediario, na area
+ * comercial, na mesma ordem em que saem na etiqueta.
  *
  * Moram na coluna da previa porque e ali que o efeito aparece: salvar o nome,
- * carregar o logotipo ou desmarcar a caixa redesenha a etiqueta logo acima.
+ * carregar o logotipo, guardar o cartao ou o crediario, ou desmarcar a caixa
+ * redesenha a etiqueta logo acima.
  * Ficam guardados neste dispositivo e nao saem com zerar o catalogo nem com
  * restaurar um backup.
  */
@@ -48,15 +53,18 @@ export default function LabelTextSettings() {
         onVisibleChange={(showCompanyName) => update({ showCompanyName })}
       />
 
-      <SavedTextSetting
-        label="Parcelamento"
-        placeholder="Ex.: 10x no cartão, juros de 8% a.m."
-        maxLength={INSTALLMENT_TEXT_MAX_LENGTH}
-        value={settings.installmentText}
-        visible={settings.showInstallmentText}
-        visibilityLabel="Mostrar o parcelamento na etiqueta"
-        onSave={(installmentText) => update({ installmentText })}
-        onVisibleChange={(showInstallmentText) => update({ showInstallmentText })}
+      <LabelCardSetting
+        settings={settings}
+        onSave={(cardInstallments) =>
+          update(cardInstallments === null ? EMPTY_CARD_SETTINGS : { cardInstallments })
+        }
+        onChange={update}
+      />
+
+      <LabelCreditSetting
+        settings={settings}
+        onSave={(credit) => update(credit ?? EMPTY_CREDIT_SETTINGS)}
+        onChange={update}
       />
     </section>
   );

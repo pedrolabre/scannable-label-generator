@@ -1,5 +1,6 @@
 import {
   DEFAULT_LABEL_SETTINGS,
+  LABEL_SETTINGS_FIELDS,
   LabelSettingsSchema,
 } from '../domain/schemas/labelSettingsSchema.js';
 
@@ -15,7 +16,9 @@ import {
  * formato — devolve a configuracao padrao, e a tela abre sem texto nenhum em
  * vez de nao abrir. O logotipo e a parte mais sujeita a estragar, e a mais
  * pesada: quando so ele nao passa, a leitura descarta o logotipo e mantem os
- * textos. Gravacao que falha sobe para quem chamou, que e quem diz ao operador
+ * textos. Campo que a configuracao nao tem mais — como o texto livre de
+ * parcelamento, que o cartao substituiu — e deixado de fora na leitura, e o
+ * resto do valor guardado continua valendo. Gravacao que falha sobe para quem chamou, que e quem diz ao operador
  * que o valor nao foi guardado; a cota cheia ganha frase propria, porque o
  * logotipo e o que a enche.
  */
@@ -34,6 +37,12 @@ function isQuotaError(error) {
   return error?.name === 'QuotaExceededError' || error?.code === 22 || error?.code === 1014;
 }
 
+function knownFields(saved) {
+  return Object.fromEntries(
+    LABEL_SETTINGS_FIELDS.filter((field) => Object.hasOwn(saved, field)).map((field) => [field, saved[field]]),
+  );
+}
+
 function storage() {
   return typeof window !== 'undefined' ? window.localStorage : null;
 }
@@ -46,7 +55,7 @@ export function readLabelSettings() {
       return { ...DEFAULT_LABEL_SETTINGS };
     }
 
-    const stored = { ...DEFAULT_LABEL_SETTINGS, ...JSON.parse(raw) };
+    const stored = { ...DEFAULT_LABEL_SETTINGS, ...knownFields(JSON.parse(raw)) };
     const parsed = LabelSettingsSchema.safeParse(stored);
 
     if (parsed.success) {

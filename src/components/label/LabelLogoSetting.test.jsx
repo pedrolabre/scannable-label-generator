@@ -226,7 +226,7 @@ describe('logotipo na folha', () => {
           labelLayout={labelLayout}
           slots={slots}
           symbols={new Map()}
-          header={{ companyName: 'Loja Inventada', installmentText: null, logo: resolveLogo(FIRST_LOGO) }}
+          header={{ companyName: 'Loja Inventada', logo: resolveLogo(FIRST_LOGO) }}
         />,
       );
     });

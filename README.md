@@ -10,7 +10,7 @@ MVP funcional.
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
-- Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço, parcelamento, EAN, NCM e símbolo 2D no canto inferior.
+- Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
 - Exportação em PDF vetorial com escala física 1:1.
 - Interface em janela única com modais dedicados e adaptação fluida de densidade.
@@ -37,7 +37,8 @@ A aplicação abre com a `Etiqueta 10 (84,7 x 46,6 mm)` na folha `A4 10 etiqueta
 - A grade parte do canto superior esquerdo; a sobra fica à direita e embaixo.
 - As seis medidas da folha são editáveis e voltam às do modelo quando a folha é trocada.
 - `Aproveitar a folha` (margem de 5 mm e etiquetas encostadas) só aparece quando abre uma coluna ou uma linha a mais.
-- Na etiqueta de 10 por folha o nome do produto ocupa uma linha, cortada com reticências quando não cabe.
+- Na etiqueta de 10 por folha o nome do produto ocupa duas linhas, em corpo menor que o dos outros modelos, e é cortado com reticências quando não cabe.
+- A etiqueta de 10 por folha e a tag grande levam o crediário e uma faixa vermelha na base, abaixo do símbolo. A etiqueta média leva só o cartão, e a pequena, nenhum dos dois.
 
 ## Logotipo da empresa
 
@@ -48,7 +49,33 @@ O logotipo é carregado uma vez em `Logotipo e textos da etiqueta`, na coluna da
 - Na etiqueta ocupa o lugar do nome da empresa no cabeçalho, inteira, alinhada à direita. O símbolo não muda de tamanho nem de lugar.
 - A etiqueta pequena não tem lugar para a imagem e continua com o nome da empresa.
 - `Mostrar o logotipo na etiqueta` tira a imagem sem apagá-la; `Remover` apaga. Sem logotipo, a etiqueta volta a ser a de antes.
-- Fica guardado neste navegador, na mesma chave do nome da empresa e do parcelamento (`labelforge.etiqueta`, no `localStorage`). Não entra no arquivo de backup, e zerar o catálogo ou restaurar um backup não o apaga.
+- Fica guardado neste navegador, na mesma chave do nome da empresa, do cartão e do crediário (`labelforge.etiqueta`, no `localStorage`). Não entra no arquivo de backup, e zerar o catálogo ou restaurar um backup não o apaga.
+
+## Cartão e crediário
+
+Configurados uma vez em `Logotipo e textos da etiqueta`, na coluna da prévia, valem para todos os produtos. Na etiqueta saem abaixo do preço à vista, nesta ordem:
+
+```text
+À VISTA R$ 1.000,00
+10x sem juros no cartão
+Crediário: 10x de R$ 180,00
+Taxa de Juros: 8% a.m.
+```
+
+- **Cartão:** quantidade de parcelas sem juros (2 a 24), sem valor. É opcional: `Mostrar o cartão na etiqueta` tira a linha sem apagar a quantidade.
+- **Taxa do crediário:** taxa de juros ao mês (0% a 20%, até duas casas decimais). Com o crediário guardado, a linha da taxa sai sempre.
+- **Parcela do crediário:** o cálculo escolhe se ela sai.
+  - `Nenhum`: sem cálculo; a etiqueta leva só a taxa.
+  - `Simples`: parcela = preço x (1 + taxa x parcelas) / parcelas. R$ 1.000,00 em 10x a 8% a.m. dá 10x de R$ 180,00.
+  - `Compostos` (Tabela Price): parcela = preço x taxa / (1 - (1 + taxa)^-parcelas). R$ 1.000,00 em 10x a 8% a.m. dá 10x de R$ 149,03.
+  - Com taxa zero, simples e compostos dividem o preço pelas parcelas.
+- A conta é feita em centavos inteiros e só a parcela final é arredondada, ao centavo mais próximo. Preço que não dá um centavo por parcela sai só com a taxa.
+- `Arredondar a parcela para ,90` mantém o real e troca os centavos por 90: R$ 161,98 e R$ 161,20 saem R$ 161,90.
+- Linha que não sai deixa o lugar para a de baixo, que sobe.
+- Valor fora dos limites é recusado com o motivo embaixo do campo, e nada é gravado.
+- O preço à vista é sempre o maior texto da etiqueta, e nenhuma dessas linhas fica menor que a linha fiscal.
+- O crediário sai na etiqueta de 10 por folha e na tag grande; o cartão, também na etiqueta média.
+- Ficam guardados neste navegador, na mesma chave do logotipo (`labelforge.etiqueta`). Não entram no arquivo de backup, e zerar o catálogo ou restaurar um backup não os apaga.
 
 ## Formato `LF1`
 
@@ -156,6 +183,9 @@ scannable-label-generator/
         conflictLabels.js
         importCounts.js
       label/
+        LabelCardSetting.jsx
+        LabelCreditSetting.jsx
+        LabelCreditSetting.test.jsx
         LabelLayoutPicker.jsx
         LabelLogoSetting.jsx
         LabelLogoSetting.test.jsx
@@ -169,6 +199,7 @@ scannable-label-generator/
         ProductLabel.jsx
         ProductLabel.test.jsx
         SavedTextSetting.jsx
+        SettingCheckbox.jsx
         previewSelection.js
         previewSelection.test.js
         useProductSymbol.js
@@ -272,7 +303,11 @@ scannable-label-generator/
         importValidation.test.js
         importWriter.js
         importWriter.test.js
+        installmentPlan.js
+        installmentPlan.test.js
         jsonParser.js
+        labelArrangements.js
+        labelArrangements.test.js
         labelContent.js
         labelContent.test.js
         labelGeometry.js
@@ -333,6 +368,7 @@ scannable-label-generator/
       pdf.js
       pdf.test.js
       pdfBytes.js
+      pdfCredit.test.js
       pdfEngine.js
       pdfLogo.test.js
       symbolPath.js
