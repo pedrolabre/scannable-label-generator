@@ -4,10 +4,12 @@ import { describe, expect, it } from 'vitest';
 
 import { generateSymbol } from '../../lib/barcode.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
+import { pngDataUrl } from '../../lib/logoFixtures.js';
 
 import { computeLabelGeometry } from './labelGeometry.js';
 import { findLabelLayout } from './labelLayoutCatalog.js';
-import { describePrintDocument } from './printDocument.js';
+import { resolveLogo } from './logoImage.js';
+import { LOGO_IMAGE_ALIAS, describePrintDocument } from './printDocument.js';
 import { listExportSymbolTexts } from './printExport.js';
 import { buildSymbolText } from './symbolContent.js';
 import { computeSheetGrid } from './sheetGrid.js';
@@ -257,5 +259,69 @@ describe('ordem das etiquetas', () => {
 
     expect(names.slice(0, 2)).toEqual(['FOGÃO CINCO BOCAS', 'FOGÃO CINCO BOCAS']);
     expect(names.slice(2, 4)).toEqual(['ARMÁRIO DE COZINHA', 'ARMÁRIO DE COZINHA']);
+  });
+});
+
+describe('logotipo no documento', () => {
+  const FOLHA_10 = findSheetLayout('a4-10-etiquetas');
+  const ETIQUETA_10 = findLabelLayout('etiqueta-media-10');
+  const LOGO = resolveLogo(pngDataUrl(300, 60));
+  const HEADER = { companyName: 'Loja Inventada', installmentText: '10x no cartão' };
+  const TEN = [{ productId: ARMARIO.id, copies: 10 }];
+
+  it('traz uma operacao de imagem por etiqueta, dentro da zona do logotipo de cada uma', async () => {
+    const grid = computeSheetGrid(FOLHA_10, ETIQUETA_10);
+    const geometry = computeLabelGeometry(ETIQUETA_10);
+    const document = await describe1({
+      items: TEN,
+      sheet: FOLHA_10,
+      labelLayout: ETIQUETA_10,
+      header: { ...HEADER, logo: LOGO },
+    });
+    const [page] = document.pages;
+    const images = opsOfType(page, 'image');
+
+    expect(images).toHaveLength(10);
+
+    images.forEach((image, index) => {
+      const cell = grid.cells[index];
+      const zone = {
+        left: cell.xMm + geometry.logo.xMm,
+        top: cell.yMm + geometry.logo.yMm,
+        right: cell.xMm + geometry.logo.xMm + geometry.logo.widthMm,
+        bottom: cell.yMm + geometry.logo.yMm + geometry.logo.heightMm,
+      };
+
+      expect(image).toMatchObject({ dataUrl: LOGO.dataUrl, format: 'PNG', alias: LOGO_IMAGE_ALIAS });
+      expect(image.xMm).toBeGreaterThanOrEqual(zone.left - 1e-9);
+      expect(image.yMm).toBeGreaterThanOrEqual(zone.top - 1e-9);
+      expect(image.xMm + image.widthMm).toBeLessThanOrEqual(zone.right + 1e-9);
+      expect(image.yMm + image.heightMm).toBeLessThanOrEqual(zone.bottom + 1e-9);
+    });
+
+    expect(textsOf(page)).not.toContain('Loja Inventada');
+  });
+
+  it('nao traz imagem sem logotipo, e o nome da empresa volta ao cabecalho', async () => {
+    const document = await describe1({
+      items: TEN,
+      sheet: FOLHA_10,
+      labelLayout: ETIQUETA_10,
+      header: { ...HEADER, logo: null },
+    });
+
+    expect(opsOfType(document.pages[0], 'image')).toHaveLength(0);
+    expect(textsOf(document.pages[0]).filter((text) => text === 'Loja Inventada')).toHaveLength(10);
+  });
+
+  it('nao traz imagem na etiqueta pequena, que continua com o nome da empresa', async () => {
+    const document = await describe1({
+      items: [{ productId: ARMARIO.id, copies: 1 }],
+      labelLayout: PEQUENA,
+      header: { ...HEADER, logo: LOGO },
+    });
+
+    expect(opsOfType(document.pages[0], 'image')).toHaveLength(0);
+    expect(textsOf(document.pages[0])).toContain('Loja Inventada');
   });
 });

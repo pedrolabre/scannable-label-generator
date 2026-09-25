@@ -11,6 +11,11 @@
  * arquivo de fonte e sem pedir nada a rede. A acentuacao completa do portugues
  * sai por essa fonte, e as reticencias do corte tambem.
  *
+ * A imagem do logotipo chega em PNG ou JPEG, os dois formatos que a biblioteca
+ * le sem conversor extra, e e desenhada na caixa exata que a descricao deu. O
+ * nome da imagem vem da descricao, e e ele que faz a biblioteca guardar a
+ * imagem uma vez so no arquivo, e nao uma por etiqueta.
+ *
  * A saida e deterministica. A data de criacao chega de fora e o identificador
  * do documento sai do proprio conteudo, entao a mesma entrada produz o mesmo
  * arquivo byte a byte, e dois conteudos diferentes nao compartilham
@@ -127,6 +132,11 @@ function drawPage(doc, page) {
       doc.setLineDashPattern(op.dashMm === null ? [] : [op.dashMm, op.dashMm], 0);
       doc.rect(op.xMm, op.yMm, op.widthMm, op.heightMm, 'S');
       doc.setLineDashPattern([], 0);
+      return;
+    }
+
+    if (op.type === 'image') {
+      doc.addImage(op.dataUrl, op.format, op.xMm, op.yMm, op.widthMm, op.heightMm, op.alias);
       return;
     }
 

@@ -178,3 +178,86 @@ describe('proporcoes derivadas das medidas', () => {
     expect(geometry.fiscal.heightMm).toBeCloseTo(geometry.fiscal.fontSizeMm * LINE_HEIGHT_RATIO, 10);
   });
 });
+
+describe('zona do logotipo', () => {
+  const WIDE_LAYOUTS = EACH_LAYOUT.filter(
+    ([, layout]) => computeLabelGeometry(layout).arrangement === LABEL_ARRANGEMENTS.WIDE,
+  );
+
+  it.each(WIDE_LAYOUTS)('toma o lugar da empresa no cabecalho em %s', (_id, layout) => {
+    const geometry = computeLabelGeometry(layout);
+
+    expect(geometry.logo).toEqual({
+      xMm: geometry.company.xMm,
+      yMm: geometry.header.yMm,
+      widthMm: geometry.company.widthMm,
+      heightMm: geometry.header.heightMm,
+    });
+    expect(Object.isFrozen(geometry.logo)).toBe(true);
+  });
+
+  it.each(WIDE_LAYOUTS)('fica na area util e nao toca nenhuma outra zona em %s', (_id, layout) => {
+    const geometry = computeLabelGeometry(layout);
+    const logo = zoneBounds(geometry.logo);
+    const usable = zoneBounds(geometry.usable);
+
+    expect(logo.left).toBeGreaterThanOrEqual(usable.left - 1e-9);
+    expect(logo.top).toBeGreaterThanOrEqual(usable.top - 1e-9);
+    expect(logo.right).toBeLessThanOrEqual(usable.right + 1e-9);
+
+    // A empresa e a zona que o logotipo substitui; todas as outras ficam livres.
+    for (const [role, zone] of listLabelZones(geometry).filter(([name]) => name !== 'company')) {
+      expect(zonesOverlap(geometry.logo, zone), `logo sobrepõe ${role}`).toBe(false);
+    }
+
+    const symbol = zoneBounds(geometry.symbol);
+
+    expect(symbol.top - logo.bottom).toBeGreaterThanOrEqual(geometry.gapMm - 1e-9);
+  });
+
+  it('nao existe no arranjo compacto', () => {
+    const geometry = computeLabelGeometry(findLabelLayout('etiqueta-pequena'));
+
+    expect(geometry.arrangement).toBe(LABEL_ARRANGEMENTS.COMPACT);
+    expect(geometry.logo).toBeNull();
+  });
+
+  it('deixa o simbolo de cada modelo no mesmo lugar e do mesmo lado', () => {
+    const expected = {
+      'etiqueta-media-10': [55.2, 17.1, 27],
+      'tag-grande': [64, 34, 32],
+      'etiqueta-media': [40, 20, 27],
+      'etiqueta-pequena': [21.5, 1.5, 27],
+    };
+
+    for (const layout of LABEL_LAYOUTS) {
+      const { symbol } = computeLabelGeometry(layout);
+      const [xMm, yMm, sizeMm] = expected[layout.id];
+
+      expect(symbol.xMm).toBeCloseTo(xMm, 6);
+      expect(symbol.yMm).toBeCloseTo(yMm, 6);
+      expect(symbol.sizeMm).toBe(sizeMm);
+    }
+  });
+
+  it('deixa a etiqueta pequena, que nao leva logotipo, com as zonas de antes', () => {
+    // Medidas lidas antes do logotipo existir: x, y, largura e altura, em mm.
+    const geometry = computeLabelGeometry(findLabelLayout('etiqueta-pequena'));
+    const round = (n) => Math.round(n * 100) / 100;
+    const measured = Object.fromEntries(
+      listLabelZones(geometry).map(([role, zone]) => [
+        role,
+        [zone.xMm, zone.yMm, zone.widthMm ?? zone.sizeMm, zone.heightMm ?? zone.sizeMm].map(round),
+      ]),
+    );
+
+    expect(measured).toEqual({
+      code: [1.5, 1.5, 18.5, 2.97],
+      company: [1.5, 4.47, 18.5, 1.84],
+      name: [1.5, 7.12, 18.5, 8.11],
+      priceLabel: [1.5, 23.44, 18.5, 1.84],
+      price: [1.5, 25.28, 18.5, 3.22],
+      symbol: [21.5, 1.5, 27, 27],
+    });
+  });
+});

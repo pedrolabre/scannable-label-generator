@@ -4,25 +4,38 @@ import {
 } from '../../domain/schemas/labelSettingsSchema.js';
 import { useLabelSettingsStore } from '../../store/useLabelSettingsStore.js';
 
+import LabelLogoSetting from './LabelLogoSetting.jsx';
 import SavedTextSetting from './SavedTextSetting.jsx';
 
 /**
- * Os dois textos da etiqueta que nao pertencem a produto nenhum: o nome da
- * empresa, no cabecalho, e o parcelamento, na area comercial.
+ * O que a etiqueta leva e nao pertence a produto nenhum: o logotipo e o nome
+ * da empresa, no cabecalho, e o parcelamento, na area comercial.
  *
- * Moram na coluna da previa porque e ali que o efeito aparece: salvar o nome
- * ou desmarcar a caixa redesenha a etiqueta logo acima. Ficam guardados neste
- * dispositivo e nao saem com zerar o catalogo nem com restaurar um backup.
+ * Moram na coluna da previa porque e ali que o efeito aparece: salvar o nome,
+ * carregar o logotipo ou desmarcar a caixa redesenha a etiqueta logo acima.
+ * Ficam guardados neste dispositivo e nao saem com zerar o catalogo nem com
+ * restaurar um backup.
  */
 export default function LabelTextSettings() {
   const settings = useLabelSettingsStore((state) => state.settings);
   const update = useLabelSettingsStore((state) => state.update);
 
   return (
-    <section aria-label="Textos da etiqueta" className="flex flex-col gap-4" data-label-text-settings="">
+    <section
+      aria-label="Logotipo e textos da etiqueta"
+      className="flex flex-col gap-4"
+      data-label-text-settings=""
+    >
       <h3 className="font-display text-xs font-semibold uppercase tracking-[0.09em] text-neutro-tintaFraca">
-        Textos da etiqueta
+        Logotipo e textos da etiqueta
       </h3>
+
+      <LabelLogoSetting
+        value={settings.logoDataUrl}
+        visible={settings.showLogo}
+        onSave={(logoDataUrl) => update({ logoDataUrl })}
+        onVisibleChange={(showLogo) => update({ showLogo })}
+      />
 
       <SavedTextSetting
         label="Nome da empresa"

@@ -10,6 +10,10 @@
  * quando o operador nao quer a linha na etiqueta. A etiqueta sem eles continua
  * valida, e a zona fica em branco.
  *
+ * O logotipo tambem chega resolvido, com formato e medida em pixels. Onde o
+ * modelo tem zona para ele, a imagem toma o lugar do nome da empresa; onde nao
+ * tem, o nome continua saindo.
+ *
  * Funcao pura: sem DOM, sem React e sem biblioteca de PDF.
  */
 
@@ -77,6 +81,36 @@ function optionalLine(role, zone, text, style) {
 }
 
 /**
+ * Caixa em que o logotipo e desenhado, ou nula quando nao ha logotipo ou o
+ * modelo nao tem zona para ele.
+ *
+ * A imagem entra inteira na zona sem distorcer: a escala e a menor das duas
+ * que cabem. Fica encostada a direita, como o nome da empresa que ela
+ * substitui, e centrada na altura da linha do cabecalho.
+ */
+export function describeLabelLogo({ geometry, logo = null }) {
+  const zone = geometry.logo;
+
+  if (!logo || !zone) {
+    return null;
+  }
+
+  const scale = Math.min(zone.widthMm / logo.widthPx, zone.heightMm / logo.heightPx);
+  const widthMm = logo.widthPx * scale;
+  const heightMm = logo.heightPx * scale;
+
+  return Object.freeze({
+    role: 'logo',
+    dataUrl: logo.dataUrl,
+    format: logo.format,
+    xMm: zone.xMm + zone.widthMm - widthMm,
+    yMm: zone.yMm + (zone.heightMm - heightMm) / 2,
+    widthMm,
+    heightMm,
+  });
+}
+
+/**
  * Linhas de texto da etiqueta, na ordem de leitura. Linha vazia fica de fora
  * da lista em vez de entrar como texto vazio.
  */
@@ -85,6 +119,7 @@ export function describeLabelContent({
   geometry,
   companyName = null,
   installmentText = null,
+  logo = null,
 }) {
   const items = [];
   const code = fitCodeText(product?.systemCode, geometry.code);
@@ -97,7 +132,8 @@ export function describeLabelContent({
     }),
   );
 
-  const company = optionalLine('company', geometry.company, companyName, {
+  const logoTakesCompany = Boolean(logo && geometry.logo);
+  const company = optionalLine('company', geometry.company, logoTakesCompany ? null : companyName, {
     align: geometry.arrangement === LABEL_ARRANGEMENTS.WIDE ? 'right' : 'left',
   });
 

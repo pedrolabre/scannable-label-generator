@@ -3,7 +3,8 @@
  *
  * Funcao pura: sem DOM, sem React, sem armazenamento e sem nenhuma biblioteca
  * de PDF. O que sai daqui e a folha inteira escrita como dados — paginas, e em
- * cada pagina retangulos, caminhos e textos em coordenada absoluta da folha.
+ * cada pagina retangulos, caminhos, textos e imagens em coordenada absoluta da
+ * folha.
  * Quem traduz isso para chamadas de uma biblioteca e o adaptador, e a separacao
  * e o que permite conferir a geometria do arquivo sem abrir arquivo nenhum.
  *
@@ -18,7 +19,7 @@
 
 import { readSymbolPath, scaleSymbolPath } from '../../lib/symbolPath.js';
 
-import { describeLabelContent } from './labelContent.js';
+import { describeLabelContent, describeLabelLogo } from './labelContent.js';
 import { computeLabelGeometry } from './labelGeometry.js';
 import { labelsOnSheet, paginateLabels } from './sheetPagination.js';
 import { describeProductSymbolSupport } from './symbolContent.js';
@@ -33,6 +34,13 @@ const FAILED_SYMBOL_GRAY = 128;
 const FAILED_SYMBOL_DASH_MM = 1;
 const FAILED_SYMBOL_MAX_SIZE_MM = 3;
 const FAILED_SYMBOL_SIZE_DIVISOR = 8;
+
+/**
+ * Nome unico da imagem do logotipo no documento. Todas as etiquetas desenham a
+ * mesma imagem, e o nome faz o arquivo guarda-la uma vez so, por mais etiquetas
+ * que a folha tenha.
+ */
+export const LOGO_IMAGE_ALIAS = 'logotipo';
 
 function whiteRect(xMm, yMm, widthMm, heightMm) {
   return Object.freeze({ type: 'rect', xMm, yMm, widthMm, heightMm, fill: 'white' });
@@ -98,6 +106,23 @@ function describeLabel({ product, geometry, origin, symbol, symbolError, header 
     );
   });
 
+  const logo = describeLabelLogo({ geometry, logo: header.logo });
+
+  if (logo) {
+    ops.push(
+      Object.freeze({
+        type: 'image',
+        dataUrl: logo.dataUrl,
+        format: logo.format,
+        alias: LOGO_IMAGE_ALIAS,
+        xMm: origin.xMm + logo.xMm,
+        yMm: origin.yMm + logo.yMm,
+        widthMm: logo.widthMm,
+        heightMm: logo.heightMm,
+      }),
+    );
+  }
+
   const zone = {
     xMm: origin.xMm + geometry.symbol.xMm,
     yMm: origin.yMm + geometry.symbol.yMm,
@@ -152,8 +177,8 @@ function describeLabel({ product, geometry, origin, symbol, symbolError, header 
  * simbolo para `{ symbol, error }`; texto ausente do mapa, ou exemplar cujo
  * texto o contrato recusa, sai com o marcador de falha, e nunca em branco.
  *
- * `header` leva o nome da empresa e o parcelamento ja resolvidos, os mesmos da
- * previa.
+ * `header` leva o logotipo, o nome da empresa e o parcelamento ja resolvidos,
+ * os mesmos da previa.
  */
 export function describePrintDocument({
   job,
@@ -170,6 +195,7 @@ export function describePrintDocument({
   const labelHeader = {
     companyName: header.companyName ?? null,
     installmentText: header.installmentText ?? null,
+    logo: header.logo ?? null,
   };
   const pages = [];
 

@@ -10,7 +10,7 @@ MVP funcional.
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
-- Etiqueta com cabeçalho (código e empresa), preço, parcelamento, EAN, NCM e símbolo 2D no canto inferior.
+- Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço, parcelamento, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
 - Exportação em PDF vetorial com escala física 1:1.
 - Interface em janela única com modais dedicados e adaptação fluida de densidade.
@@ -38,6 +38,17 @@ A aplicação abre com a `Etiqueta 10 (84,7 x 46,6 mm)` na folha `A4 10 etiqueta
 - As seis medidas da folha são editáveis e voltam às do modelo quando a folha é trocada.
 - `Aproveitar a folha` (margem de 5 mm e etiquetas encostadas) só aparece quando abre uma coluna ou uma linha a mais.
 - Na etiqueta de 10 por folha o nome do produto ocupa uma linha, cortada com reticências quando não cabe.
+
+## Logotipo da empresa
+
+O logotipo é carregado uma vez em `Logotipo e textos da etiqueta`, na coluna da prévia, e sai na prévia, na folha e no PDF.
+
+- Formatos aceitos: PNG, JPEG e SVG. SVG é convertido em PNG no carregamento; PNG fica em PNG e JPEG fica em JPEG.
+- A imagem não é recusada pelo tamanho: acima de 1.200 px de lado ela é reduzida, sem distorcer, e ainda sai acima de 600 dpi na etiqueta. Se passar de 512 KB, o lado encolhe por passos até 600 px; em último caso, o PNG vira JPEG sobre fundo branco.
+- Na etiqueta ocupa o lugar do nome da empresa no cabeçalho, inteira, alinhada à direita. O símbolo não muda de tamanho nem de lugar.
+- A etiqueta pequena não tem lugar para a imagem e continua com o nome da empresa.
+- `Mostrar o logotipo na etiqueta` tira a imagem sem apagá-la; `Remover` apaga. Sem logotipo, a etiqueta volta a ser a de antes.
+- Fica guardado neste navegador, na mesma chave do nome da empresa e do parcelamento (`labelforge.etiqueta`, no `localStorage`). Não entra no arquivo de backup, e zerar o catálogo ou restaurar um backup não o apaga.
 
 ## Formato `LF1`
 
@@ -146,6 +157,8 @@ scannable-label-generator/
         importCounts.js
       label/
         LabelLayoutPicker.jsx
+        LabelLogoSetting.jsx
+        LabelLogoSetting.test.jsx
         LabelPreviewDialog.jsx
         LabelPreviewPanel.jsx
         LabelPreviewPanel.test.jsx
@@ -268,6 +281,8 @@ scannable-label-generator/
         labelLayoutCatalog.test.js
         labelText.js
         labelText.test.js
+        logoImage.js
+        logoImage.test.js
         nfceParser.js
         nfceParser.test.js
         nfceProductMapping.js
@@ -313,10 +328,13 @@ scannable-label-generator/
       cx.js
       download.js
       download.test.js
+      logoFile.js
+      logoFixtures.js
       pdf.js
       pdf.test.js
       pdfBytes.js
       pdfEngine.js
+      pdfLogo.test.js
       symbolPath.js
       symbolPath.test.js
     pwa/
@@ -329,6 +347,7 @@ scannable-label-generator/
       backupRepository.js
       indexed-db.js
       labelSettingsStorage.js
+      labelSettingsStorage.test.js
       productRepository.js
       productRepository.test.js
       storageError.js
