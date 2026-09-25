@@ -13,11 +13,26 @@ import {
  *
  * Leitura que falha — armazenamento bloqueado, valor corrompido, valor de outro
  * formato — devolve a configuracao padrao, e a tela abre sem texto nenhum em
- * vez de nao abrir. Gravacao que falha sobe para quem chamou, que e quem diz ao
- * operador que o texto nao foi guardado.
+ * vez de nao abrir. O logotipo e a parte mais sujeita a estragar, e a mais
+ * pesada: quando so ele nao passa, a leitura descarta o logotipo e mantem os
+ * textos. Gravacao que falha sobe para quem chamou, que e quem diz ao operador
+ * que o valor nao foi guardado; a cota cheia ganha frase propria, porque o
+ * logotipo e o que a enche.
  */
 
 export const LABEL_SETTINGS_STORAGE_KEY = 'labelforge.etiqueta';
+
+export const STORAGE_FULL_MESSAGE =
+  'Não há espaço no armazenamento deste navegador para guardar a configuração da etiqueta.';
+
+const WITHOUT_LOGO = Object.freeze({
+  logoDataUrl: DEFAULT_LABEL_SETTINGS.logoDataUrl,
+  showLogo: DEFAULT_LABEL_SETTINGS.showLogo,
+});
+
+function isQuotaError(error) {
+  return error?.name === 'QuotaExceededError' || error?.code === 22 || error?.code === 1014;
+}
 
 function storage() {
   return typeof window !== 'undefined' ? window.localStorage : null;
@@ -31,9 +46,16 @@ export function readLabelSettings() {
       return { ...DEFAULT_LABEL_SETTINGS };
     }
 
-    const parsed = LabelSettingsSchema.safeParse({ ...DEFAULT_LABEL_SETTINGS, ...JSON.parse(raw) });
+    const stored = { ...DEFAULT_LABEL_SETTINGS, ...JSON.parse(raw) };
+    const parsed = LabelSettingsSchema.safeParse(stored);
 
-    return parsed.success ? parsed.data : { ...DEFAULT_LABEL_SETTINGS };
+    if (parsed.success) {
+      return parsed.data;
+    }
+
+    const withoutLogo = LabelSettingsSchema.safeParse({ ...stored, ...WITHOUT_LOGO });
+
+    return withoutLogo.success ? withoutLogo.data : { ...DEFAULT_LABEL_SETTINGS };
   } catch {
     return { ...DEFAULT_LABEL_SETTINGS };
   }
@@ -48,7 +70,11 @@ export function writeLabelSettings(settings) {
     throw new Error('O armazenamento deste navegador não está disponível.');
   }
 
-  target.setItem(LABEL_SETTINGS_STORAGE_KEY, JSON.stringify(validated));
+  try {
+    target.setItem(LABEL_SETTINGS_STORAGE_KEY, JSON.stringify(validated));
+  } catch (error) {
+    throw isQuotaError(error) ? new Error(STORAGE_FULL_MESSAGE) : error;
+  }
 
   return validated;
 }

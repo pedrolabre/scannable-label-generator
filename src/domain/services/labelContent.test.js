@@ -2,14 +2,18 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { pngDataUrl } from '../../lib/logoFixtures.js';
+
 import {
   PRICE_LABEL_TEXT,
   describeFiscalLine,
   describeLabelContent,
+  describeLabelLogo,
   formatNcm,
 } from './labelContent.js';
 import { computeLabelGeometry, zoneBounds } from './labelGeometry.js';
 import { LABEL_LAYOUTS, findLabelLayout } from './labelLayoutCatalog.js';
+import { resolveLogo } from './logoImage.js';
 
 const PRODUCT = {
   systemCode: '118789',
@@ -116,4 +120,52 @@ describe('texto dentro da etiqueta', () => {
       }
     },
   );
+});
+
+describe('logotipo', () => {
+  const WIDE = computeLabelGeometry(findLabelLayout('etiqueta-media-10'));
+  const COMPACT = computeLabelGeometry(findLabelLayout('etiqueta-pequena'));
+  const WORDMARK = resolveLogo(pngDataUrl(400, 50));
+  const SQUARE = resolveLogo(pngDataUrl(90, 90));
+
+  it('toma o lugar do nome da empresa onde o modelo tem zona para ele', () => {
+    const items = describeLabelContent({ product: PRODUCT, geometry: WIDE, ...HEADER, logo: WORDMARK });
+
+    expect(roles(items)).not.toContain('company');
+    expect(roles(items)).toEqual(['code', 'name', 'priceLabel', 'price', 'installment', 'fiscal']);
+  });
+
+  it('deixa o nome da empresa na etiqueta pequena, que nao tem zona para a imagem', () => {
+    const items = describeLabelContent({ product: PRODUCT, geometry: COMPACT, ...HEADER, logo: WORDMARK });
+
+    expect(roles(items)).toContain('company');
+    expect(describeLabelLogo({ geometry: COMPACT, logo: WORDMARK })).toBeNull();
+  });
+
+  it('nao descreve imagem sem logotipo', () => {
+    expect(describeLabelLogo({ geometry: WIDE, logo: null })).toBeNull();
+    expect(describeLabelLogo({ geometry: WIDE })).toBeNull();
+  });
+
+  it.each([
+    ['larga e baixa', WORDMARK],
+    ['quadrada', SQUARE],
+  ])('poe a imagem %s inteira na zona, sem distorcer, a direita e centrada na altura', (_name, logo) => {
+    const item = describeLabelLogo({ geometry: WIDE, logo });
+    const zone = zoneBounds(WIDE.logo);
+
+    expect(item).toMatchObject({ role: 'logo', dataUrl: logo.dataUrl, format: 'PNG' });
+    expect(item.widthMm / item.heightMm).toBeCloseTo(logo.widthPx / logo.heightPx, 10);
+    expect(item.xMm).toBeGreaterThanOrEqual(zone.left - 1e-9);
+    expect(item.yMm).toBeGreaterThanOrEqual(zone.top - 1e-9);
+    expect(item.xMm + item.widthMm).toBeCloseTo(zone.right, 10);
+    expect(item.yMm + item.heightMm).toBeLessThanOrEqual(zone.bottom + 1e-9);
+    expect(item.yMm - zone.top).toBeCloseTo(zone.bottom - (item.yMm + item.heightMm), 10);
+
+    // Um dos lados encosta na zona: a imagem sai no maior tamanho que cabe.
+    const fillsWidth = Math.abs(item.widthMm - WIDE.logo.widthMm) < 1e-9;
+    const fillsHeight = Math.abs(item.heightMm - WIDE.logo.heightMm) < 1e-9;
+
+    expect(fillsWidth || fillsHeight).toBe(true);
+  });
 });

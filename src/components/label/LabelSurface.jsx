@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { cx } from '../../lib/cx.js';
-import { describeLabelContent } from '../../domain/services/labelContent.js';
+import { describeLabelContent, describeLabelLogo } from '../../domain/services/labelContent.js';
 import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
 
 /**
@@ -12,7 +12,8 @@ import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
  * etiqueta e — a previa individual mostra o primeiro, a folha mostra cada um.
  *
  * O que vai escrito e onde sai de `describeLabelContent`, a mesma lista que o
- * arquivo impresso desenha. Aqui ela so vira elemento posicionado.
+ * arquivo impresso desenha, e a caixa do logotipo sai de `describeLabelLogo`.
+ * Aqui elas so viram elemento posicionado.
  *
  * As medidas saem por `style` em milimetro nativo do CSS. O milimetro do CSS e
  * definido pela propria especificacao da linguagem, e e ele que o navegador
@@ -82,6 +83,25 @@ function SymbolZone({ zone, symbol, symbolError }) {
   );
 }
 
+function LogoImage({ item }) {
+  return (
+    <img
+      src={item.dataUrl}
+      alt="Logotipo da empresa"
+      draggable={false}
+      style={{
+        position: 'absolute',
+        left: toMm(item.xMm),
+        top: toMm(item.yMm),
+        width: toMm(item.widthMm),
+        height: toMm(item.heightMm),
+        maxWidth: 'none',
+      }}
+      data-label-zone={item.role}
+    />
+  );
+}
+
 function TextLine({ item }) {
   return (
     <div
@@ -116,6 +136,7 @@ export default function LabelSurface({
   symbolError = null,
   companyName = null,
   installmentText = null,
+  logo = null,
   scaleFactor = 1,
   className,
 }) {
@@ -130,10 +151,10 @@ export default function LabelSurface({
       return { geometry: null, error };
     }
 
-    const content = describeLabelContent({ product, geometry, companyName, installmentText });
+    const content = describeLabelContent({ product, geometry, companyName, installmentText, logo });
 
-    return { geometry, error: null, content };
-  }, [layout, product, companyName, installmentText]);
+    return { geometry, error: null, content, logoItem: describeLabelLogo({ geometry, logo }) };
+  }, [layout, product, companyName, installmentText, logo]);
 
   if (rendered.error) {
     return (
@@ -143,7 +164,7 @@ export default function LabelSurface({
     );
   }
 
-  const { geometry, content } = rendered;
+  const { geometry, content, logoItem } = rendered;
 
   return (
     <div
@@ -172,6 +193,8 @@ export default function LabelSurface({
         {content.map((item) => (
           <TextLine key={`${item.role}-${item.yMm}`} item={item} />
         ))}
+
+        {logoItem ? <LogoImage item={logoItem} /> : null}
 
         <SymbolZone zone={geometry.symbol} symbol={symbol} symbolError={symbolError} />
       </div>

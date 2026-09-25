@@ -22,6 +22,12 @@
  *   preco rente a base. O parcelamento e a linha fiscal ficam de fora, porque a
  *   coluna nao tem largura para eles serem lidos.
  *
+ * O logotipo tem zona propria so no arranjo largo: a caixa inteira do lugar da
+ * empresa no cabecalho, na altura da linha do codigo. Ele e alternativa ao nome
+ * da empresa, e nao vizinho dele, entao as duas zonas ocupam o mesmo lugar e
+ * so uma delas e desenhada. No arranjo compacto a linha da empresa tem menos de
+ * 2 mm de altura, pouco para uma imagem, e a zona fica nula.
+ *
  * As proporcoes sao constantes do modulo, e nao numeros por modelo. Um modelo
  * novo entra no catalogo declarando largura, altura, margem e lado do simbolo:
  * todo o resto e derivado, e os mesmos testes que protegem os modelos de hoje
@@ -148,6 +154,13 @@ function wideZones({ usable, symbol, gapMm, sizes, symbolTopMm }) {
     lineHeightMm: header.heightMm,
   };
 
+  const logo = {
+    xMm: company.xMm,
+    yMm: header.yMm,
+    widthMm: company.widthMm,
+    heightMm: header.heightMm,
+  };
+
   const nameTopMm = header.yMm + header.heightMm + sizes.gap;
   const name = nameZone(
     usable.xMm,
@@ -177,7 +190,7 @@ function wideZones({ usable, symbol, gapMm, sizes, symbolTopMm }) {
     );
   }
 
-  return { header, code, company, name, column, priceLabel, price, installment, fiscal };
+  return { header, code, company, logo, name, column, priceLabel, price, installment, fiscal };
 }
 
 function compactZones({ usable, symbol, gapMm, sizes }) {
@@ -213,7 +226,18 @@ function compactZones({ usable, symbol, gapMm, sizes }) {
 
   const name = nameZone(column.xMm, nameTopMm, column.widthMm, sizes.name, available);
 
-  return { header, code, company, name, column, priceLabel, price, installment: null, fiscal: null };
+  return {
+    header,
+    code,
+    company,
+    logo: null,
+    name,
+    column,
+    priceLabel,
+    price,
+    installment: null,
+    fiscal: null,
+  };
 }
 
 /**
@@ -284,7 +308,11 @@ export function computeLabelGeometry(layout, totalModules = MAX_SYMBOL_TOTAL_MOD
   });
 }
 
-/** Zonas de texto e o simbolo, na ordem de leitura, para quem confere sobreposicao. */
+/**
+ * Zonas de texto e o simbolo, na ordem de leitura, para quem confere
+ * sobreposicao. O logotipo fica de fora porque ocupa o lugar da empresa: quem
+ * confere o logotipo compara a zona dele com estas, menos a da empresa.
+ */
 export function listLabelZones(geometry) {
   return [
     ['code', geometry.code],
