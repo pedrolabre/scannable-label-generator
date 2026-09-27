@@ -321,6 +321,14 @@ scannable-label-generator/
         nfceParser.js
         nfceParser.test.js
         nfceProductMapping.js
+        odsArchive.js
+        odsArchive.test.js
+        odsEncoding.js
+        odsEncoding.test.js
+        odsFixtures.js
+        odsParser.js
+        odsParser.test.js
+        odsTable.js
         printDocument.js
         printDocument.test.js
         printExport.js

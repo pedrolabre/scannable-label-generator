@@ -1,7 +1,7 @@
 /**
  * Formato intermediario do importador: a unica forma que CSV, JSON, XML de
- * NFC-e e relatorio em texto do ERP assumem depois do parsing, e a unica que os
- * passos seguintes leem.
+ * NFC-e, relatorio em texto do ERP e planilha OpenDocument assumem depois do
+ * parsing, e a unica que os passos seguintes leem.
  *
  * O registro nao e um produto e nao pretende ser: `raw` guarda os campos como
  * vieram do arquivo, em texto, sem conversao e sem renomear nada. A traducao
@@ -30,14 +30,15 @@
  * - `fileName`  nome do arquivo escolhido;
  * - `fileIndex` posicao do arquivo no lote, ja que dois arquivos selecionados
  *               podem ter o mesmo nome;
- * - `format`    'csv', 'json', 'xml' ou 'txt';
+ * - `format`    'csv', 'json', 'xml', 'txt' ou 'ods';
  * - `index`     posicao do registro dentro do arquivo, contada a partir de
  *               zero: linha de dados do CSV, posicao na lista do JSON, ordem
  *               do `<det>` na nota;
  * - `itemNumber` o `nItem` declarado pelo proprio XML, quando existir;
- * - `lineNumber` a linha fisica do registro no arquivo, contada a partir de
- *               um, so no relatorio em texto: entre um registro e outro ha
- *               cabecalho de pagina, e a posicao do registro nao diz a linha.
+ * - `lineNumber` a linha do registro no arquivo, contada a partir de um, so
+ *               no relatorio em texto e na planilha OpenDocument: entre um
+ *               registro e outro pode haver cabecalho de pagina ou linha vazia
+ *               pulada, e a posicao do registro nao diz a linha.
  *
  * `recordId` combina arquivo e posicao num identificador estavel dentro do
  * lote, usado como chave de lista e para levar a decisao do usuario de volta
@@ -48,6 +49,7 @@ export const IMPORT_FORMAT_CSV = 'csv';
 export const IMPORT_FORMAT_JSON = 'json';
 export const IMPORT_FORMAT_XML = 'xml';
 export const IMPORT_FORMAT_TXT = 'txt';
+export const IMPORT_FORMAT_ODS = 'ods';
 
 export function createImportRecord({
   fileName,
@@ -85,7 +87,9 @@ export function formatThousands(value) {
  * cabecalho, entao o primeiro registro de dados e a linha 2 do arquivo — o
  * mesmo numero que o usuario ve ao abrir a planilha. No relatorio em texto a
  * linha e a fisica, com o cabecalho de cada pagina contado, que e a que o
- * operador acha ao abrir o relatorio.
+ * operador acha ao abrir o relatorio. Na planilha OpenDocument a linha e a da
+ * grade, a mesma que o editor de planilhas mostra, com as linhas vazias
+ * puladas contadas.
  */
 export function describeImportOrigin(record) {
   const { fileName, format, index, itemNumber, lineNumber } = record.source;
@@ -98,7 +102,7 @@ export function describeImportOrigin(record) {
     return `${fileName}, item ${itemNumber ?? index + 1}`;
   }
 
-  if (format === IMPORT_FORMAT_TXT) {
+  if (format === IMPORT_FORMAT_TXT || format === IMPORT_FORMAT_ODS) {
     return `${fileName}, linha ${formatThousands(lineNumber ?? index + 1)}`;
   }
 

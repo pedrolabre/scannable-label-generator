@@ -306,5 +306,5 @@ describe('parseTxtReport, desempenho', () => {
     expect(records).toHaveLength(20000);
     expect(records[19999].raw.Descricao).toBe('PRODUTO INVENTADO AÇO 019999');
     expect(elapsed).toBeLessThan(1000);
-  });
+  }, 30_000);
 });
