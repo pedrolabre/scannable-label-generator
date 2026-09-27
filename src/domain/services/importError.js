@@ -1,8 +1,8 @@
 /**
  * Falha de formato de um arquivo do lote: o conteudo nao pode ser lido como
- * CSV, JSON ou XML de NFC-e. A mensagem ja nasce no texto que o usuario le, ao
- * lado do nome do arquivo, e a recusa vale para aquele arquivo apenas — os
- * demais do mesmo lote seguem sendo lidos.
+ * CSV, JSON, XML de NFC-e ou relatorio em texto do ERP. A mensagem ja nasce no
+ * texto que o usuario le, ao lado do nome do arquivo, e a recusa vale para
+ * aquele arquivo apenas — os demais do mesmo lote seguem sendo lidos.
  */
 export class ImportFormatError extends Error {
   constructor(message) {

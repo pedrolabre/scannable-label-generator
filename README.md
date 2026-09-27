@@ -343,6 +343,11 @@ scannable-label-generator/
         symbolContent.js
         symbolContent.test.js
         tabularProductMapping.js
+        txtEncoding.js
+        txtEncoding.test.js
+        txtReportFixtures.js
+        txtReportParser.js
+        txtReportParser.test.js
     lib/
       app-meta.js
       barcode.js
