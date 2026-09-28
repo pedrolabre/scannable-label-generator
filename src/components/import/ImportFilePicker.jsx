@@ -14,8 +14,22 @@ import Button from '../ui/Button.jsx';
  * O campo e zerado depois de cada escolha: sem isso, escolher o mesmo arquivo
  * duas vezes seguidas nao dispara `change` e a segunda tentativa pareceria
  * ignorada.
+ *
+ * A importacao de produtos e a complementacao do catalogo usam o mesmo seletor,
+ * cada uma com a sua lista de extensoes e o seu texto de ajuda. O padrao e o da
+ * importacao.
  */
-export default function ImportFilePicker({ isParsing, onFilesSelected }) {
+
+const IMPORT_HELP_TEXT =
+  'Aceita planilhas .csv, listas .json, notas fiscais .xml e relatórios .txt do ERP. Vários arquivos de uma vez.';
+
+export default function ImportFilePicker({
+  isParsing,
+  onFilesSelected,
+  extensions = ACCEPTED_FILE_EXTENSIONS,
+  helpText = IMPORT_HELP_TEXT,
+  inputId = 'import-files',
+}) {
   const inputRef = useRef(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -83,10 +97,10 @@ export default function ImportFilePicker({ isParsing, onFilesSelected }) {
 
       <input
         ref={inputRef}
-        id="import-files"
+        id={inputId}
         type="file"
         multiple
-        accept={ACCEPTED_FILE_EXTENSIONS.join(',')}
+        accept={extensions.join(',')}
         onChange={handleChange}
         disabled={isParsing}
         className="sr-only"
@@ -96,9 +110,7 @@ export default function ImportFilePicker({ isParsing, onFilesSelected }) {
         {isParsing ? 'Lendo arquivos…' : 'Escolher arquivos'}
       </Button>
 
-      <p className="text-xs text-neutro-tintaFraca">
-        Aceita planilhas .csv, listas .json e notas fiscais .xml. Vários arquivos de uma vez.
-      </p>
+      <p className="text-xs text-neutro-tintaFraca">{helpText}</p>
     </div>
   );
 }

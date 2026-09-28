@@ -8,7 +8,8 @@ MVP funcional.
 
 ## Funcionamento
 
-- Cadastro manual de produtos e importação em lote via CSV, JSON e XML de NFC-e (SEFAZ 4.00).
+- Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e relatórios `.txt` do ERP (Tabela de Preço e Saldo de Estoque por Grupo).
+- `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
@@ -153,6 +154,7 @@ scannable-label-generator/
     main.jsx
     App.jsx
     App.test.jsx
+    AppCompletion.test.jsx
     components/
       AppShell.jsx
       AppShell.test.jsx
@@ -167,6 +169,10 @@ scannable-label-generator/
         BackupRestoreSection.jsx
         useBackupExport.js
         useBackupRestore.js
+      completion/
+        CatalogCompletionPanel.jsx
+        CatalogCompletionPanel.test.jsx
+        CatalogCompletionSummary.jsx
       import/
         ImportConflictBulkActions.jsx
         ImportConflictNotice.jsx
@@ -286,6 +292,8 @@ scannable-label-generator/
         backupRestore.test.js
         backupText.js
         backupWriter.js
+        catalogCompletion.js
+        catalogCompletion.test.js
         csvParser.js
         importConflict.js
         importConflict.test.js
@@ -299,6 +307,8 @@ scannable-label-generator/
         importReportIndex.js
         importService.js
         importService.test.js
+        importServiceOds.test.js
+        importServiceReports.test.js
         importValidation.js
         importValidation.test.js
         importWriter.js
@@ -351,6 +361,7 @@ scannable-label-generator/
         symbolContent.js
         symbolContent.test.js
         tabularProductMapping.js
+        tabularProductMapping.test.js
         txtEncoding.js
         txtEncoding.test.js
         txtReportFixtures.js
@@ -399,8 +410,11 @@ scannable-label-generator/
       labelSettingsStorage.test.js
       productRepository.js
       productRepository.test.js
+      productRepositoryBulkUpdate.test.js
       storageError.js
     store/
+      useCompletionStore.js
+      useCompletionStore.test.js
       useImportStore.js
       useLabelSettingsStore.js
       usePrintJobStore.js

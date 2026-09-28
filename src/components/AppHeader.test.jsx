@@ -50,14 +50,14 @@ describe('marca e gatilhos em largura estreita', () => {
    * por posicao absoluta, os botoes nao encolhem e a marca encolhe com
    * reticencias. Com isso, a soma nunca passa da largura: quem cede e o nome.
    */
-  it('poe a marca e os tres botoes lado a lado, no mesmo fluxo', () => {
+  it('poe a marca e os quatro botoes lado a lado, no mesmo fluxo', () => {
     render();
 
     const marca = container.querySelector('[data-marca]');
     const gatilhos = container.querySelector('[data-gatilhos]');
 
     expect(marca.parentElement).toBe(gatilhos.parentElement);
-    expect(gatilhos.querySelectorAll('button')).toHaveLength(3);
+    expect(gatilhos.querySelectorAll('button')).toHaveLength(4);
 
     for (const elemento of [marca, gatilhos, ...gatilhos.querySelectorAll('button')]) {
       expect(classes(elemento)).not.toContain('absolute');
@@ -86,7 +86,7 @@ describe('marca e gatilhos em largura estreita', () => {
     );
     const textos = container.querySelectorAll('[data-gatilhos] button span');
 
-    expect(nomes).toEqual(['Importar', 'Backup', 'Novo produto']);
+    expect(nomes).toEqual(['Importar', 'Completar dados', 'Backup', 'Novo produto']);
 
     for (const texto of textos) {
       expect(classes(texto)).toContain('max-sm:sr-only');

@@ -1,4 +1,4 @@
-import { Database, Download, Plus } from 'lucide-react';
+import { Database, Download, ListChecks, Plus } from 'lucide-react';
 
 import { APP_NAME } from '../lib/app-meta.js';
 
@@ -13,12 +13,17 @@ const VIEW_OPTIONS = [
 ];
 
 /**
- * Faixa do topo: a marca e os tres gatilhos que nao pertencem a coluna nenhuma.
+ * Faixa do topo: a marca e os quatro gatilhos que nao pertencem a coluna
+ * nenhuma.
  *
- * Cadastrar, importar e gerar o arquivo de backup nao sao passo do trabalho de
- * impressao nem da listagem — sao tarefas que atravessam a aplicacao inteira.
- * Por isso ficam aqui, e nao dentro de uma das colunas, que e onde estariam se
- * a pergunta fosse so "onde cabe".
+ * Cadastrar, importar, completar os dados do catalogo e gerar o arquivo de
+ * backup nao sao passo do trabalho de impressao nem da listagem — sao tarefas
+ * que atravessam a aplicacao inteira. Por isso ficam aqui, e nao dentro de uma
+ * das colunas, que e onde estariam se a pergunta fosse so "onde cabe".
+ *
+ * `Completar dados` fica logo depois de `Importar` porque os dois leem arquivo,
+ * e fica separado dele porque o efeito e outro: importar cria produtos,
+ * completar so preenche campos vazios do que ja esta cadastrado.
  *
  * `Novo produto` e o unico botao de marca da tela principal. Dois botoes
  * preenchidos lado a lado deixariam de indicar qualquer coisa.
@@ -40,6 +45,7 @@ const VIEW_OPTIONS = [
 export default function AppHeader({
   onNewProduct,
   onImport,
+  onComplete,
   onBackup,
   activeView = SHELL_VIEWS.PRODUCTS,
   onViewChange,
@@ -64,6 +70,11 @@ export default function AppHeader({
           <Button type="button" onClick={onImport} className="max-sm:px-3">
             <Download className="h-4 w-4 lg:h-[15px] lg:w-[15px]" aria-hidden="true" />
             <span className="max-sm:sr-only">Importar</span>
+          </Button>
+
+          <Button type="button" onClick={onComplete} className="max-sm:px-3">
+            <ListChecks className="h-4 w-4 lg:h-[15px] lg:w-[15px]" aria-hidden="true" />
+            <span className="max-sm:sr-only">Completar dados</span>
           </Button>
 
           <Button type="button" onClick={onBackup} className="max-sm:px-3">
