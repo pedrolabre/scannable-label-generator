@@ -10,6 +10,7 @@ import AppHeader from './components/AppHeader.jsx';
 import AppShell, { SHELL_VIEWS } from './components/AppShell.jsx';
 import StatusBar from './components/layout/StatusBar.jsx';
 import BackupPanel from './components/backup/BackupPanel.jsx';
+import CatalogCompletionPanel from './components/completion/CatalogCompletionPanel.jsx';
 import ImportPanel from './components/import/ImportPanel.jsx';
 import LabelPreviewDialog from './components/label/LabelPreviewDialog.jsx';
 import LabelPreviewPanel from './components/label/LabelPreviewPanel.jsx';
@@ -46,8 +47,8 @@ import { useProductStore } from './store/useProductStore.js';
  *
  * As duas previas ampliadas, a da etiqueta e a da folha, sao dialogos irmaos,
  * cada uma com o seu gatilho: `Ampliar` na coluna da direita, `Prévia da folha`
- * na da esquerda. Os dois sao desenhados daqui, como os outros tres, porque so
- * aqui se sabe qual esta aberto.
+ * na da esquerda. Os dois sao desenhados daqui, como os outros quatro, porque
+ * so aqui se sabe qual esta aberto.
  *
  * A vista ativa da tela estreita tambem mora aqui, e tambem morre no
  * recarregamento. Ela so decide qual coluna aparece abaixo do ponto de corte;
@@ -66,6 +67,7 @@ import { useProductStore } from './store/useProductStore.js';
 const MODALS = Object.freeze({
   PRODUCT: 'produto',
   IMPORT: 'importacao',
+  COMPLETION: 'complementacao',
   PREVIEW: 'previa',
   SHEET: 'folha',
   BACKUP: 'backup',
@@ -209,6 +211,7 @@ export default function App() {
           <AppHeader
             onNewProduct={handleNewProduct}
             onImport={() => setOpenModal(MODALS.IMPORT)}
+            onComplete={() => setOpenModal(MODALS.COMPLETION)}
             onBackup={() => setOpenModal(MODALS.BACKUP)}
             activeView={activeView}
             onViewChange={setActiveView}
@@ -289,6 +292,8 @@ export default function App() {
       ) : null}
 
       {openModal === MODALS.IMPORT ? <ImportPanel onClose={closeModal} /> : null}
+
+      {openModal === MODALS.COMPLETION ? <CatalogCompletionPanel onClose={closeModal} /> : null}
 
       {openModal === MODALS.BACKUP ? (
         <BackupPanel

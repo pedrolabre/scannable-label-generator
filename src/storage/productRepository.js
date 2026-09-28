@@ -39,6 +39,24 @@ export async function updateProduct(product) {
   return validated;
 }
 
+/**
+ * Regrava um conjunto de produtos que ja existem, numa transacao so.
+ *
+ * Como na troca do catalogo inteiro, a validacao acontece antes de a transacao
+ * abrir: um produto fora do contrato impede a gravacao de todos, em vez de
+ * interrompe-la no meio. Depois disso, ou o conjunto inteiro entra, ou nenhum
+ * produto muda.
+ */
+export async function updateProducts(products) {
+  const validated = products.map((product) => ProductSchema.parse(product));
+
+  if (validated.length > 0) {
+    await runProductsTransaction(() => db.products.bulkPut(validated));
+  }
+
+  return validated;
+}
+
 export function deleteProduct(id) {
   return db.products.delete(id);
 }

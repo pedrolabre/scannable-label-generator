@@ -14,6 +14,11 @@ import { normalizeSearchText } from './productSearch.js';
  * espaco nas pontas nao importam: "Descrição", "descricao" e " DESCRICAO "
  * encontram a mesma entrada.
  *
+ * Os relatorios em texto do ERP e a planilha cadastral trazem dois nomes que so
+ * eles usam: `Preço R$`, com o simbolo da moeda no proprio nome, e a abreviacao
+ * `Cód. Barras`. Marca, unidade, estoque e codigo alternativo ficam de fora de
+ * proposito: o produto nao tem campo para nenhum deles.
+ *
  * `priceInCentavos` nao e aceito como nome de coluna. Quem escreve uma planilha
  * escreve o preco em reais, e uma coluna chamada assim seria lida como reais do
  * mesmo jeito — o nome prometeria centavos e entregaria outra coisa.
@@ -23,8 +28,8 @@ const COLUMN_ALIASES = {
   systemCode: ['systemCode', 'codigo', 'codigo do sistema', 'codigo interno', 'cod', 'sku', 'referencia'],
   displayName: ['displayName', 'nome', 'nome da etiqueta', 'nome curto', 'etiqueta'],
   description: ['description', 'descricao', 'descricao completa'],
-  priceInCentavos: ['price', 'preco', 'preco unitario', 'preco de venda', 'valor'],
-  ean: ['ean', 'gtin', 'codigo de barras', 'codigo ean', 'barras'],
+  priceInCentavos: ['price', 'preco', 'preco unitario', 'preco de venda', 'valor', 'preco r$'],
+  ean: ['ean', 'gtin', 'codigo de barras', 'codigo ean', 'barras', 'cod. barras'],
   ncm: ['ncm', 'codigo ncm', 'ncm/sh', 'classificacao fiscal'],
   category: ['category', 'categoria', 'grupo'],
   notes: ['notes', 'observacoes', 'observacao', 'obs'],
