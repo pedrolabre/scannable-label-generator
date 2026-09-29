@@ -13,7 +13,7 @@ MVP funcional.
 - A revisão do lote diz quantos registros ganharam NCM e código de barras pela base e quantos tinham código fora dela, prontos inclusive, e o registro que aparece na revisão leva a marca dos campos que vieram da base. Quando a leitura da base falha, um aviso diz que o lote seguiu como veio do arquivo, e a gravação continua disponível.
 - `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
 - `Base de referência`, ao lado de `Completar dados`: mostra quantos códigos a base guarda, quantos têm NCM e código de barras e a data da última carga; troca a base inteira pela planilha `.ods` sem tocar no catálogo; apaga a base, com confirmação; e completa o NCM e o código de barras vazios dos produtos já cadastrados a partir da base, sem arquivo e com o resumo conferido antes de gravar.
-- Listagem paginada, 50 produtos por página, com a troca de página e o trecho exibido no rodapé fixo da coluna. A busca, sem acento e sem diferença de caixa, procura no catálogo inteiro, e a página sai do resultado já em ordem de nome; trocar o termo volta à primeira página, e cadastrar, editar, remover ou importar mantém a página atual. A marcação para a folha é guardada por produto e não muda com a troca de página.
+- Listagem paginada, 50 produtos por página, com a troca de página e o trecho exibido no rodapé fixo da coluna. A busca, sem acento e sem diferença de caixa, procura no catálogo inteiro, e a página sai do resultado já em ordem de nome. O catálogo é preparado para a busca uma vez a cada mudança da lista (forma sem acento dos campos e ordem por nome), e cada termo só filtra; o campo mostra cada letra na hora e a lista acompanha logo em seguida, sem esperar a digitação parar. Trocar o termo volta à primeira página, e cadastrar, editar, remover ou importar mantém a página atual. A marcação para a folha é guardada por produto e não muda com a troca de página.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
@@ -265,6 +265,7 @@ scannable-label-generator/
         ProductList.test.jsx
         ProductListPager.jsx
         ProductListPages.test.jsx
+        ProductListSearch.test.jsx
         ProductListStatus.jsx
         ProductSearchField.jsx
         ProductTable.jsx
@@ -379,6 +380,7 @@ scannable-label-generator/
         productMapping.js
         productMapping.test.js
         productSearch.js
+        productSearch.test.js
         productService.js
         referenceCompletion.js
         referenceCompletion.test.js

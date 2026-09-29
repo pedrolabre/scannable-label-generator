@@ -1,6 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { startTransition, useCallback, useMemo, useRef, useState } from 'react';
 
-import { compareProductsByName, searchProducts } from '../../domain/services/productSearch.js';
+import {
+  buildProductSearchIndex,
+  searchProductIndex,
+} from '../../domain/services/productSearch.js';
 import { describeStorageError } from '../../storage/storageError.js';
 
 import ShellColumn from '../layout/ShellColumn.jsx';
@@ -74,6 +77,14 @@ function countHint(visible, total) {
  * outro. Cadastrar, editar, remover e reler o catalogo mantem a pagina, e
  * quando ela deixa de existir a tela mostra a nova ultima. A troca de pagina
  * leva a lista de volta ao topo.
+ *
+ * O catalogo e preparado para a busca uma vez por lista: a forma comparavel de
+ * cada produto e a ordem por nome so mudam quando a lista muda, e cada termo so
+ * filtra. O campo guarda o que foi digitado e mostra cada letra na hora; o
+ * termo aplicado a lista segue numa transicao, que o React interrompe quando
+ * chega outra tecla, entao digitar rapido nao espera o desenho da pagina. A
+ * dica "X de Y" e o aviso de busca sem resultado falam do termo aplicado, o
+ * mesmo da lista na tela. Esvaziar o campo aplica na hora.
  */
 export default function ProductList({
   products,
@@ -89,15 +100,18 @@ export default function ProductList({
   onClearCatalog,
 }) {
   const [query, setQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [pageIndex, setPageIndex] = useState(0);
   const listRef = useRef(null);
   const [productToRemove, setProductToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [removalError, setRemovalError] = useState(null);
 
+  const searchIndex = useMemo(() => buildProductSearchIndex(products), [products]);
+
   const visibleProducts = useMemo(
-    () => [...searchProducts(products, query)].sort(compareProductsByName),
-    [products, query],
+    () => searchProductIndex(searchIndex, appliedQuery),
+    [searchIndex, appliedQuery],
   );
 
   const totalPages = countListPages(visibleProducts.length);
@@ -117,6 +131,15 @@ export default function ProductList({
   function handleQueryChange(value) {
     setQuery(value);
     setPageIndex(0);
+
+    if (value === '') {
+      setAppliedQuery('');
+      return;
+    }
+
+    startTransition(() => {
+      setAppliedQuery(value);
+    });
   }
 
   // O corpo que rola e o da coluna, e ele continua o mesmo entre as paginas:
@@ -153,10 +176,45 @@ export default function ProductList({
     setRemovalError(null);
   }
 
-  function handleStartRemoval(product) {
+  const handleStartRemoval = useCallback((product) => {
     setProductToRemove(product);
     setRemovalError(null);
-  }
+  }, []);
+
+  // A tabela e os cartoes so mudam com a pagina e com o que vem de fora. Cada
+  // tecla redesenha a faixa da busca antes do termo ser aplicado, e esse
+  // desenho precisa ser leve: com o elemento guardado, o React pula as linhas
+  // que nao mudaram.
+  const listSurfaces = useMemo(
+    () => (
+      <div ref={listRef}>
+        <div className="hidden sm:block">
+          <ProductTable
+            products={pageProducts}
+            selectedProductId={selectedProductId}
+            printSelection={printSelection}
+            onTogglePrint={onTogglePrint}
+            onEdit={onEdit}
+            onPreview={onPreview}
+            onRemove={handleStartRemoval}
+          />
+        </div>
+
+        <div className="p-recuo sm:hidden">
+          <ProductCards
+            products={pageProducts}
+            selectedProductId={selectedProductId}
+            printSelection={printSelection}
+            onTogglePrint={onTogglePrint}
+            onEdit={onEdit}
+            onPreview={onPreview}
+            onRemove={handleStartRemoval}
+          />
+        </div>
+      </div>
+    ),
+    [pageProducts, selectedProductId, printSelection, onTogglePrint, onEdit, onPreview, handleStartRemoval],
+  );
 
   function renderBody() {
     if (products.length === 0 && loadError) {
@@ -186,38 +244,12 @@ export default function ProductList({
     if (visibleProducts.length === 0) {
       return (
         <Padded>
-          <NoMatchStatus query={query} onClearSearch={() => handleQueryChange('')} />
+          <NoMatchStatus query={appliedQuery} onClearSearch={() => handleQueryChange('')} />
         </Padded>
       );
     }
 
-    return (
-      <div ref={listRef}>
-        <div className="hidden sm:block">
-          <ProductTable
-            products={pageProducts}
-            selectedProductId={selectedProductId}
-            printSelection={printSelection}
-            onTogglePrint={onTogglePrint}
-            onEdit={onEdit}
-            onPreview={onPreview}
-            onRemove={handleStartRemoval}
-          />
-        </div>
-
-        <div className="p-recuo sm:hidden">
-          <ProductCards
-            products={pageProducts}
-            selectedProductId={selectedProductId}
-            printSelection={printSelection}
-            onTogglePrint={onTogglePrint}
-            onEdit={onEdit}
-            onPreview={onPreview}
-            onRemove={handleStartRemoval}
-          />
-        </div>
-      </div>
-    );
+    return listSurfaces;
   }
 
   const header =
