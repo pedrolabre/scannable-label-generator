@@ -82,7 +82,7 @@ describe('logotipo no arquivo', () => {
       expect(draw.x).toBeCloseTo(op.xMm * POINTS_PER_MM, 3);
       expect(draw.y).toBeCloseTo((SHEET.heightMm - op.yMm - op.heightMm) * POINTS_PER_MM, 3);
     });
-  }, 30_000);
+  });
 
   it('grava o JPEG como JPEG, sem reconverter', async () => {
     const bytes = await renderPrintDocument(describeTen(resolveLogo(JPEG_8X4_DATA_URL)), {
@@ -92,14 +92,14 @@ describe('logotipo no arquivo', () => {
     expect(countImageObjects(bytes)).toBe(1);
     expect(asLatin1(bytes)).toContain('/Filter /DCTDecode');
     expect(readImageDraws(readContent(bytes))).toHaveLength(10);
-  }, 30_000);
+  });
 
   it('sem logotipo, nao grava objeto de imagem nenhum', async () => {
     const bytes = await renderPrintDocument(describeTen(null), { createdAt: CREATED_AT });
 
     expect(countImageObjects(bytes)).toBe(0);
     expect(readImageDraws(readContent(bytes))).toHaveLength(0);
-  }, 30_000);
+  });
 
   it('continua gerando o mesmo arquivo para a mesma entrada', async () => {
     const description = describeTen(resolveLogo(pngDataUrl(120, 40)));
@@ -107,5 +107,5 @@ describe('logotipo no arquivo', () => {
     const second = await renderPrintDocument(description, { createdAt: CREATED_AT });
 
     expect(Buffer.from(first).equals(Buffer.from(second))).toBe(true);
-  }, 30_000);
+  });
 });

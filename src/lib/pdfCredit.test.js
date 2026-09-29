@@ -130,7 +130,7 @@ describe('crediario e faixa no arquivo', () => {
       expect(draw.width).toBeCloseTo(op.widthMm * POINTS_PER_MM, 3);
       expect(draw.height).toBeCloseTo(-op.heightMm * POINTS_PER_MM, 3);
     });
-  }, 30_000);
+  });
 
   it('sem crediario, nao escreve linha de parcela nem de taxa, e o cartao continua', async () => {
     const content = readContent(
@@ -141,5 +141,5 @@ describe('crediario e faixa no arquivo', () => {
     expect(content).not.toContain('Crediário');
     expect(content).toContain('(10x sem juros no cartão) Tj');
     expect(readBandDraws(content)).toHaveLength(3);
-  }, 30_000);
+  });
 });

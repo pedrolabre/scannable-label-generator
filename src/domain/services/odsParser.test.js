@@ -278,5 +278,5 @@ describe('parseOdsFile, desempenho', () => {
     expect(records).toHaveLength(20000);
     expect(records[19999].raw.Descrição).toBe('GUARDA ROUPA INVENTADO 19999');
     expect(elapsed).toBeLessThan(5000);
-  }, 30_000);
+  });
 });

@@ -54,13 +54,8 @@ function conteudoDeArquivo(produtos, overrides = {}) {
     formatVersion: BACKUP_FORMAT_VERSION,
     databaseVersion: BACKUP_DATABASE_VERSION,
     generatedAt: new Date(2026, 8, 18, 16, 7).toISOString(),
-    counts: {
-      products: produtos.length,
-      labelLayouts: 0,
-      sheetLayouts: 0,
-      printJobs: 0,
-    },
-    tables: { products: produtos, labelLayouts: [], sheetLayouts: [], printJobs: [] },
+    counts: { products: produtos.length },
+    tables: { products: produtos },
     ...overrides,
   });
 }
@@ -141,12 +136,7 @@ describe('cartao', () => {
 
 describe('exportar', () => {
   it('le as tabelas e dispara o download com o nome do dia', async () => {
-    readBackupTables.mockResolvedValue({
-      products: [produto()],
-      labelLayouts: [],
-      sheetLayouts: [],
-      printJobs: [],
-    });
+    readBackupTables.mockResolvedValue({ products: [produto()] });
 
     render();
     await clicar('Exportar backup');

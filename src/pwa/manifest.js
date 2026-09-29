@@ -8,7 +8,8 @@ import { APP_NAME } from '../lib/app-meta.js';
  * seria uma segunda fonte de verdade, livre para divergir em silencio.
  *
  * A descricao repete a que esta no `<head>` do documento porque o HTML e
- * estatico e nao importa modulo; as duas mudam juntas.
+ * estatico e nao importa modulo; as duas mudam juntas, e `documentMeta.test.js`
+ * confere que continuam iguais.
  */
 
 export const APP_DESCRIPTION =

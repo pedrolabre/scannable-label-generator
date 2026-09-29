@@ -5,8 +5,9 @@
  * etiqueta, entao uma tabela mutavel so criaria perguntas sem resposta boa:
  * quem semeia, quando semeia, e o que acontece com a impressao no dia em que
  * uma linha for apagada. Como constante o catalogo esta pronto antes de
- * qualquer leitura de armazenamento, e nao ha linha para apagar. A tabela do
- * banco fica reservada para o dia em que existirem modelos do proprio usuario.
+ * qualquer leitura de armazenamento, e nao ha linha para apagar. O banco nao
+ * tem tabela de modelos: se um dia existirem modelos do proprio usuario, a
+ * tabela entra numa versao nova do banco.
  *
  * `symbolSizeMm` e o lado da caixa inteira do simbolo, com a zona de silencio
  * ja dentro dela. A caixa e dimensionada para o maior texto que o simbolo

@@ -4,6 +4,10 @@ import 'fake-indexeddb/auto';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import {
+  BACKUP_DATABASE_VERSION,
+  BACKUP_FORMAT_VERSION,
+} from '../domain/schemas/backupFileSchema.js';
 import { readBackupFile } from '../domain/services/backupRead.js';
 import { buildBackupFile, serializeBackupFile } from '../domain/services/backupFile.js';
 
@@ -36,7 +40,7 @@ const ENTRIES = [
 
 const BASE_STATS = { total: 2, withNcm: 2, withEan: 1, loadedAt: LOADED_AT };
 
-// Arquivo como a versao atual do backup o gera, sem a base de referencia.
+// Arquivo no formato 1, como todo backup gerado antes da versao 3 do banco.
 function backupText(products) {
   return JSON.stringify({
     format: 'labelforge-backup',
@@ -72,17 +76,36 @@ describe('carga da base e catalogo', () => {
 });
 
 describe('base e backup', () => {
-  it('o arquivo gerado continua com as quatro tabelas e sem a base', async () => {
+  it('o arquivo gerado leva so os produtos e nao leva a base', async () => {
     await createProduct(WARDROBE);
     await replaceReferenceEntries(ENTRIES, { loadedAt: LOADED_AT });
 
     const tables = await readBackupTables();
     const file = buildBackupFile(tables, new Date(LOADED_AT));
 
-    expect(Object.keys(tables)).toEqual(['products', 'labelLayouts', 'sheetLayouts', 'printJobs']);
-    expect(file.databaseVersion).toBe(1);
+    expect(Object.keys(tables)).toEqual(['products']);
+    expect(file.formatVersion).toBe(BACKUP_FORMAT_VERSION);
+    expect(file.databaseVersion).toBe(BACKUP_DATABASE_VERSION);
     expect(serializeBackupFile(file)).not.toContain('94035000');
     expect(readBackupFile(serializeBackupFile(file)).issues).toEqual([]);
+  });
+
+  it('gerar e restaurar devolve os mesmos produtos e mantem a base', async () => {
+    await createProduct(WARDROBE);
+    await replaceReferenceEntries(ENTRIES, { loadedAt: LOADED_AT });
+
+    const text = serializeBackupFile(buildBackupFile(await readBackupTables(), new Date(LOADED_AT)));
+
+    await clearAllProducts();
+
+    const read = readBackupFile(text);
+
+    expect(read.issues).toEqual([]);
+
+    await writeBackupTables(read.file.tables);
+
+    expect(await listProducts()).toEqual([WARDROBE]);
+    expect(await getReferenceStats()).toEqual(BASE_STATS);
   });
 
   it('aceita o backup ja gerado na versao 1 e restaura sem tocar na base', async () => {

@@ -2,13 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  BACKUP_DATABASE_VERSION,
-  BACKUP_FORMAT,
-  BACKUP_FORMAT_VERSION,
-  BackupEnvelopeSchema,
-  BackupFileSchema,
-} from './backupFileSchema.js';
+import { BACKUP_FORMAT, BackupEnvelopeSchema, BackupFileSchema } from './backupFileSchema.js';
 
 /**
  * O contrato do arquivo de backup, conferido pelos dois lados: o que ele precisa
@@ -33,13 +27,15 @@ function produto(overrides = {}) {
   };
 }
 
+// Arquivo no formato 1, com as quatro tabelas: e o que todo backup gerado antes
+// da versao 3 do banco tem, e continua sendo aceito.
 function arquivo(overrides = {}) {
   const produtos = overrides.produtos ?? [produto()];
 
   return {
     format: BACKUP_FORMAT,
-    formatVersion: BACKUP_FORMAT_VERSION,
-    databaseVersion: BACKUP_DATABASE_VERSION,
+    formatVersion: 1,
+    databaseVersion: 1,
     generatedAt: '2026-09-18T12:30:00.000Z',
     counts: {
       products: produtos.length,
@@ -96,17 +92,17 @@ describe('identidade e versao', () => {
   });
 
   it('recusa versao de formato desconhecida', () => {
-    const resultado = BackupEnvelopeSchema.safeParse(arquivo({ envelope: { formatVersion: 2 } }));
+    const resultado = BackupEnvelopeSchema.safeParse(arquivo({ envelope: { formatVersion: 3 } }));
 
     expect(resultado.success).toBe(false);
-    expect(mensagens(resultado)[0]).toContain('Versão de formato desconhecida: 2');
+    expect(mensagens(resultado)[0]).toContain('Versão de formato desconhecida: 3');
   });
 
-  it('recusa versao de banco diferente da local', () => {
-    const resultado = BackupEnvelopeSchema.safeParse(arquivo({ envelope: { databaseVersion: 3 } }));
+  it('recusa versao de banco mais nova que a local', () => {
+    const resultado = BackupEnvelopeSchema.safeParse(arquivo({ envelope: { databaseVersion: 4 } }));
 
     expect(resultado.success).toBe(false);
-    expect(mensagens(resultado)[0]).toContain('versão 3 do armazenamento local');
+    expect(mensagens(resultado)[0]).toContain('versão 4 do armazenamento local');
   });
 
   it('recusa data de geracao fora do padrao', () => {
