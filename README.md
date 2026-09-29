@@ -2,6 +2,8 @@
 
 SPA client-side para cadastro de produtos e geração de etiquetas com QR Code machine-readable, organizadas em folha A4 e exportadas em PDF vetorial. Tudo roda no navegador: sem servidor, sem conta, sem rede depois da primeira visita.
 
+LabelForge é o nome do produto: é o que aparece na interface, no aplicativo instalado, no título da página e nos metadados do PDF. O repositório se chama `scannable-label-generator`, e é esse o nome do pacote no `package.json`.
+
 ## Status
 
 MVP funcional.
@@ -19,7 +21,8 @@ MVP funcional.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
 - Exportação em PDF vetorial com escala física 1:1.
 - Interface em janela única com modais dedicados e adaptação fluida de densidade.
-- Persistência local no IndexedDB com backup total e opção de zerar catálogo.
+- Persistência local no IndexedDB, com duas tabelas: os produtos e a base de referência. O banco que já existe no navegador passa para a versão nova sem perder produto nem base.
+- Backup total dos produtos num arquivo JSON, com opção de zerar catálogo. O arquivo sai no formato 2, só com os produtos e a versão do banco; o arquivo do formato 1, com as quatro tabelas, continua sendo aceito na restauração. A base de referência fica fora do arquivo, e restaurar não a apaga.
 - PWA instalável e utilizável offline.
 
 ## Modelos de etiqueta e folha
@@ -115,11 +118,11 @@ LF1|118789|CANTINHO CAFE RUBI|85990|||c1
 - Zod na validação de contratos e schemas de dados.
 - Dexie sobre o IndexedDB para persistência local no navegador.
 - Zustand no gerenciamento de estado global.
-- PapaParse e fast-xml-parser para leitura de CSV, JSON e XML de NFC-e.
+- PapaParse para leitura de CSV. JSON, XML de NFC-e, relatórios `.txt` e planilhas `.ods` são lidos com o próprio navegador (`JSON.parse`, `DOMParser` e `DecompressionStream`), sem biblioteca a mais.
 - bwip-js para geração de QR Code no padrão `LF1`.
 - jsPDF para renderização e exportação de PDF vetorial em escala física 1:1.
 - vite-plugin-pwa para suporte a PWA instalável e operação offline.
-- Vitest para testes automatizados unitários e de integração, com fake-indexeddb para exercitar o banco local.
+- Vitest para testes automatizados unitários e de integração, com fake-indexeddb para exercitar o banco local e limite de 30 s por caso em `vitest.config.js`.
 
 ## Comandos
 
@@ -315,6 +318,7 @@ scannable-label-generator/
       services/
         backupFile.js
         backupFile.test.js
+        backupFormats.test.js
         backupRead.js
         backupRestore.test.js
         backupText.js
@@ -432,6 +436,7 @@ scannable-label-generator/
       symbolPath.js
       symbolPath.test.js
     pwa/
+      documentMeta.test.js
       manifest.js
       manifest.test.js
       registerServiceWorker.js

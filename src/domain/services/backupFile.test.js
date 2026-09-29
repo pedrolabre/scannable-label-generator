@@ -78,29 +78,17 @@ describe('montagem do envelope', () => {
     expect(arquivo.generatedAt).toBe('2026-09-18T12:30:00.000Z');
   });
 
-  it('escreve as quatro tabelas mesmo quando tres estao vazias', () => {
-    const arquivo = buildBackupFile({ products: CATALOGO }, new Date());
+  it('escreve so a tabela de produtos, mesmo quando recebe outras', () => {
+    const arquivo = buildBackupFile({ products: CATALOGO, labelLayouts: [] }, new Date());
 
-    expect(Object.keys(arquivo.tables)).toEqual([
-      'products',
-      'labelLayouts',
-      'sheetLayouts',
-      'printJobs',
-    ]);
-    expect(arquivo.tables.labelLayouts).toEqual([]);
-    expect(arquivo.tables.sheetLayouts).toEqual([]);
-    expect(arquivo.tables.printJobs).toEqual([]);
+    expect(Object.keys(arquivo.tables)).toEqual(['products']);
+    expect(Object.keys(arquivo.counts)).toEqual(['products']);
   });
 
   it('conta a partir do proprio conteudo, e nao de um numero recebido', () => {
     const arquivo = buildBackupFile({ products: CATALOGO }, new Date());
 
-    expect(arquivo.counts).toEqual({
-      products: 3,
-      labelLayouts: 0,
-      sheetLayouts: 0,
-      printJobs: 0,
-    });
+    expect(arquivo.counts).toEqual({ products: 3 });
   });
 
   it('monta um arquivo vazio quando nada foi lido', () => {

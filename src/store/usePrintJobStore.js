@@ -12,8 +12,8 @@ import {
  * Estado do trabalho de impressao que o operador esta montando.
  *
  * Transiente por decisao: nada daqui vai para o IndexedDB, e a pagina recarregada
- * comeca do zero. Persistir a selecao exigiria um segundo mecanismo de
- * armazenamento fora do contrato do banco, cuja versao nao muda; persistir so as
+ * comeca do zero. O banco nao tem tabela de trabalho de impressao, e persistir a
+ * selecao exigiria uma versao nova do banco so para isso; persistir so as
  * margens guardaria um ajuste de impressora em meio a dados de catalogo.
  *
  * O store guarda identificadores e texto, e nunca objetos de produto: o produto

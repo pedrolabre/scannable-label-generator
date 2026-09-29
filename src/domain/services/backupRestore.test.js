@@ -2,11 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  BACKUP_DATABASE_VERSION,
-  BACKUP_FORMAT,
-  BACKUP_FORMAT_VERSION,
-} from '../schemas/backupFileSchema.js';
+import { BACKUP_FORMAT } from '../schemas/backupFileSchema.js';
 
 import { MAX_REPORTED_ISSUES, describeIssueLocation, readBackupFile } from './backupRead.js';
 import {
@@ -46,13 +42,15 @@ function produto(overrides = {}) {
   };
 }
 
+// Arquivo no formato 1, com as quatro tabelas: e o que todo backup gerado antes
+// da versao 3 do banco tem, e continua sendo aceito.
 function arquivo(overrides = {}) {
   const produtos = overrides.produtos ?? [produto()];
 
   return {
     format: BACKUP_FORMAT,
-    formatVersion: BACKUP_FORMAT_VERSION,
-    databaseVersion: BACKUP_DATABASE_VERSION,
+    formatVersion: 1,
+    databaseVersion: 1,
     generatedAt: '2026-09-18T12:30:00.000Z',
     counts: {
       products: produtos.length,

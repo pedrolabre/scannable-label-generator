@@ -12,13 +12,14 @@ import {
  * camada de persistencia, quem dispara o download e a tela, e aqui fica apenas a
  * forma do arquivo.
  *
- * ## Por que as quatro tabelas, mesmo vazias
+ * ## Por que so a tabela de produtos
  *
- * As tres tabelas que nao sao a de produtos saem como lista vazia em vez de
- * ficarem de fora. Custa nada e resolve uma ambiguidade real: sem elas, quem le
- * o arquivo nao distingue "a tabela estava vazia" de "o arquivo foi cortado".
- * Com elas, a forma do envelope nao depende do conteudo do armazenamento, e a
- * conferencia de presenca de tabela passa a significar alguma coisa.
+ * E a unica tabela do banco que o arquivo precisa levar: a base de referencia se
+ * refaz a partir da planilha cadastral, e os modelos de etiqueta e de folha sao
+ * constante de codigo. A tabela sai mesmo vazia, e nao fica de fora: sem ela,
+ * quem le o arquivo nao distingue "o catalogo estava vazio" de "o arquivo foi
+ * cortado". Com ela, a forma do envelope nao depende do conteudo do
+ * armazenamento, e a conferencia de presenca de tabela significa alguma coisa.
  *
  * ## Por que JSON puro
  *
@@ -47,7 +48,7 @@ const FILE_NAME_PREFIX = 'labelforge-backup';
 export const LARGE_BACKUP_THRESHOLD = 50000;
 
 /**
- * Monta o envelope a partir das quatro tabelas ja lidas.
+ * Monta o envelope a partir das tabelas ja lidas.
  *
  * As contagens saem do proprio conteudo, e nao de um parametro: uma contagem
  * informada de fora poderia divergir do que o arquivo carrega, e e justamente

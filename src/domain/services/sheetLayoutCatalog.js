@@ -4,9 +4,9 @@
  * E constante de codigo, e nao linha de banco, pela mesma razao do catalogo de
  * etiquetas: ninguem semeia a tabela, e o dia em que uma linha for apagada a
  * impressao quebra sem resposta boa. Como constante o catalogo esta pronto
- * antes de qualquer leitura de armazenamento, e nao ha linha para apagar. A
- * tabela `sheetLayouts` fica reservada para o dia em que existirem folhas do
- * proprio usuario.
+ * antes de qualquer leitura de armazenamento, e nao ha linha para apagar. O
+ * banco nao tem tabela de folhas: se um dia existirem folhas do proprio
+ * usuario, a tabela entra numa versao nova do banco.
  *
  * Tres modelos. A folha de 10 etiquetas e a que a operacao ja usa: um
  * formulario de preco repetido duas colunas por cinco linhas numa A4 comum,

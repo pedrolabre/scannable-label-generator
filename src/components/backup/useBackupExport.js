@@ -11,7 +11,7 @@ import { readBackupTables } from '../../storage/backupRepository.js';
 /**
  * Estado da exportacao e a sequencia que a executa.
  *
- * A sequencia e curta e sempre a mesma: ler as quatro tabelas, montar o
+ * A sequencia e curta e sempre a mesma: ler os produtos, montar o
  * envelope, escrever o texto e disparar o download. Fica fora do JSX pelo mesmo
  * motivo que a exportacao do PDF ficou: o componente desenha, e quem conduz a
  * sequencia e uma funcao que pode ser lida de cima a baixo.

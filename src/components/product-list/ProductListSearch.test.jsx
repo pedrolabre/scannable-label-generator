@@ -7,8 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { inventCatalog, inventProduct } from './listFixtures.js';
 import ProductList from './ProductList.jsx';
 
-vi.setConfig({ testTimeout: 30_000 });
-
 let container;
 let root;
 let current;

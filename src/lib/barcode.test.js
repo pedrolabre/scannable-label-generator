@@ -90,15 +90,13 @@ describe('conteudo do simbolo', () => {
 });
 
 describe('pior caso aceito', () => {
-  // Os dois textos no teto sao os mais caros do arquivo. A suite monta um
-  // ambiente por arquivo e executa os arquivos em paralelo; o limite proprio
-  // faz a prova medir o desenho, e nao a carga da maquina.
+  // Os dois textos no teto sao os mais caros do arquivo.
   it('nao passa da versao 7 no teto do texto sem acento', async () => {
     const text = `LF1|${'9'.repeat(20)}|${'X Y1'.repeat(40)}`.slice(0, MAX_SYMBOL_TEXT_BYTES);
     const symbol = await generateSymbol(text);
 
     expect(symbol.totalModules).toBeLessThanOrEqual(MAX_SYMBOL_TOTAL_MODULES);
-  }, 30_000);
+  });
 
   it('nao passa da versao 7 no teto do texto com acento', async () => {
     const text = 'Á'.repeat(MAX_UTF8_SYMBOL_TEXT_BYTES / 2 - 0.5) + 'A';
@@ -106,7 +104,7 @@ describe('pior caso aceito', () => {
 
     expect(new TextEncoder().encode(text).length).toBe(MAX_UTF8_SYMBOL_TEXT_BYTES);
     expect(symbol.totalModules).toBeLessThanOrEqual(MAX_SYMBOL_TOTAL_MODULES);
-  }, 30_000);
+  });
 
   it('nao passa da versao 7 com o nome de 60 caracteres acentuado e todos os campos', async () => {
     const product = productFrom({
@@ -119,7 +117,7 @@ describe('pior caso aceito', () => {
 
     expect(product.displayName).toHaveLength(60);
     expect(symbol.totalModules).toBeLessThanOrEqual(MAX_SYMBOL_TOTAL_MODULES);
-  }, 30_000);
+  });
 });
 
 describe('proporcao do simbolo', () => {

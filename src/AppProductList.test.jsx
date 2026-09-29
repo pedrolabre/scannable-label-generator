@@ -16,10 +16,6 @@ vi.mock('./lib/barcode.js', () => ({ generateSymbol }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-// Os casos montam a listagem inteira no jsdom, e o tempo de cada um varia com a
-// carga da maquina: o limite padrao de 5 s nao comporta essa variacao.
-vi.setConfig({ testTimeout: 30_000 });
-
 const PRODUCTS = inventCatalog(120);
 const ORDER = [...PRODUCTS].sort(compareProductsByName);
 
