@@ -38,6 +38,8 @@ export default function ImportReviewPanel() {
   const detectedCount = useImportStore((state) => state.detectedCount);
   const corrections = useImportStore((state) => state.corrections);
   const conflictSummary = useImportStore((state) => state.conflictSummary);
+  const enrichmentSummary = useImportStore((state) => state.enrichmentSummary);
+  const referenceError = useImportStore((state) => state.referenceError);
   const correctRecord = useImportStore((state) => state.correctRecord);
   const revertRecord = useImportStore((state) => state.revertRecord);
   const decideConflict = useImportStore((state) => state.decideConflict);
@@ -81,7 +83,11 @@ export default function ImportReviewPanel() {
 
   return (
     <div className="space-y-3">
-      <ImportReviewSummary report={report} />
+      <ImportReviewSummary
+        report={report}
+        enrichment={enrichmentSummary}
+        referenceError={referenceError}
+      />
 
       <ImportWritePanel />
 

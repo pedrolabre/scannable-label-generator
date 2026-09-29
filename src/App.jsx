@@ -23,6 +23,7 @@ import { selectedPrintIds } from './components/print/printSelection.js';
 import { usePrintExport } from './components/print/usePrintExport.js';
 import ProductForm from './components/product-form/ProductForm.jsx';
 import ProductList from './components/product-list/ProductList.jsx';
+import ReferencePanel from './components/reference/ReferencePanel.jsx';
 import UpdateNotice from './components/pwa/UpdateNotice.jsx';
 import { usePrintJobStore } from './store/usePrintJobStore.js';
 import { useProductStore } from './store/useProductStore.js';
@@ -68,6 +69,7 @@ const MODALS = Object.freeze({
   PRODUCT: 'produto',
   IMPORT: 'importacao',
   COMPLETION: 'complementacao',
+  REFERENCE: 'base',
   PREVIEW: 'previa',
   SHEET: 'folha',
   BACKUP: 'backup',
@@ -212,6 +214,7 @@ export default function App() {
             onNewProduct={handleNewProduct}
             onImport={() => setOpenModal(MODALS.IMPORT)}
             onComplete={() => setOpenModal(MODALS.COMPLETION)}
+            onReference={() => setOpenModal(MODALS.REFERENCE)}
             onBackup={() => setOpenModal(MODALS.BACKUP)}
             activeView={activeView}
             onViewChange={setActiveView}
@@ -294,6 +297,8 @@ export default function App() {
       {openModal === MODALS.IMPORT ? <ImportPanel onClose={closeModal} /> : null}
 
       {openModal === MODALS.COMPLETION ? <CatalogCompletionPanel onClose={closeModal} /> : null}
+
+      {openModal === MODALS.REFERENCE ? <ReferencePanel onClose={closeModal} /> : null}
 
       {openModal === MODALS.BACKUP ? (
         <BackupPanel

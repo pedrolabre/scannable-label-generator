@@ -10,7 +10,9 @@ MVP funcional.
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e relatórios `.txt` do ERP (Tabela de Preço e Saldo de Estoque por Grupo).
 - Na importação, o NCM e o código de barras que o arquivo não traz são completados pela base de referência guardada pelo `Completar dados`, antes da conferência. A base é consultada uma vez por lote, pelo código inteiro ou sem os zeros à esquerda; só o campo vazio é completado, e o valor que o arquivo trouxe nunca muda. Sem base, ou com a leitura dela falhando, a importação segue como antes.
+- A revisão do lote diz quantos registros ganharam NCM e código de barras pela base e quantos tinham código fora dela, prontos inclusive, e o registro que aparece na revisão leva a marca dos campos que vieram da base. Quando a leitura da base falha, um aviso diz que o lote seguiu como veio do arquivo, e a gravação continua disponível.
 - `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
+- `Base de referência`, ao lado de `Completar dados`: mostra quantos códigos a base guarda, quantos têm NCM e código de barras e a data da última carga; troca a base inteira pela planilha `.ods` sem tocar no catálogo; apaga a base, com confirmação; e completa o NCM e o código de barras vazios dos produtos já cadastrados a partir da base, sem arquivo e com o resumo conferido antes de gravar.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
@@ -156,6 +158,7 @@ scannable-label-generator/
     App.jsx
     App.test.jsx
     AppCompletion.test.jsx
+    AppReference.test.jsx
     components/
       AppShell.jsx
       AppShell.test.jsx
@@ -185,11 +188,14 @@ scannable-label-generator/
         ImportPanel.jsx
         ImportRecordIssueList.jsx
         ImportReviewPanel.jsx
+        ImportReviewPanel.test.jsx
         ImportReviewRecord.jsx
         ImportReviewSummary.jsx
+        ImportReviewSummary.test.jsx
         ImportWritePanel.jsx
         ImportWriteResult.jsx
         conflictLabels.js
+        enrichmentSentence.js
         importCounts.js
       label/
         LabelCardSetting.jsx
@@ -261,6 +267,14 @@ scannable-label-generator/
       pwa/
         UpdateNotice.jsx
         UpdateNotice.test.jsx
+      reference/
+        ClearReferenceButton.jsx
+        ReferenceCompletionSection.jsx
+        ReferenceCompletionSection.test.jsx
+        ReferencePanel.jsx
+        ReferencePanel.test.jsx
+        ReferenceSheetSection.jsx
+        ReferenceStats.jsx
       ui/
         Button.jsx
         Card.jsx
@@ -358,6 +372,8 @@ scannable-label-generator/
         productMapping.test.js
         productSearch.js
         productService.js
+        referenceCompletion.js
+        referenceCompletion.test.js
         referenceEntries.js
         referenceEntries.test.js
         sheetGrid.js
@@ -425,10 +441,13 @@ scannable-label-generator/
       referenceRepository.test.js
       storageError.js
     store/
+      importBatchUpdates.js
       importEnrichment.js
       importEnrichment.test.js
       importEnrichmentDatabase.test.js
       importEnrichmentFormats.test.js
+      referenceCompletionSlice.js
+      referenceCompletionSlice.test.js
       useCompletionStore.js
       useCompletionStore.test.js
       useCompletionStoreReference.test.js
@@ -437,6 +456,8 @@ scannable-label-generator/
       usePrintJobStore.js
       useProductStore.js
       useProductStore.test.js
+      useReferenceStore.js
+      useReferenceStore.test.js
     styles/
       brandClasses.test.js
       global.css
