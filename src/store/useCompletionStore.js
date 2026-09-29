@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 
 import { planCatalogCompletion } from '../domain/services/catalogCompletion.js';
+import { IMPORT_FORMAT_ODS } from '../domain/services/importRecord.js';
 import {
   COMPLETION_FILE_EXTENSIONS,
   parseImportFiles,
 } from '../domain/services/importService.js';
+import { buildReferenceEntries } from '../domain/services/referenceEntries.js';
 import { listProducts, updateProducts } from '../storage/productRepository.js';
+import { replaceReferenceEntries } from '../storage/referenceRepository.js';
 import { describeStorageError, describeStorageReadError } from '../storage/storageError.js';
 
 import { useProductStore } from './useProductStore.js';
@@ -30,6 +33,18 @@ import { useProductStore } from './useProductStore.js';
  * botao de confirmar servindo de nova tentativa.
  *
  * Como na importacao, fechar o dialogo nao descarta o que foi lido.
+ *
+ * ## A base de referencia
+ *
+ * A planilha `.ods` e a fonte do NCM e do codigo de barras. Alem de completar o
+ * catalogo presente, as linhas dela viram a base de referencia, guardada entre
+ * as sessoes para os produtos que chegarem depois. As linhas sao montadas na
+ * leitura, junto com o resumo, e gravadas na mesma confirmacao, depois do
+ * catalogo, substituindo a base inteira. Os outros formatos so completam o
+ * catalogo e nao mexem na base.
+ *
+ * Como a base vale mesmo com o catalogo vazio, a confirmacao fica disponivel
+ * quando ha produto a completar ou linha da planilha a guardar.
  */
 
 export const COMPLETION_STATUS = Object.freeze({
@@ -49,8 +64,16 @@ function initialState() {
     records: [],
     plan: null,
     result: null,
+    reference: null,
+    referenceResult: null,
     error: null,
   };
+}
+
+function planReference(records) {
+  const sheetRecords = records.filter((record) => record.source?.format === IMPORT_FORMAT_ODS);
+
+  return sheetRecords.length > 0 ? buildReferenceEntries(sheetRecords) : null;
 }
 
 export const useCompletionStore = create((set, get) => ({
@@ -91,6 +114,7 @@ export const useCompletionStore = create((set, get) => ({
         files: parsed.files,
         records: parsed.records,
         plan: planCatalogCompletion(products, parsed.records),
+        reference: planReference(parsed.records),
       });
     } catch (error) {
       set({
@@ -102,7 +126,7 @@ export const useCompletionStore = create((set, get) => ({
   },
 
   confirm: async () => {
-    const { status, records } = get();
+    const { status, records, reference } = get();
 
     if (status !== COMPLETION_STATUS.READY) {
       return;
@@ -110,15 +134,28 @@ export const useCompletionStore = create((set, get) => ({
 
     set({ status: COMPLETION_STATUS.WRITING, error: null });
 
+    let catalogChanged = false;
+
     try {
       const plan = planCatalogCompletion(await listProducts(), records);
 
       await updateProducts(plan.products);
+      catalogChanged = plan.products.length > 0;
 
-      set({ status: COMPLETION_STATUS.DONE, plan, result: plan.summary });
+      const referenceResult =
+        reference && reference.entries.length > 0
+          ? { entryCount: await replaceReferenceEntries(reference.entries) }
+          : null;
+
+      set({ status: COMPLETION_STATUS.DONE, plan, result: plan.summary, referenceResult });
     } catch (error) {
       set({ status: COMPLETION_STATUS.READY, error: describeStorageError(error) });
-      return;
+
+      // O catalogo gravado antes da falha da base continua gravado; a
+      // listagem e relida para mostra-lo.
+      if (!catalogChanged) {
+        return;
+      }
     }
 
     // A releitura falhando nao desfaz a gravacao, que ja terminou: o motivo

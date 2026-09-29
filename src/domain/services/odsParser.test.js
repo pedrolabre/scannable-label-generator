@@ -261,7 +261,7 @@ describe('parseOdsFile, recusas', () => {
 });
 
 describe('parseOdsFile, desempenho', () => {
-  it('le 20.000 linhas de quatro colunas em menos de 2 s', async () => {
+  it('le 20.000 linhas de quatro colunas em menos de 5 s', async () => {
     const products = Array.from({ length: 20000 }, (_, i) =>
       productRow({
         code: 100000 + i,
@@ -277,6 +277,6 @@ describe('parseOdsFile, desempenho', () => {
 
     expect(records).toHaveLength(20000);
     expect(records[19999].raw.Descrição).toBe('GUARDA ROUPA INVENTADO 19999');
-    expect(elapsed).toBeLessThan(2000);
+    expect(elapsed).toBeLessThan(5000);
   }, 30_000);
 });

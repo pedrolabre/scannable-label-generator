@@ -9,6 +9,7 @@ import InlineAlert from '../ui/InlineAlert.jsx';
 import ModalShell from '../ui/ModalShell.jsx';
 
 import CatalogCompletionSummary from './CatalogCompletionSummary.jsx';
+import ReferenceEntriesSummary from './ReferenceEntriesSummary.jsx';
 
 /**
  * Dialogo da complementacao do catalogo.
@@ -20,7 +21,9 @@ import CatalogCompletionSummary from './CatalogCompletionSummary.jsx';
  * barras mas nao traz preco.
  *
  * O resumo aparece antes de qualquer gravacao, e o botao de completar e a
- * confirmacao. Como na importacao, o dialogo nao fecha no clique fora e fechar
+ * confirmacao. Com a planilha `.ods`, a mesma confirmacao guarda as linhas
+ * dela na base de referencia; sem produto a completar, o botao so guarda a
+ * base, e o nome dele diz isso. Como na importacao, o dialogo nao fecha no clique fora e fechar
  * nao descarta o que foi lido.
  */
 
@@ -32,6 +35,8 @@ export default function CatalogCompletionPanel({ onClose }) {
   const files = useCompletionStore((state) => state.files);
   const plan = useCompletionStore((state) => state.plan);
   const result = useCompletionStore((state) => state.result);
+  const reference = useCompletionStore((state) => state.reference);
+  const referenceResult = useCompletionStore((state) => state.referenceResult);
   const error = useCompletionStore((state) => state.error);
   const readFiles = useCompletionStore((state) => state.readFiles);
   const confirm = useCompletionStore((state) => state.confirm);
@@ -40,8 +45,11 @@ export default function CatalogCompletionPanel({ onClose }) {
   const isReading = status === COMPLETION_STATUS.READING;
   const isWriting = status === COMPLETION_STATUS.WRITING;
   const isBusy = isReading || isWriting;
+  const hasProductsToComplete = plan?.summary.updatedProducts > 0;
+  const hasReferenceToStore = reference?.summary.entryCount > 0;
   const canConfirm =
-    (status === COMPLETION_STATUS.READY || isWriting) && plan?.summary.updatedProducts > 0;
+    (status === COMPLETION_STATUS.READY || isWriting) && (hasProductsToComplete || hasReferenceToStore);
+  const confirmLabel = hasProductsToComplete ? 'Completar catálogo' : 'Guardar base de referência';
 
   const handleFilesSelected = useCallback(
     (selected) => {
@@ -73,7 +81,7 @@ export default function CatalogCompletionPanel({ onClose }) {
           </Button>
           {canConfirm ? (
             <Button type="button" variant="primary" onClick={handleConfirm} disabled={isWriting}>
-              {isWriting ? 'Gravando…' : 'Completar catálogo'}
+              {isWriting ? 'Gravando…' : confirmLabel}
             </Button>
           ) : null}
         </>
@@ -82,7 +90,8 @@ export default function CatalogCompletionPanel({ onClose }) {
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-neutro-tintaMedia">
           Compara cada código do arquivo com o catálogo deste dispositivo. O que já está preenchido
-          fica como está, e código que não está cadastrado é ignorado.
+          fica como está, e código que não está cadastrado é ignorado. A planilha .ods também fica
+          guardada neste navegador como base de referência de NCM e código de barras.
         </p>
 
         <ImportFilePicker
@@ -102,6 +111,10 @@ export default function CatalogCompletionPanel({ onClose }) {
             summary={result ?? plan.summary}
             isDone={status === COMPLETION_STATUS.DONE}
           />
+        ) : null}
+
+        {reference && !isReading ? (
+          <ReferenceEntriesSummary summary={reference.summary} result={referenceResult} />
         ) : null}
       </div>
     </ModalShell>

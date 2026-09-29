@@ -63,7 +63,8 @@ export function deleteProduct(id) {
 
 /**
  * Apaga todos os produtos de uma vez. Toca so a tabela de produtos: os modelos
- * sao constante de codigo, e a configuracao da etiqueta vive fora do banco.
+ * sao constante de codigo, a configuracao da etiqueta vive fora do banco, e a
+ * base de referencia continua guardada para a proxima importacao.
  */
 export function clearAllProducts() {
   return db.products.clear();

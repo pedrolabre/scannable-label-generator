@@ -9,7 +9,7 @@ MVP funcional.
 ## Funcionamento
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e relatórios `.txt` do ERP (Tabela de Preço e Saldo de Estoque por Grupo).
-- `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda.
+- `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
@@ -115,7 +115,7 @@ LF1|118789|CANTINHO CAFE RUBI|85990|||c1
 - bwip-js para geração de QR Code no padrão `LF1`.
 - jsPDF para renderização e exportação de PDF vetorial em escala física 1:1.
 - vite-plugin-pwa para suporte a PWA instalável e operação offline.
-- Vitest para testes automatizados unitários e de integração.
+- Vitest para testes automatizados unitários e de integração, com fake-indexeddb para exercitar o banco local.
 
 ## Comandos
 
@@ -172,7 +172,9 @@ scannable-label-generator/
       completion/
         CatalogCompletionPanel.jsx
         CatalogCompletionPanel.test.jsx
+        CatalogCompletionPanelReference.test.jsx
         CatalogCompletionSummary.jsx
+        ReferenceEntriesSummary.jsx
       import/
         ImportConflictBulkActions.jsx
         ImportConflictNotice.jsx
@@ -281,6 +283,7 @@ scannable-label-generator/
         labelSettingsSchema.js
         productSchema.js
         productSchema.test.js
+        referenceEntrySchema.js
         labelLayoutSchema.js
         sheetLayoutSchema.js
         sheetLayoutSchema.test.js
@@ -352,6 +355,8 @@ scannable-label-generator/
         productMapping.test.js
         productSearch.js
         productService.js
+        referenceEntries.js
+        referenceEntries.test.js
         sheetGrid.js
         sheetGrid.test.js
         sheetLayoutCatalog.js
@@ -406,15 +411,20 @@ scannable-label-generator/
     storage/
       backupRepository.js
       indexed-db.js
+      indexed-db.test.js
       labelSettingsStorage.js
       labelSettingsStorage.test.js
       productRepository.js
       productRepository.test.js
       productRepositoryBulkUpdate.test.js
+      referenceBoundaries.test.js
+      referenceRepository.js
+      referenceRepository.test.js
       storageError.js
     store/
       useCompletionStore.js
       useCompletionStore.test.js
+      useCompletionStoreReference.test.js
       useImportStore.js
       useLabelSettingsStore.js
       usePrintJobStore.js
