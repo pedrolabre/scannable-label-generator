@@ -1,4 +1,4 @@
-import { Database, Download, ListChecks, Plus } from 'lucide-react';
+import { Database, Download, Library, ListChecks, Plus } from 'lucide-react';
 
 import { APP_NAME } from '../lib/app-meta.js';
 
@@ -13,17 +13,22 @@ const VIEW_OPTIONS = [
 ];
 
 /**
- * Faixa do topo: a marca e os quatro gatilhos que nao pertencem a coluna
+ * Faixa do topo: a marca e os cinco gatilhos que nao pertencem a coluna
  * nenhuma.
  *
- * Cadastrar, importar, completar os dados do catalogo e gerar o arquivo de
- * backup nao sao passo do trabalho de impressao nem da listagem — sao tarefas
- * que atravessam a aplicacao inteira. Por isso ficam aqui, e nao dentro de uma
- * das colunas, que e onde estariam se a pergunta fosse so "onde cabe".
+ * Cadastrar, importar, completar os dados do catalogo, cuidar da base de
+ * referencia e gerar o arquivo de backup nao sao passo do trabalho de
+ * impressao nem da listagem — sao tarefas que atravessam a aplicacao inteira.
+ * Por isso ficam aqui, e nao dentro de uma das colunas, que e onde estariam se
+ * a pergunta fosse so "onde cabe".
  *
  * `Completar dados` fica logo depois de `Importar` porque os dois leem arquivo,
  * e fica separado dele porque o efeito e outro: importar cria produtos,
  * completar so preenche campos vazios do que ja esta cadastrado.
+ *
+ * `Base de referencia` vem logo depois dos dois porque e a base que o
+ * Completar dados guarda e a importacao consulta: a tela mostra o que ela
+ * guarda, troca e apaga a base e completa o catalogo a partir dela.
  *
  * `Novo produto` e o unico botao de marca da tela principal. Dois botoes
  * preenchidos lado a lado deixariam de indicar qualquer coisa.
@@ -46,6 +51,7 @@ export default function AppHeader({
   onNewProduct,
   onImport,
   onComplete,
+  onReference,
   onBackup,
   activeView = SHELL_VIEWS.PRODUCTS,
   onViewChange,
@@ -75,6 +81,11 @@ export default function AppHeader({
           <Button type="button" onClick={onComplete} className="max-sm:px-3">
             <ListChecks className="h-4 w-4 lg:h-[15px] lg:w-[15px]" aria-hidden="true" />
             <span className="max-sm:sr-only">Completar dados</span>
+          </Button>
+
+          <Button type="button" onClick={onReference} className="max-sm:px-3">
+            <Library className="h-4 w-4 lg:h-[15px] lg:w-[15px]" aria-hidden="true" />
+            <span className="max-sm:sr-only">Base de referência</span>
           </Button>
 
           <Button type="button" onClick={onBackup} className="max-sm:px-3">

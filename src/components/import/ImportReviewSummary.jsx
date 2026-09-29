@@ -1,3 +1,4 @@
+import { enrichmentSentence } from './enrichmentSentence.js';
 import { pluralize } from './importCounts.js';
 
 /**
@@ -6,6 +7,12 @@ import { pluralize } from './importCounts.js';
  * Ela e a primeira coisa a ser lida porque e a unica que cabe em um lote de
  * qualquer tamanho: com 200 mil registros e tres recusados, o numero e a
  * resposta, e as tres linhas abaixo dela sao o detalhe.
+ *
+ * Logo abaixo vem o que a base de referencia completou, contado sobre o lote
+ * inteiro: quase todo registro completado chega pronto e nao aparece na lista,
+ * entao e so aqui que o numero dele pode ser lido. Quando a leitura da base
+ * falha, o aviso diz que o lote seguiu como veio do arquivo e que a gravacao
+ * continua disponivel — a base nunca impede a importacao.
  */
 function reviewSentence({ readyCount, attentionCount, pendingCount, refusedCount }) {
   const total = readyCount + attentionCount + pendingCount + refusedCount;
@@ -36,12 +43,32 @@ function reviewSentence({ readyCount, attentionCount, pendingCount, refusedCount
   return `${head}: ${parts.join(', ')}.`;
 }
 
-export default function ImportReviewSummary({ report }) {
+const REFERENCE_FAILURE_TEXT =
+  'A base de referência não foi consultada: o NCM e o código de barras ficam como vieram do arquivo, e a gravação continua disponível.';
+
+export default function ImportReviewSummary({ report, enrichment = null, referenceError = null }) {
+  const enrichmentText = enrichmentSentence(enrichment);
+
   return (
     <div className="space-y-1">
       <p role="status" className="text-sm font-semibold text-neutro-tintaMedia">
         {reviewSentence(report)}
       </p>
+
+      {enrichmentText ? (
+        <p className="text-sm text-neutro-tintaMedia" data-resumo-enriquecimento="">
+          {enrichmentText}
+        </p>
+      ) : null}
+
+      {referenceError ? (
+        <p
+          className="border border-marca-amareloBorda bg-marca-amareloTenue p-3 text-sm text-marca-amareloTexto"
+          data-falha-base=""
+        >
+          {`${referenceError} ${REFERENCE_FAILURE_TEXT}`}
+        </p>
+      ) : null}
 
       {report.refusedCount > 0 ? (
         <p className="text-sm text-neutro-tintaFraca">

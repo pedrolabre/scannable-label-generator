@@ -127,6 +127,13 @@ describe('getReferenceStats e clearReferenceEntries', () => {
   });
 });
 
+/**
+ * Os limites valem para a suite inteira, e nao so para o arquivo sozinho. Com
+ * os outros arquivos disputando a maquina, a carga e a busca em lista de 20.000
+ * passam de 5 s e a busca de um codigo passa de 1 ms em media, enquanto o
+ * arquivo sozinho fica abaixo dos dois; o limite folgado ainda pega uma busca
+ * que deixe de usar a chave e passe a varrer a tabela.
+ */
 describe('desempenho no IndexedDB em memoria', () => {
   const entries = Array.from({ length: 20000 }, (_, i) => ({
     comparableCode: String(100000 + i),
@@ -135,7 +142,7 @@ describe('desempenho no IndexedDB em memoria', () => {
     ...(i % 7 === 0 ? { ean: String(7890000000000 + i) } : {}),
   }));
 
-  it('grava 20.000 linhas e acha as 20.000 numa busca em lista em menos de 5 s cada', async () => {
+  it('grava 20.000 linhas e acha as 20.000 numa busca em lista em menos de 15 s cada', async () => {
     let started = performance.now();
 
     await replaceReferenceEntries(entries, { loadedAt: FIRST_LOAD });
@@ -148,11 +155,11 @@ describe('desempenho no IndexedDB em memoria', () => {
     const findElapsed = performance.now() - started;
 
     expect(found.size).toBe(20000);
-    expect(loadElapsed).toBeLessThan(5000);
-    expect(findElapsed).toBeLessThan(5000);
+    expect(loadElapsed).toBeLessThan(15_000);
+    expect(findElapsed).toBeLessThan(15_000);
   }, 60_000);
 
-  it('acha um codigo em menos de 1 ms em media', async () => {
+  it('acha um codigo em menos de 3 ms em media', async () => {
     await replaceReferenceEntries(entries, { loadedAt: FIRST_LOAD });
 
     const started = performance.now();
@@ -161,6 +168,6 @@ describe('desempenho no IndexedDB em memoria', () => {
       await findReference(String(100000 + i * 20));
     }
 
-    expect((performance.now() - started) / 1000).toBeLessThan(1);
+    expect((performance.now() - started) / 1000).toBeLessThan(3);
   }, 60_000);
 });

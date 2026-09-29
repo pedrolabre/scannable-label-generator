@@ -21,6 +21,8 @@ import ImportRecordIssueList from './ImportRecordIssueList.jsx';
  * Quando o nome veio de um corte, o texto completo aparece logo abaixo do
  * campo: e nele que esta a diferenca entre duas variantes do mesmo produto, e
  * sem ele o corte nao tem como ser conferido.
+ *
+ * Ao lado do codigo, a marca dos campos que a base de referencia completou.
  */
 /**
  * Tres rotulos, duas cores: o vermelho suave e a recusa, que nao se resolve nesta
@@ -46,6 +48,29 @@ function StatusBadge({ status }) {
       )}
     >
       {BADGE_LABEL.get(status) ?? 'Conferir'}
+    </span>
+  );
+}
+
+const ENRICHED_FIELD_LABELS = Object.freeze({ ncm: 'NCM', ean: 'código de barras' });
+
+/**
+ * Os campos que vieram da base de referencia, e nao do arquivo. A marca e
+ * neutra de proposito: completar pela base nao e aviso nem confirmacao, e so a
+ * origem do valor — o mesmo registro pode estar pronto ou recusado por outro
+ * motivo.
+ */
+function EnrichedBadge({ fields }) {
+  if (!fields || fields.length === 0) {
+    return null;
+  }
+
+  return (
+    <span
+      className="shrink-0 border border-neutro-borda bg-neutro-superficie px-2 py-0.5 text-xs text-neutro-tintaMedia"
+      data-completado-pela-base={fields.join(' ')}
+    >
+      {`Da base: ${fields.map((field) => ENRICHED_FIELD_LABELS[field] ?? field).join(' e ')}`}
     </span>
   );
 }
@@ -91,6 +116,8 @@ export default function ImportReviewRecord({
             {record.candidate.systemCode}
           </span>
         ) : null}
+
+        <EnrichedBadge fields={record.enrichedFields} />
 
         {typeof price === 'number' ? (
           <span className="ml-auto text-sm font-semibold tabular-nums text-neutro-tintaMedia">
