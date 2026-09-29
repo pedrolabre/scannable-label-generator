@@ -14,6 +14,11 @@ import { listProducts, replaceAllProducts } from './productRepository.js';
  * escreve nelas. Os dois catalogos sao constante de codigo e o trabalho de
  * impressao e transiente, entao a leitura existe para confirmar que estao vazias
  * — e nao para migrar conteudo que a aplicacao nao produz.
+ *
+ * A base de referencia fica fora do arquivo: ela se refaz inteira a partir da
+ * planilha cadastral, e a restauracao nao a apaga nem a substitui. Com isso o
+ * formato do arquivo continua o mesmo, e todo backup ja gerado segue sendo
+ * aceito.
  */
 
 /** Le as quatro tabelas de uma vez, para montar o arquivo de backup. */

@@ -95,8 +95,11 @@ function findProduct(index, code) {
  * Valor do arquivo para um campo, ou o motivo de nao haver um. Aviso da
  * traducao para o campo e o proprio valor recusado pelo contrato contam como
  * valor invalido; campo ausente no registro nao conta como nada.
+ *
+ * Tambem e a leitura da base de referencia, para que as duas decidam do mesmo
+ * jeito o que e valor aproveitavel.
  */
-function readFileValue(record, field) {
+export function readFileValue(record, field) {
   if ((record.candidateIssues ?? []).some((issue) => issue.field === field)) {
     return { invalid: true };
   }
