@@ -53,3 +53,48 @@ const NAME_COLLATOR = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric:
 export function compareProductsByName(first, second) {
   return NAME_COLLATOR.compare(first.displayName, second.displayName);
 }
+
+/**
+ * Catalogo pronto para a busca da listagem: os produtos em ordem de nome e,
+ * para cada um, a forma comparavel dos campos pesquisaveis. Ele e montado uma
+ * vez por lista, e nao a cada termo: com milhares de produtos, normalizar os
+ * tres campos de todos eles e reordenar o resultado a cada tecla custava mais
+ * do que o proprio desenho da pagina.
+ *
+ * A ordem vem de `compareProductsByName`. Como a ordenacao do JavaScript e
+ * estavel, filtrar a lista ja ordenada da os mesmos produtos, na mesma ordem,
+ * que ordenar o resultado filtrado.
+ */
+export function buildProductSearchIndex(products) {
+  const ordered = [...products].sort(compareProductsByName);
+
+  return {
+    products: ordered,
+    searchable: ordered.map((product) =>
+      SEARCHABLE_FIELDS.map((field) => normalizeSearchText(product[field])),
+    ),
+  };
+}
+
+/**
+ * O mesmo resultado de `searchProducts`, ja em ordem de nome, sobre o catalogo
+ * preparado por `buildProductSearchIndex`. So o termo e normalizado. Um termo
+ * vazio devolve o catalogo inteiro, sempre a mesma lista.
+ */
+export function searchProductIndex(index, query) {
+  const term = normalizeSearchText(query);
+
+  if (term === '') {
+    return index.products;
+  }
+
+  const found = [];
+
+  index.searchable.forEach((fields, position) => {
+    if (fields.some((text) => text.includes(term))) {
+      found.push(index.products[position]);
+    }
+  });
+
+  return found;
+}
