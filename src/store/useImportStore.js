@@ -29,6 +29,7 @@ import {
 import { describeStorageError } from '../storage/storageError.js';
 
 import { detectConflicts, entryFor, refreshRecord } from './importBatchUpdates.js';
+import { enrichFromReference } from './importEnrichment.js';
 import { useProductStore } from './useProductStore.js';
 
 /**
@@ -52,6 +53,12 @@ import { useProductStore } from './useProductStore.js';
  *
  * A correcao do usuario nao volta ao registro: ela mora em `corrections`, e a
  * reconferencia atinge um registro so — o corrigido —, nunca o lote.
+ *
+ * Entre a leitura e a conferencia, o lote passa pela base de referencia
+ * (`importEnrichment.js`): o NCM e o codigo de barras vazios sao completados
+ * pela base, e as contagens ficam em `enrichmentSummary`. A correcao continua
+ * valendo por cima do valor completado, como por cima de qualquer valor do
+ * arquivo.
  *
  * ## A deteccao de codigo repetido e um terceiro passo
  *
@@ -94,6 +101,8 @@ function initialState() {
     conflictDecisions: {},
     conflictSummary: null,
     catalogError: null,
+    enrichmentSummary: null,
+    referenceError: null,
     isWriting: false,
     stopRequested: false,
     writtenCount: 0,
@@ -120,11 +129,12 @@ export const useImportStore = create((set, get) => ({
     set({ ...initialState(), isParsing: true });
 
     try {
-      const result = await parseImportFiles(selected, {
+      const parsed = await parseImportFiles(selected, {
         onFileSettled: (file) => {
           set({ files: [...get().files, file] });
         },
       });
+      const result = { ...parsed, records: await enrichFromReference(set, parsed.records) };
 
       set({
         records: result.records,
