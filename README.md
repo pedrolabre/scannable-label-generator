@@ -9,6 +9,7 @@ MVP funcional.
 ## Funcionamento
 
 - Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e relatórios `.txt` do ERP (Tabela de Preço e Saldo de Estoque por Grupo).
+- Na importação, o NCM e o código de barras que o arquivo não traz são completados pela base de referência guardada pelo `Completar dados`, antes da conferência. A base é consultada uma vez por lote, pelo código inteiro ou sem os zeros à esquerda; só o campo vazio é completado, e o valor que o arquivo trouxe nunca muda. Sem base, ou com a leitura dela falhando, a importação segue como antes.
 - `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
@@ -351,6 +352,8 @@ scannable-label-generator/
         printText.js
         printText.test.js
         productCandidateIssue.js
+        productEnrichment.js
+        productEnrichment.test.js
         productMapping.js
         productMapping.test.js
         productSearch.js
@@ -422,6 +425,10 @@ scannable-label-generator/
       referenceRepository.test.js
       storageError.js
     store/
+      importEnrichment.js
+      importEnrichment.test.js
+      importEnrichmentDatabase.test.js
+      importEnrichmentFormats.test.js
       useCompletionStore.js
       useCompletionStore.test.js
       useCompletionStoreReference.test.js
