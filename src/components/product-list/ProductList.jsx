@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { compareProductsByName, searchProducts } from '../../domain/services/productSearch.js';
 import { describeStorageError } from '../../storage/storageError.js';
@@ -7,6 +7,12 @@ import ShellColumn from '../layout/ShellColumn.jsx';
 import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 import ClearCatalogButton from './ClearCatalogButton.jsx';
+import {
+  clampListPage,
+  countListPages,
+  itemsOnListPage,
+  listPageRange,
+} from './listPage.js';
 import ProductCards from './ProductCards.jsx';
 import {
   EmptyCatalogStatus,
@@ -14,6 +20,7 @@ import {
   LoadingStatus,
   NoMatchStatus,
 } from './ProductListStatus.jsx';
+import ProductListPager from './ProductListPager.jsx';
 import ProductSearchField from './ProductSearchField.jsx';
 import ProductTable from './ProductTable.jsx';
 
@@ -58,6 +65,15 @@ function countHint(visible, total) {
  * A marcacao para a folha de etiquetas so atravessa esta tela: o conjunto do que
  * esta marcado e o alternador chegam prontos e descem para as duas superficies.
  * A listagem nao guarda essa escolha, porque quem a consome e o painel da folha.
+ * Por isso trocar de pagina nao mexe no que esta marcado.
+ *
+ * A tabela e os cartoes recebem uma pagina do resultado, e nao o resultado
+ * inteiro: com o catalogo completo na tela, a montagem levava minutos. A busca
+ * continua sobre o catalogo inteiro, e a pagina sai do que ela devolveu, ja em
+ * ordem de nome. Trocar o termo volta a primeira pagina, porque o resultado e
+ * outro. Cadastrar, editar, remover e reler o catalogo mantem a pagina, e
+ * quando ela deixa de existir a tela mostra a nova ultima. A troca de pagina
+ * leva a lista de volta ao topo.
  */
 export default function ProductList({
   products,
@@ -73,6 +89,8 @@ export default function ProductList({
   onClearCatalog,
 }) {
   const [query, setQuery] = useState('');
+  const [pageIndex, setPageIndex] = useState(0);
+  const listRef = useRef(null);
   const [productToRemove, setProductToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const [removalError, setRemovalError] = useState(null);
@@ -81,6 +99,37 @@ export default function ProductList({
     () => [...searchProducts(products, query)].sort(compareProductsByName),
     [products, query],
   );
+
+  const totalPages = countListPages(visibleProducts.length);
+  const currentPage = clampListPage(pageIndex, totalPages);
+
+  // A pagina guardada acompanha a que esta na tela. Sem isso, a pagina que
+  // deixou de existir voltaria a aparecer quando o resultado crescesse de novo.
+  if (currentPage !== pageIndex) {
+    setPageIndex(currentPage);
+  }
+
+  const pageProducts = useMemo(
+    () => itemsOnListPage(visibleProducts, currentPage),
+    [visibleProducts, currentPage],
+  );
+
+  function handleQueryChange(value) {
+    setQuery(value);
+    setPageIndex(0);
+  }
+
+  // O corpo que rola e o da coluna, e ele continua o mesmo entre as paginas:
+  // sem voltar ao topo, a pagina nova abriria pelo fim.
+  function handlePageChange(nextPage) {
+    setPageIndex(clampListPage(nextPage, totalPages));
+
+    const body = listRef.current?.closest('[data-corpo]');
+
+    if (body) {
+      body.scrollTop = 0;
+    }
+  }
 
   // A confirmacao que falha mantem o dialogo aberto: o produto continua na lista
   // e no armazenamento, e e isso que a tela precisa dizer. Confirmar de novo e a
@@ -137,16 +186,16 @@ export default function ProductList({
     if (visibleProducts.length === 0) {
       return (
         <Padded>
-          <NoMatchStatus query={query} onClearSearch={() => setQuery('')} />
+          <NoMatchStatus query={query} onClearSearch={() => handleQueryChange('')} />
         </Padded>
       );
     }
 
     return (
-      <>
+      <div ref={listRef}>
         <div className="hidden sm:block">
           <ProductTable
-            products={visibleProducts}
+            products={pageProducts}
             selectedProductId={selectedProductId}
             printSelection={printSelection}
             onTogglePrint={onTogglePrint}
@@ -158,7 +207,7 @@ export default function ProductList({
 
         <div className="p-recuo sm:hidden">
           <ProductCards
-            products={visibleProducts}
+            products={pageProducts}
             selectedProductId={selectedProductId}
             printSelection={printSelection}
             onTogglePrint={onTogglePrint}
@@ -167,7 +216,7 @@ export default function ProductList({
             onRemove={handleStartRemoval}
           />
         </div>
-      </>
+      </div>
     );
   }
 
@@ -177,7 +226,7 @@ export default function ProductList({
         <div className="min-w-0 flex-1">
           <ProductSearchField
             value={query}
-            onChange={setQuery}
+            onChange={handleQueryChange}
             hint={countHint(visibleProducts.length, products.length)}
           />
         </div>
@@ -188,9 +237,29 @@ export default function ProductList({
       </div>
     ) : null;
 
+  const { first, last } = listPageRange(visibleProducts.length, currentPage);
+
+  // Os avisos de estado ocupam o lugar da lista, e entao nao ha o que paginar.
+  const footer =
+    totalPages > 1 ? (
+      <ProductListPager
+        pageIndex={currentPage}
+        totalPages={totalPages}
+        first={first}
+        last={last}
+        onChange={handlePageChange}
+      />
+    ) : null;
+
   return (
     <>
-      <ShellColumn label="Produtos cadastrados" header={header} flush className="bg-neutro-papel">
+      <ShellColumn
+        label="Produtos cadastrados"
+        header={header}
+        footer={footer}
+        flush
+        className="bg-neutro-papel"
+      >
         {renderBody()}
       </ShellColumn>
 
