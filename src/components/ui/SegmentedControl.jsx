@@ -50,6 +50,13 @@ const PREVIOUS_KEYS = new Set(['ArrowLeft', 'ArrowUp']);
  *
  * A altura acompanha a de controle da tela: 44 px onde ela pode ser tocada,
  * 32 px na tela larga.
+ *
+ * Cada rotulo e `relative` por causa do radio escondido. O `sr-only` o tira do
+ * fluxo com posicao absoluta, e sem um ancestral posicionado ele se ancora na
+ * pagina, e nao na coluna que rola: fica onde estaria com a coluna no topo,
+ * muitas vezes abaixo da janela. Ao receber foco no clique, o navegador rola a
+ * pagina ate ele — e `overflow: hidden` em `html` e `body` nao impede essa
+ * rolagem —, deslocando o contorno inteiro para cima.
  */
 export default function SegmentedControl({
   legend,
@@ -111,7 +118,7 @@ export default function SegmentedControl({
           const isSelected = option.value === value;
 
           return (
-            <label key={option.value} className="min-w-0">
+            <label key={option.value} className="relative min-w-0">
               <input
                 type="radio"
                 name={name}
