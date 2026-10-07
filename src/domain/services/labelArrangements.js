@@ -104,7 +104,7 @@ function bandZone(usable, heightMm) {
   };
 }
 
-export function wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit }) {
+export function wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit, logoColumn = false }) {
   const header = line(usable.xMm, usable.yMm, usable.widthMm, sizes.code);
   const codeWidthMm = usable.widthMm * HEADER_CODE_SHARE;
   const code = { ...header, widthMm: codeWidthMm };
@@ -119,21 +119,38 @@ export function wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit }
     lineHeightMm: header.heightMm,
   };
 
-  const logo = {
-    xMm: company.xMm,
-    yMm: header.yMm,
-    widthMm: company.widthMm,
-    heightMm: header.heightMm,
-  };
-
   const nameTopMm = below(header) + sizes.gap;
-  const name = wideNameZone(usable.xMm, nameTopMm, usable.widthMm, sizes, symbol.yMm - gapMm - nameTopMm);
+  const wideName = wideNameZone(usable.xMm, nameTopMm, usable.widthMm, sizes, symbol.yMm - gapMm - nameTopMm);
+  const columnWidthMm = usable.widthMm - symbol.sizeMm - gapMm;
+
+  const logo = logoColumn
+    ? {
+        xMm: symbol.xMm,
+        yMm: usable.yMm,
+        widthMm: symbol.sizeMm,
+        heightMm: symbol.yMm - gapMm - usable.yMm,
+      }
+    : {
+        xMm: company.xMm,
+        yMm: header.yMm,
+        widthMm: company.widthMm,
+        heightMm: header.heightMm,
+      };
+
+  const name = logoColumn
+    ? {
+        ...wideName,
+        widthMm: columnWidthMm,
+        heightMm: NAME_MAX_LINES * wideName.lineHeightMm,
+        lines: NAME_MAX_LINES,
+      }
+    : wideName;
 
   const columnTopMm = below(name) + sizes.gap;
   const column = {
     xMm: usable.xMm,
     yMm: columnTopMm,
-    widthMm: usable.widthMm - symbol.sizeMm - gapMm,
+    widthMm: columnWidthMm,
     heightMm: usable.yMm + usable.heightMm - columnTopMm,
   };
 

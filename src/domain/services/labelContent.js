@@ -124,7 +124,7 @@ export function describeLabelLogo({ geometry, logo = null }) {
     dataUrl: logo.dataUrl,
     format: logo.format,
     xMm: zone.xMm + zone.widthMm - widthMm,
-    yMm: zone.yMm + (zone.heightMm - heightMm) / 2,
+    yMm: geometry.logoColumn ? zone.yMm : zone.yMm + (zone.heightMm - heightMm) / 2,
     widthMm,
     heightMm,
   });
@@ -187,6 +187,25 @@ function supportLines({ product, geometry, card, credit }) {
   });
 }
 
+function followName(geometry, usedLines) {
+  if (!geometry.logoColumn) {
+    return geometry;
+  }
+
+  const unusedLines = geometry.name.lines - Math.max(1, Math.min(usedLines, geometry.name.lines));
+  const shiftMm = unusedLines * geometry.name.lineHeightMm;
+
+  if (shiftMm === 0) {
+    return geometry;
+  }
+
+  return {
+    ...geometry,
+    priceLabel: { ...geometry.priceLabel, yMm: geometry.priceLabel.yMm - shiftMm },
+    price: { ...geometry.price, yMm: geometry.price.yMm - shiftMm },
+  };
+}
+
 /**
  * Linhas de texto da etiqueta, na ordem de leitura. Linha vazia fica de fora
  * da lista em vez de entrar como texto vazio.
@@ -230,21 +249,22 @@ export function describeLabelContent({
     ),
   );
 
-  const price = fitPriceText(formatCentavosAsBRL(product?.priceInCentavos) ?? '', geometry.price);
+  const commercial = followName(geometry, name.lines.length);
+  const price = fitPriceText(formatCentavosAsBRL(product?.priceInCentavos) ?? '', commercial.price);
 
   return Object.freeze(
     [
       ...items,
       company,
       ...nameItems,
-      textItem('priceLabel', geometry.priceLabel, PRICE_LABEL_TEXT, { bold: true }),
-      textItem('price', geometry.price, price.text, {
+      textItem('priceLabel', commercial.priceLabel, PRICE_LABEL_TEXT, { bold: true }),
+      textItem('price', commercial.price, price.text, {
         fontSizeMm: price.fontSizeMm,
         bold: true,
         face: 'display',
         digits: true,
       }),
-      ...supportLines({ product, geometry, card, credit }),
+      ...supportLines({ product, geometry: commercial, card, credit }),
       optionalLine('fiscal', geometry.fiscal, describeFiscalLine(product)),
     ].filter(Boolean),
   );

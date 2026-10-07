@@ -271,7 +271,7 @@ describe('logotipo no documento', () => {
 
   it('traz uma operacao de imagem por etiqueta, dentro da zona do logotipo de cada uma', async () => {
     const grid = computeSheetGrid(FOLHA_10, ETIQUETA_10);
-    const geometry = computeLabelGeometry(ETIQUETA_10);
+    const geometry = computeLabelGeometry(ETIQUETA_10, undefined, { withLogo: true });
     const document = await describe1({
       items: TEN,
       sheet: FOLHA_10,

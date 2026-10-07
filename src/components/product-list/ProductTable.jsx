@@ -1,6 +1,7 @@
 import { cx } from '../../lib/cx.js';
 
 import ProductTableRow from './ProductTableRow.jsx';
+import SelectAllForPrint from './SelectAllForPrint.jsx';
 
 // A faixa de colunas e a unica parte da tabela que nao rola: ela gruda no topo
 // do corpo da coluna, para que quem desce trezentos produtos continue sabendo o
@@ -18,9 +19,7 @@ const HEAD_CELL_BASE = cx(
  * fundo: o unico realce e o do ponteiro sobre a linha, para que a tabela leia
  * como planilha parada ate alguem interagir com ela.
  *
- * A primeira coluna marca o produto para a folha de etiquetas. Ela nao tem
- * marcar-todos: sobre uma lista filtrada pela busca, "todos" significaria ora o
- * catalogo inteiro ora so o que esta visivel, e as duas leituras sao defensaveis.
+ * A primeira coluna marca o produto para a folha de etiquetas.
  *
  * A largura das colunas e fixa, menos a do produto, que fica com o que sobrar.
  * Com a largura decidida pelo conteudo, a soma dos codigos e do preco passava da
@@ -37,6 +36,7 @@ export default function ProductTable({
   selectedProductId = null,
   printSelection,
   onTogglePrint,
+  selectAll = null,
   onEdit,
   onPreview,
   onRemove,
@@ -45,8 +45,15 @@ export default function ProductTable({
     <table className="w-full table-fixed border-collapse text-sm">
       <thead>
         <tr>
-          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[80px] whitespace-nowrap')}>
-            Imprimir
+          <th scope="col" className={cx(HEAD_CELL_BASE, 'w-[108px] whitespace-nowrap')}>
+            {selectAll ? (
+              <span className="flex items-center gap-1">
+                <SelectAllForPrint state={selectAll.state} onChange={selectAll.onChange} />
+                Imprimir
+              </span>
+            ) : (
+              'Imprimir'
+            )}
           </th>
           <th scope="col" className={HEAD_CELL_BASE}>
             Produto

@@ -77,6 +77,7 @@ function buildCatalog() {
 
     // Lanca quando o modelo nao comporta o contrato visual completo.
     computeLabelGeometry(parsed.data);
+    computeLabelGeometry(parsed.data, undefined, { withLogo: true });
 
     return Object.freeze(parsed.data);
   });

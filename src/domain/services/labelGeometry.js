@@ -50,6 +50,8 @@ export const LABEL_ARRANGEMENTS = Object.freeze({ WIDE: 'larga', COMPACT: 'compa
 /** Modelos com crediario e faixa de cor na base. */
 export const CREDIT_LAYOUT_IDS = Object.freeze(['etiqueta-media-10', 'tag-grande']);
 
+export const LOGO_COLUMN_LAYOUT_IDS = Object.freeze(['etiqueta-media-10']);
+
 const CODE_SIZE_RATIO = 0.055;
 const CODE_SIZE_MIN_MM = 2.4;
 const CODE_SIZE_MAX_MM = 5.2;
@@ -131,7 +133,11 @@ function typeScale(usable, columnWidthMm) {
  * contrato visual: simbolo abaixo do piso de legibilidade para o maior texto
  * aceito, coluna sem largura, ou textos que nao cabem na altura.
  */
-export function computeLabelGeometry(layout, totalModules = MAX_SYMBOL_TOTAL_MODULES) {
+export function computeLabelGeometry(
+  layout,
+  totalModules = MAX_SYMBOL_TOTAL_MODULES,
+  { withLogo = false } = {},
+) {
   const { widthMm, heightMm, paddingMm, symbolSizeMm } = layout;
 
   const usable = {
@@ -180,14 +186,16 @@ export function computeLabelGeometry(layout, totalModules = MAX_SYMBOL_TOTAL_MOD
   const arrangement = fitsWide ? LABEL_ARRANGEMENTS.WIDE : LABEL_ARRANGEMENTS.COMPACT;
 
   const withCredit = CREDIT_LAYOUT_IDS.includes(layout.id);
+  const logoColumn = fitsWide && withLogo && LOGO_COLUMN_LAYOUT_IDS.includes(layout.id);
   const zones = fitsWide
-    ? wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit })
+    ? wideZones({ usable, symbol, gapMm, sizes, heightMm, withCredit, logoColumn })
     : compactZones({ usable, symbol, gapMm, sizes });
 
   return freezeAll({
     widthMm,
     heightMm,
     arrangement,
+    logoColumn,
     gapMm,
     usable,
     symbol,

@@ -209,7 +209,7 @@ export function describePrintDocument({
   symbols,
   header = {},
 }) {
-  const geometry = computeLabelGeometry(labelLayout);
+  const geometry = computeLabelGeometry(labelLayout, undefined, { withLogo: Boolean(header.logo) });
   const byId = new Map(products.map((product) => [product.id, product]));
   const { totalSheets } = paginateLabels(job.items, grid.perSheet);
   const labelHeader = {

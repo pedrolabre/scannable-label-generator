@@ -42,7 +42,7 @@ export default function ProductTableRow({
         isSelected ? 'bg-marca-vermelhoTenue' : 'hover:bg-neutro-superficie',
       )}
     >
-      <td className={cx(CELL_BASE, 'w-px text-center')}>
+      <td className={cx(CELL_BASE, 'w-px text-left')}>
         <Checkbox
           label={`Imprimir etiqueta de ${product.displayName}`}
           checked={isSelectedForPrint}

@@ -26,6 +26,7 @@ import {
 import ProductListPager from './ProductListPager.jsx';
 import ProductSearchField from './ProductSearchField.jsx';
 import ProductTable from './ProductTable.jsx';
+import { describeSelectAllForPrint } from './SelectAllForPrint.jsx';
 
 // Os avisos de estado nao encostam na borda da coluna como a tabela encosta: a
 // tabela e faixa de ponta a ponta, e eles sao texto.
@@ -93,6 +94,7 @@ export default function ProductList({
   selectedProductId = null,
   printSelection,
   onTogglePrint,
+  onSetPrintSelection = null,
   onRetryLoad,
   onEdit,
   onPreview,
@@ -122,6 +124,18 @@ export default function ProductList({
   if (currentPage !== pageIndex) {
     setPageIndex(currentPage);
   }
+
+  const visibleIds = useMemo(() => visibleProducts.map((product) => product.id), [visibleProducts]);
+
+  const selectAll = useMemo(() => {
+    if (!onSetPrintSelection) {
+      return null;
+    }
+
+    const state = describeSelectAllForPrint(visibleIds, printSelection);
+
+    return { state, onChange: (selected) => onSetPrintSelection(visibleIds, selected) };
+  }, [visibleIds, printSelection, onSetPrintSelection]);
 
   const pageProducts = useMemo(
     () => itemsOnListPage(visibleProducts, currentPage),
@@ -194,6 +208,7 @@ export default function ProductList({
             selectedProductId={selectedProductId}
             printSelection={printSelection}
             onTogglePrint={onTogglePrint}
+            selectAll={selectAll}
             onEdit={onEdit}
             onPreview={onPreview}
             onRemove={handleStartRemoval}
@@ -206,6 +221,7 @@ export default function ProductList({
             selectedProductId={selectedProductId}
             printSelection={printSelection}
             onTogglePrint={onTogglePrint}
+            selectAll={selectAll}
             onEdit={onEdit}
             onPreview={onPreview}
             onRemove={handleStartRemoval}
@@ -213,7 +229,16 @@ export default function ProductList({
         </div>
       </div>
     ),
-    [pageProducts, selectedProductId, printSelection, onTogglePrint, onEdit, onPreview, handleStartRemoval],
+    [
+      pageProducts,
+      selectedProductId,
+      printSelection,
+      onTogglePrint,
+      selectAll,
+      onEdit,
+      onPreview,
+      handleStartRemoval,
+    ],
   );
 
   function renderBody() {

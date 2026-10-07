@@ -65,6 +65,35 @@ export const usePrintJobStore = create((set, get) => ({
     set({ selection: [...selection, { productId, copies: '1' }] });
   },
 
+  setProductsSelected: (productIds, selected) => {
+    const { selection } = get();
+
+    if (selected) {
+      const present = new Set(selection.map((entry) => entry.productId));
+      const added = [];
+
+      productIds.forEach((productId) => {
+        if (!present.has(productId)) {
+          present.add(productId);
+          added.push({ productId, copies: '1' });
+        }
+      });
+
+      if (added.length > 0) {
+        set({ selection: [...selection, ...added] });
+      }
+
+      return;
+    }
+
+    const removing = new Set(productIds);
+    const next = selection.filter((entry) => !removing.has(entry.productId));
+
+    if (next.length !== selection.length) {
+      set({ selection: next });
+    }
+  },
+
   setCopies: (productId, copies) => {
     set({
       selection: get().selection.map((entry) =>

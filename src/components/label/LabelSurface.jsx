@@ -170,7 +170,7 @@ export default function LabelSurface({
     let geometry;
 
     try {
-      geometry = computeLabelGeometry(layout);
+      geometry = computeLabelGeometry(layout, undefined, { withLogo: Boolean(logo) });
     } catch (error) {
       return { geometry: null, error };
     }

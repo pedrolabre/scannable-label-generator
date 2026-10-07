@@ -87,6 +87,7 @@ export default function App() {
 
   const printSelection = usePrintJobStore((state) => state.selection);
   const togglePrintProduct = usePrintJobStore((state) => state.toggleProduct);
+  const setPrintProductsSelected = usePrintJobStore((state) => state.setProductsSelected);
   const clearPrintSelection = usePrintJobStore((state) => state.clearSelection);
 
   const [openModal, setOpenModal] = useState(null);
@@ -236,6 +237,7 @@ export default function App() {
             selectedProductId={selectedProductId}
             printSelection={printSelectionIds}
             onTogglePrint={togglePrintProduct}
+            onSetPrintSelection={setPrintProductsSelected}
             onRetryLoad={handleRetryLoad}
             onEdit={handleEdit}
             onPreview={handlePreview}

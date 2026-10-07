@@ -15,7 +15,7 @@ MVP funcional.
 - A revisão do lote diz quantos registros ganharam NCM e código de barras pela base e quantos tinham código fora dela, prontos inclusive, e o registro que aparece na revisão leva a marca dos campos que vieram da base. Quando a leitura da base falha, um aviso diz que o lote seguiu como veio do arquivo, e a gravação continua disponível.
 - `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
 - `Base de referência`, ao lado de `Completar dados`: mostra quantos códigos a base guarda, quantos têm NCM e código de barras e a data da última carga; troca a base inteira pela planilha `.ods` sem tocar no catálogo; apaga a base, com confirmação; e completa o NCM e o código de barras vazios dos produtos já cadastrados a partir da base, sem arquivo e com o resumo conferido antes de gravar.
-- Listagem paginada, 50 produtos por página, com a troca de página e o trecho exibido no rodapé fixo da coluna. A busca, sem acento e sem diferença de caixa, procura no catálogo inteiro, e a página sai do resultado já em ordem de nome. O catálogo é preparado para a busca uma vez a cada mudança da lista (forma sem acento dos campos e ordem por nome), e cada termo só filtra; o campo mostra cada letra na hora e a lista acompanha logo em seguida, sem esperar a digitação parar. Trocar o termo volta à primeira página, e cadastrar, editar, remover ou importar mantém a página atual. A marcação para a folha é guardada por produto e não muda com a troca de página.
+- Listagem paginada, 50 produtos por página, com a troca de página e o trecho exibido no rodapé fixo da coluna. A busca, sem acento e sem diferença de caixa, procura no catálogo inteiro, e a página sai do resultado já em ordem de nome. O catálogo é preparado para a busca uma vez a cada mudança da lista (forma sem acento dos campos e ordem por nome), e cada termo só filtra; o campo mostra cada letra na hora e a lista acompanha logo em seguida, sem esperar a digitação parar. Trocar o termo volta à primeira página, e cadastrar, editar, remover ou importar mantém a página atual. A marcação para a folha é guardada por produto e não muda com a troca de página. A caixa do cabeçalho `Imprimir` (nos cartões, `Imprimir todos`) marca a lista inteira, em todas as páginas: sem busca, o catálogo; com busca, só o resultado. Com a lista toda marcada, ela desmarca a lista; com parte marcada, fica no meio. O que estava marcado fora do resultado da busca fica como estava, e quem já estava marcado mantém as cópias digitadas.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
@@ -55,6 +55,7 @@ O logotipo é carregado uma vez em `Logotipo e textos da etiqueta`, na coluna da
 - Formatos aceitos: PNG, JPEG e SVG. SVG é convertido em PNG no carregamento; PNG fica em PNG e JPEG fica em JPEG.
 - A imagem não é recusada pelo tamanho: acima de 1.200 px de lado ela é reduzida, sem distorcer, e ainda sai acima de 600 dpi na etiqueta. Se passar de 512 KB, o lado encolhe por passos até 600 px; em último caso, o PNG vira JPEG sobre fundo branco.
 - Na etiqueta ocupa o lugar do nome da empresa no cabeçalho, inteira, alinhada à direita. O símbolo não muda de tamanho nem de lugar.
+- Na etiqueta de 10 por folha, o logotipo ocupa a coluna do símbolo, do topo até logo acima dele (27 × 13,1 mm), encostado no topo e à direita. A descrição vai para a coluna da esquerda, com até três linhas, e pode descer ao lado do símbolo; o "à vista", o preço, o cartão e o crediário descem uma linha e sobem de novo quando a descrição usa menos linhas. A linha fiscal continua rente à base. Sem logotipo, essa etiqueta volta ao arranjo de cabeçalho, com a descrição na largura inteira.
 - A etiqueta pequena não tem lugar para a imagem e continua com o nome da empresa.
 - `Mostrar o logotipo na etiqueta` tira a imagem sem apagá-la; `Remover` apaga. Sem logotipo, a etiqueta volta a ser a de antes.
 - Fica guardado neste navegador, na mesma chave do nome da empresa, do cartão e do crediário (`labelforge.etiqueta`, no `localStorage`). Não entra no arquivo de backup, e zerar o catálogo ou restaurar um backup não o apaga.
@@ -271,8 +272,10 @@ scannable-label-generator/
         ProductListSearch.test.jsx
         ProductListStatus.jsx
         ProductSearchField.jsx
+        ProductListSelectAll.test.jsx
         ProductTable.jsx
         ProductTableRow.jsx
+        SelectAllForPrint.jsx
         listFixtures.js
         listPage.js
         listPage.test.js
@@ -355,6 +358,7 @@ scannable-label-generator/
         labelGeometry.test.js
         labelLayoutCatalog.js
         labelLayoutCatalog.test.js
+        labelLogoColumn.test.js
         labelText.js
         labelText.test.js
         logoImage.js

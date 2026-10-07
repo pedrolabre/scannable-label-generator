@@ -4,6 +4,7 @@ import { formatCentavosAsBRL } from '../../lib/currency.js';
 import Checkbox from '../ui/Checkbox.jsx';
 
 import ProductItemActions from './ProductItemActions.jsx';
+import SelectAllForPrint from './SelectAllForPrint.jsx';
 
 // O mesmo tom da linha da tabela. O verde e reservado a confirmacao, e preco
 // nao e confirmacao de nada: as duas vistas da listagem dizem o preco igual.
@@ -23,11 +24,12 @@ export default function ProductCards({
   selectedProductId = null,
   printSelection,
   onTogglePrint,
+  selectAll = null,
   onEdit,
   onPreview,
   onRemove,
 }) {
-  return (
+  const list = (
     <ul className="divide-y divide-neutro-divisor">
       {products.map((product) => (
         <li key={product.id} className="flex items-start gap-3 px-4 py-3">
@@ -76,5 +78,19 @@ export default function ProductCards({
         </li>
       ))}
     </ul>
+  );
+
+  if (!selectAll) {
+    return list;
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 border-b border-neutro-divisor px-4 py-2 text-xs font-semibold uppercase tracking-[0.07em] text-neutro-tintaFraca">
+        <SelectAllForPrint state={selectAll.state} onChange={selectAll.onChange} />
+        <span aria-hidden="true">Imprimir todos</span>
+      </div>
+      {list}
+    </div>
   );
 }
