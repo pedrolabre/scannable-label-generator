@@ -1,5 +1,8 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { cx } from '../lib/cx.js';
 
+import ShellDrawer, { DRAWER_SIDES } from './layout/ShellDrawer.jsx';
 import { FOCUS_OUTLINE, FOCUS_OUTLINE_COLORS } from './ui/focusClasses.js';
 
 /**
@@ -57,6 +60,18 @@ export const SHELL_VIEWS = Object.freeze({
  * As tres colunas chegam por posicao, e nao como filhos soltos: este contorno
  * decide onde cada uma vive e com que largura, e nao sabe nada do que ha dentro
  * delas.
+ *
+ * Na tela larga, as duas laterais sao gavetas: cada uma tem uma alca na borda
+ * que encosta na listagem e pode se alargar por cima dela, sem mexer na grade
+ * (`ShellDrawer`). O estado das duas mora aqui, num valor so, e por isso so uma
+ * abre por vez — abrir a outra fecha a primeira. Aberta, ela fecha pela propria
+ * alca, por `Esc` ou por um toque no conteudo principal fora dela. O valor e de
+ * tela e morre no recarregamento.
+ *
+ * O `Esc` e ouvido no documento, porque o clique num texto da gaveta deixa o
+ * foco no `body`. A tecla so vale quando parte do conteudo principal ou do
+ * `body`: um dialogo aberto por cima trata o proprio `Esc`, e fechar o dialogo
+ * nao deve recolher a gaveta que estava atras dele.
  */
 export default function AppShell({
   header,
@@ -66,10 +81,61 @@ export default function AppShell({
   status,
   activeView = SHELL_VIEWS.PRODUCTS,
 }) {
+  const mainRef = useRef(null);
+  const [expandedSide, setExpandedSide] = useState(null);
+
+  const setSideExpanded = useCallback((side, expanded) => {
+    setExpandedSide((current) => {
+      if (expanded) {
+        return side;
+      }
+
+      return current === side ? null : current;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (expandedSide === null) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      const target = event.target;
+      const fromShell =
+        target === document.body || (target instanceof Node && mainRef.current?.contains(target));
+
+      if (fromShell) {
+        setExpandedSide(null);
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [expandedSide]);
+
+  // O toque fora fecha ja no `pointerdown`, e o clique segue o seu caminho: o
+  // botao da listagem que estava a vista continua respondendo no mesmo gesto.
+  function handlePointerDown(event) {
+    if (expandedSide === null) {
+      return;
+    }
+
+    const openDrawer = mainRef.current?.querySelector('[data-gaveta-aberta]');
+
+    if (openDrawer && !openDrawer.contains(event.target)) {
+      setExpandedSide(null);
+    }
+  }
+
   const columns = [
-    [SHELL_VIEWS.PRINT, left],
-    [SHELL_VIEWS.PRODUCTS, center],
-    [SHELL_VIEWS.PREVIEW, right],
+    [SHELL_VIEWS.PRINT, left, DRAWER_SIDES.LEFT, 'trabalho de impressão'],
+    [SHELL_VIEWS.PRODUCTS, center, null, null],
+    [SHELL_VIEWS.PREVIEW, right, DRAWER_SIDES.RIGHT, 'prévia da etiqueta'],
   ];
 
   return (
@@ -90,11 +156,13 @@ export default function AppShell({
       {header}
 
       <main
+        ref={mainRef}
         id={MAIN_CONTENT_ID}
         tabIndex={-1}
-        className="grid min-h-0 min-w-0 flex-1 grid-cols-1 lg:grid-cols-janela"
+        onPointerDown={handlePointerDown}
+        className="grid min-h-0 min-w-0 flex-1 grid-cols-1 lg:relative lg:grid-cols-janela"
       >
-        {columns.map(([view, column]) => (
+        {columns.map(([view, column, drawerSide, drawerLabel]) => (
           <div
             key={view}
             data-vista={view}
@@ -104,7 +172,18 @@ export default function AppShell({
               view === activeView ? 'flex' : 'hidden',
             )}
           >
-            {column}
+            {drawerSide ? (
+              <ShellDrawer
+                side={drawerSide}
+                label={drawerLabel}
+                expanded={expandedSide === drawerSide}
+                onExpandedChange={(expanded) => setSideExpanded(drawerSide, expanded)}
+              >
+                {column}
+              </ShellDrawer>
+            ) : (
+              column
+            )}
           </div>
         ))}
       </main>

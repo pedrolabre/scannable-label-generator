@@ -21,6 +21,7 @@ MVP funcional.
 - Layouts padronizados em milímetros reais, com prévia individual e montagem de grade em folha A4.
 - Exportação em PDF vetorial com escala física 1:1.
 - Interface em janela única com modais dedicados e adaptação fluida de densidade.
+- Na tela larga, as colunas laterais têm uma alça na borda que encosta na listagem. Um clique (ou um arraste) alarga a coluna por cima da listagem, sem mexer nela: a da esquerda vai até pouco antes do código, e a da direita cobre ações, preço e código. Com mais espaço, as opções ficam lado a lado. Uma abre por vez, e ela fecha pela própria alça, por `Esc` ou por um clique na listagem.
 - Persistência local no IndexedDB, com duas tabelas: os produtos e a base de referência. O banco que já existe no navegador passa para a versão nova sem perder produto nem base.
 - Backup total dos produtos num arquivo JSON, com opção de zerar catálogo. O arquivo sai no formato 2, só com os produtos e a versão do banco; o arquivo do formato 1, com as quatro tabelas, continua sendo aceito na restauração. A base de referência fica fora do arquivo, e restaurar não a apaga.
 - PWA instalável e utilizável offline.
@@ -168,6 +169,7 @@ scannable-label-generator/
     components/
       AppShell.jsx
       AppShell.test.jsx
+      AppShellDrawers.test.jsx
       AppHeader.jsx
       AppHeader.test.jsx
       backup/
@@ -227,6 +229,7 @@ scannable-label-generator/
       layout/
         ShellColumn.jsx
         ShellColumn.test.jsx
+        ShellDrawer.jsx
         StatusBar.jsx
         StatusBar.test.jsx
       print/

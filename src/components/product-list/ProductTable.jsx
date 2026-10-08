@@ -30,6 +30,11 @@ const HEAD_CELL_BASE = cx(
  * O codigo de barras nao tem coluna propria: ele desce para a linha muda do
  * produto, ao lado da categoria. Com coluna, ele tomava do nome a largura de que
  * o nome precisa para ser lido numa tela de 1366 px.
+ *
+ * As larguras de Codigo, Preco e Acoes na tela larga tambem medem as gavetas
+ * das colunas laterais (`gaveta-esquerda` e `gaveta-direita` no
+ * `tailwind.config.js`): a da esquerda para antes do Codigo, e a da direita
+ * cobre as tres. Mudou uma, muda la tambem.
  */
 export default function ProductTable({
   products,

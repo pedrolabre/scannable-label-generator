@@ -75,11 +75,13 @@ describe('atalho para o conteudo', () => {
 
     const focusable = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR));
 
-    expect(focusable.length).toBeGreaterThanOrEqual(3);
+    expect(focusable.length).toBeGreaterThanOrEqual(4);
     expect(focusable[0].tagName).toBe('A');
     expect(focusable[0].textContent).toBe('Pular para o conteúdo');
     expect(focusable[1].textContent).toBe('Ação do cabeçalho');
-    expect(focusable[2].textContent).toBe('Cadastrar produto');
+    // A alca da gaveta da esquerda vem logo depois da coluna que ela alarga.
+    expect(focusable[2].getAttribute('aria-label')).toBe('Alargar trabalho de impressão');
+    expect(focusable[3].textContent).toBe('Cadastrar produto');
   });
 
   it('aponta para o identificador que o conteudo principal carrega', () => {

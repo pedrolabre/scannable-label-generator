@@ -93,10 +93,6 @@ export default {
       },
 
       /**
-       * A unica elevacao do produto, e ela existe por necessidade: o painel do
-       * dialogo precisa se descolar da tela que continua desenhada atras dele.
-       */
-      /**
        * Medidas que definem a densidade da tela. O valor mora em variavel de
        * CSS, e nao aqui, porque ele muda no ponto de corte: a tela larga e
        * operada com mouse e fica compacta, a estreita pode ser tocada e fica
@@ -122,8 +118,37 @@ export default {
         janela: '240px minmax(0, 1fr) 288px',
       },
 
+      /**
+       * Medidas das gavetas da tela larga, contadas a partir da borda do
+       * conteudo principal onde cada uma mora. Elas acompanham a tabela da
+       * listagem (`ProductTable.jsx`), cujas colunas fixas sao, da direita para
+       * a esquerda: Acoes 128, Preco 112 e Codigo 96 px — 336 px no total.
+       *
+       *   esquerda  288 (coluna direita) + 17 (barra de rolagem da listagem)
+       *             + 336 + 19 de folga = 660 px livres a direita dela, para
+       *             que pare um pouco antes do Codigo, com ou sem barra.
+       *   direita   288 + 336 + 16 = 640 px de largura: com a barra de rolagem
+       *             ela chega ao comeco do Codigo; sem a barra, avanca 16 px
+       *             sobre o fim do Produto, que ja termina em reticencias.
+       *
+       * Quem mudar a largura de uma coluna da tabela muda estas duas junto.
+       */
+      inset: {
+        'gaveta-esquerda': '660px',
+      },
+      width: {
+        'gaveta-direita': '640px',
+      },
+
+      /**
+       * As duas unicas elevacoes do produto, e as duas existem por
+       * necessidade: o painel do dialogo e a gaveta aberta flutuam sobre uma
+       * tela que continua desenhada por baixo, e so a borda nao os descola
+       * dela.
+       */
       boxShadow: {
         modal: '0 24px 64px rgba(0, 0, 0, 0.28)',
+        gaveta: '0 8px 32px rgba(0, 0, 0, 0.18)',
       },
     },
   },
