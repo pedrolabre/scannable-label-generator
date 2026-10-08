@@ -1,5 +1,7 @@
 import { ProductSchema } from '../schemas/productSchema.js';
 
+import { suggestDisplayName } from './productMapping.js';
+
 /**
  * Complementacao do catalogo: o arquivo so preenche o que esta vazio no produto
  * que ja existe.
@@ -35,9 +37,17 @@ import { ProductSchema } from '../schemas/productSchema.js';
  * ganham, quantos ja o tinham preenchido e quantos valores do arquivo foram
  * recusados pelo contrato. O registro repetido no arquivo — pelo codigo
  * comparado — so vale na primeira vez em que aparece.
+ *
+ * ## As divergencias
+ *
+ * Descricao, preco ou NCM preenchidos com valor valido diferente no arquivo
+ * viram divergencia, sem gravar nada; so as escolhidas passam por
+ * `applyDivergenceChoices`. A descricao e comparada sem diferenca de espacos.
  */
 
 export const COMPLETABLE_FIELDS = Object.freeze(['description', 'ean', 'ncm', 'category', 'notes']);
+
+export const DIVERGENCE_FIELDS = Object.freeze(['description', 'priceInCentavos', 'ncm']);
 
 const NUMERIC_CODE = /^\d+$/;
 
@@ -57,6 +67,46 @@ function isEmpty(value) {
 
 function emptyCounts() {
   return Object.fromEntries(COMPLETABLE_FIELDS.map((field) => [field, 0]));
+}
+
+function comparableValue(field, value) {
+  if (field === 'description' && typeof value === 'string') {
+    return value.replace(/\s+/g, ' ').trim();
+  }
+
+  return value;
+}
+
+function sameValue(field, a, b) {
+  return comparableValue(field, a) === comparableValue(field, b);
+}
+
+function readDivergences(product, record) {
+  const divergences = [];
+
+  for (const field of DIVERGENCE_FIELDS) {
+    if (isEmpty(product[field])) {
+      continue;
+    }
+
+    const read = readFileValue(record, field);
+
+    if (read.value === undefined || sameValue(field, product[field], read.value)) {
+      continue;
+    }
+
+    divergences.push({
+      id: `${product.id}:${field}`,
+      productId: product.id,
+      systemCode: product.systemCode,
+      displayName: product.displayName,
+      field,
+      current: product[field],
+      incoming: read.value,
+    });
+  }
+
+  return divergences;
 }
 
 function indexCatalog(products) {
@@ -122,12 +172,13 @@ export function readFileValue(record, field) {
  * pelo importador, com `candidate` e `candidateIssues`. Devolve os produtos que
  * mudam, ja com os campos novos e o `updatedAt` do momento, e o resumo das
  * contagens. Produto que nao ganha campo nenhum nao entra na lista e nao tem o
- * `updatedAt` tocado.
+ * `updatedAt` tocado. `divergences` fica fora de `products`.
  */
 export function planCatalogCompletion(products, records, { now = new Date().toISOString() } = {}) {
   const index = indexCatalog(products);
   const seen = new Set();
   const changes = new Map();
+  const divergences = [];
 
   const summary = {
     recordCount: records.length,
@@ -170,6 +221,8 @@ export function planCatalogCompletion(products, records, { now = new Date().toIS
     const current = changes.get(product.id) ?? product;
     const gained = {};
 
+    divergences.push(...readDivergences(current, record));
+
     for (const field of COMPLETABLE_FIELDS) {
       const read = readFileValue(record, field);
 
@@ -197,6 +250,55 @@ export function planCatalogCompletion(products, records, { now = new Date().toIS
     }
 
     changes.set(product.id, { ...current, ...gained, updatedAt: now });
+  }
+
+  summary.updatedProducts = changes.size;
+
+  return { products: [...changes.values()], summary, divergences };
+}
+
+function nameFromDescription(description, fallback) {
+  const { value } = suggestDisplayName(description);
+
+  return ProductSchema.shape.displayName.safeParse(value).success ? value : fallback;
+}
+
+/**
+ * Os produtos que mudam pelas divergencias escolhidas. A divergencia cujo campo
+ * ja nao tem o valor mostrado e contada como desatualizada, e a descricao nova
+ * refaz o nome da etiqueta pela regra de corte da importacao.
+ */
+export function applyDivergenceChoices(
+  products,
+  divergences,
+  chosenIds,
+  { now = new Date().toISOString() } = {},
+) {
+  const chosen = new Set(chosenIds);
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const changes = new Map();
+  const summary = { applied: 0, stale: 0, updatedProducts: 0 };
+
+  for (const divergence of divergences) {
+    if (!chosen.has(divergence.id)) {
+      continue;
+    }
+
+    const product = changes.get(divergence.productId) ?? byId.get(divergence.productId);
+
+    if (!product || !sameValue(divergence.field, product[divergence.field], divergence.current)) {
+      summary.stale += 1;
+      continue;
+    }
+
+    const next = { ...product, [divergence.field]: divergence.incoming, updatedAt: now };
+
+    if (divergence.field === 'description') {
+      next.displayName = nameFromDescription(divergence.incoming, product.displayName);
+    }
+
+    changes.set(product.id, next);
+    summary.applied += 1;
   }
 
   summary.updatedProducts = changes.size;

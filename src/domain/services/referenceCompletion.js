@@ -11,6 +11,9 @@ import { ENRICHABLE_FIELDS } from './productEnrichment.js';
  * dai o calculo e o mesmo do Completar dados: so o campo vazio e preenchido,
  * o valor passa pelo contrato do produto, nenhum produto e criado.
  *
+ * Todos os produtos sao procurados, para que o NCM da base diferente do
+ * cadastrado apareca como divergencia.
+ *
  * O dominio nao consulta armazenamento: quem chama pede a base com os codigos
  * de `referenceCodesToAsk` e entrega o mapa pronto, o mesmo que a busca em
  * lista devolve.
@@ -42,6 +45,11 @@ export function referenceCodesToAsk(products) {
   return [...codes];
 }
 
+/** Codigos de todos os produtos, sem repetir: os procurados na base. */
+export function referenceCodesToCheck(products) {
+  return [...new Set(products.map((product) => product.systemCode))];
+}
+
 function recordFor(code, reference) {
   const candidate = { systemCode: code };
 
@@ -58,14 +66,15 @@ function recordFor(code, reference) {
  * O que a base completa no catalogo, e as contagens.
  *
  * `references` e o mapa da busca em lista, do codigo como foi pedido para o que
- * a base tem dele. Devolve os produtos que mudam, o resumo do calculo do
- * Completar dados e quantos codigos foram procurados e nao estavam na base.
+ * a base tem dele. Devolve os produtos que mudam, as divergencias de NCM, o
+ * resumo do calculo do Completar dados e quantos dos codigos sem NCM ou sem
+ * codigo de barras nao estavam na base.
  */
 export function planReferenceCompletion(products, references, options) {
   const asked = referenceCodesToAsk(products);
   const records = [];
 
-  for (const code of asked) {
+  for (const code of referenceCodesToCheck(products)) {
     const reference = references.get(code);
 
     if (reference) {
@@ -74,13 +83,11 @@ export function planReferenceCompletion(products, references, options) {
   }
 
   const plan = planCatalogCompletion(products, records, options);
+  const outsideReference = asked.filter((code) => !references.has(code)).length;
 
   return {
     products: plan.products,
-    summary: {
-      ...plan.summary,
-      askedCodes: asked.length,
-      outsideReference: asked.length - records.length,
-    },
+    divergences: plan.divergences,
+    summary: { ...plan.summary, askedCodes: asked.length, outsideReference },
   };
 }

@@ -1,7 +1,10 @@
 import { CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 
+import { DIVERGENCE_STATUS } from '../../store/divergenceWrite.js';
 import { COMPLETION_FROM_BASE_STATUS } from '../../store/referenceCompletionSlice.js';
 import { useReferenceStore } from '../../store/useReferenceStore.js';
+import DivergenceDialog from '../divergence/DivergenceDialog.jsx';
 import { formatCount, pluralize } from '../import/importCounts.js';
 import Button from '../ui/Button.jsx';
 import InlineAlert from '../ui/InlineAlert.jsx';
@@ -77,12 +80,19 @@ export default function ReferenceCompletionSection({ isBaseEmpty }) {
   const error = useReferenceStore((state) => state.completionError);
   const checkCompletion = useReferenceStore((state) => state.checkCompletion);
   const confirmCompletion = useReferenceStore((state) => state.confirmCompletion);
+  const divergenceStatus = useReferenceStore((state) => state.divergenceStatus);
+  const divergenceResult = useReferenceStore((state) => state.divergenceResult);
+  const divergenceError = useReferenceStore((state) => state.divergenceError);
+  const applyDivergences = useReferenceStore((state) => state.applyCompletionDivergences);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const isChecking = status === COMPLETION_FROM_BASE_STATUS.CHECKING;
   const isWriting = status === COMPLETION_FROM_BASE_STATUS.WRITING;
   const summary = plan?.summary ?? null;
   const canConfirm =
     (status === COMPLETION_FROM_BASE_STATUS.READY || isWriting) && summary?.updatedProducts > 0;
+  const divergences = plan?.divergences ?? [];
+  const canReview = !isChecking && divergences.length > 0;
 
   return (
     <section aria-labelledby="base-completar" className="space-y-3">
@@ -92,7 +102,8 @@ export default function ReferenceCompletionSection({ isBaseEmpty }) {
 
       <p className="text-sm leading-relaxed text-neutro-tintaMedia">
         Procura na base os produtos já cadastrados sem NCM ou sem código de barras e preenche só o
-        campo vazio. Nenhum produto é criado, e nada é gravado antes da confirmação.
+        campo vazio. NCM diferente do cadastrado aparece em Divergências. Nenhum produto é criado,
+        e nada é gravado antes da confirmação.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -105,12 +116,31 @@ export default function ReferenceCompletionSection({ isBaseEmpty }) {
             {isWriting ? 'Gravando…' : 'Completar catálogo'}
           </Button>
         ) : null}
+
+        {canReview ? (
+          <Button type="button" onClick={() => setIsReviewing(true)} disabled={isWriting}>
+            {`Divergências (${divergences.length.toLocaleString('pt-BR')})`}
+          </Button>
+        ) : null}
       </div>
 
       {error ? <InlineAlert>{error}</InlineAlert> : null}
 
       {summary && !isChecking ? (
         <CompletionSummary summary={summary} isDone={status === COMPLETION_FROM_BASE_STATUS.DONE} />
+      ) : null}
+
+      {isReviewing ? (
+        <DivergenceDialog
+          divergences={divergences}
+          subtitle="NCM da base diferente do cadastrado."
+          incomingLabel="Na base"
+          isApplying={divergenceStatus === DIVERGENCE_STATUS.APPLYING}
+          result={divergenceResult}
+          error={divergenceError}
+          onApply={applyDivergences}
+          onClose={() => setIsReviewing(false)}
+        />
       ) : null}
     </section>
   );

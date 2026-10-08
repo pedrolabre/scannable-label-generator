@@ -10,17 +10,17 @@ import ReferenceSheetSection from './ReferenceSheetSection.jsx';
 import ReferenceStats from './ReferenceStats.jsx';
 
 /**
- * Dialogo da base de referencia de NCM e codigo de barras.
+ * Dialogo da base de referencia: codigo, NCM e codigo de barras.
  *
  * Ele e irmao do Completar dados, e nao uma secao dele, porque a base vale por
  * si: e ela que a importacao consulta, e o operador precisa ver o que ela
  * guarda sem ler arquivo nenhum. As tres primeiras partes — o que a base
- * guarda, a troca pela planilha e o apagar — nunca tocam o catalogo; a ultima,
+ * guarda, a carga por arquivo e o apagar — nunca tocam o catalogo; a ultima,
  * completar o catalogo pela base, grava produtos e por isso fica separada, com
  * resumo antes.
  *
  * As estatisticas sao lidas a cada abertura. Como os outros dialogos de
- * arquivo, ele nao fecha no clique fora, e fechar nao descarta a planilha lida.
+ * arquivo, ele nao fecha no clique fora, e fechar nao descarta o arquivo lido.
  */
 export default function ReferencePanel({ onClose }) {
   const stats = useReferenceStore((state) => state.stats);
@@ -38,7 +38,7 @@ export default function ReferencePanel({ onClose }) {
   return (
     <ModalShell
       title="Base de referência"
-      subtitle="NCM e código de barras guardados neste navegador para completar a importação."
+      subtitle="Código, NCM e código de barras guardados neste navegador para completar a importação."
       width={640}
       closeOnBackdrop={false}
       onClose={onClose}

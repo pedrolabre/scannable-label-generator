@@ -1,4 +1,5 @@
 import { comparableCode, readFileValue } from './catalogCompletion.js';
+import { IMPORT_FORMAT_XML } from './importRecord.js';
 
 /**
  * Linhas da base de referencia a partir dos registros ja traduzidos pelo
@@ -26,6 +27,32 @@ import { comparableCode, readFileValue } from './catalogCompletion.js';
  *
  * Funcao pura: nao toca em armazenamento e nao le relogio.
  */
+
+function mentionsReferenceField(record) {
+  if (record.candidate?.ncm !== undefined || record.candidate?.ean !== undefined) {
+    return true;
+  }
+
+  return (record.candidateIssues ?? []).some((issue) => issue.field === 'ncm' || issue.field === 'ean');
+}
+
+/**
+ * Registros dos arquivos que alimentam a base: os que nao sao nota fiscal e
+ * trazem algum NCM ou codigo de barras, valido ou nao.
+ */
+export function selectReferenceRecords(records) {
+  const files = new Set();
+
+  for (const record of records) {
+    if (record.source?.format !== IMPORT_FORMAT_XML && mentionsReferenceField(record)) {
+      files.add(record.source?.fileIndex);
+    }
+  }
+
+  return records.filter(
+    (record) => record.source?.format !== IMPORT_FORMAT_XML && files.has(record.source?.fileIndex),
+  );
+}
 
 function emptySummary(recordCount) {
   return {
@@ -92,4 +119,46 @@ export function buildReferenceEntries(records) {
   summary.entryCount = entries.length;
 
   return { entries, summary };
+}
+
+/**
+ * Linhas da base depois da atualizacao codigo por codigo, sem gravar. O campo
+ * ausente no arquivo mantem o valor guardado. `existing` e o `Map` da chave
+ * para a linha guardada.
+ */
+export function planReferenceMerge(entries, existing) {
+  const merged = [];
+  const summary = { added: 0, updated: 0, unchanged: 0 };
+
+  for (const entry of entries) {
+    const stored = existing.get(entry.comparableCode);
+
+    if (!stored) {
+      merged.push({ ...entry });
+      summary.added += 1;
+      continue;
+    }
+
+    const next = { comparableCode: entry.comparableCode, systemCode: entry.systemCode };
+    const ncm = entry.ncm ?? stored.ncm;
+    const ean = entry.ean ?? stored.ean;
+
+    if (ncm !== undefined) {
+      next.ncm = ncm;
+    }
+
+    if (ean !== undefined) {
+      next.ean = ean;
+    }
+
+    if (next.ncm === stored.ncm && next.ean === stored.ean) {
+      summary.unchanged += 1;
+    } else {
+      summary.updated += 1;
+    }
+
+    merged.push(next);
+  }
+
+  return { entries: merged, summary };
 }

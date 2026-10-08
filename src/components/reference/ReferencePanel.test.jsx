@@ -5,8 +5,9 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * O dialogo da base de referencia: o que a base guarda, a base vazia, a troca
- * pela planilha, o apagar e as falhas do armazenamento com o motivo na tela.
+ * O dialogo da base de referencia: o que a base guarda, a base vazia, a carga
+ * por arquivo — atualizar ou trocar —, o apagar e as falhas do armazenamento
+ * com o motivo na tela.
  * O `Blob` do jsdom nao monta a planilha, entao a leitura dela entra pronta no
  * store; a leitura em si e coberta no teste do store.
  */
@@ -27,6 +28,9 @@ const references = vi.hoisted(() => ({
   findReference: vi.fn(),
   findReferences: vi.fn(),
   getReferenceStats: vi.fn(),
+  mergeReferenceEntries: vi.fn(),
+  previewReferenceLoad: vi.fn(),
+  replaceReferenceBase: vi.fn(),
   replaceReferenceEntries: vi.fn(),
 }));
 
@@ -56,6 +60,7 @@ const SHEET = {
     unusable: 1,
     repeated: 0,
   },
+  preview: { added: 1, updated: 0, unchanged: 1, removedOnReplace: 18929 },
 };
 
 let container;
@@ -155,7 +160,9 @@ describe('o que a base guarda', () => {
     expect(container.querySelector('[data-base-vazia]').textContent).toContain(
       'A base de referência está vazia',
     );
-    expect(container.querySelector('[data-base-vazia]').textContent).toContain('planilha cadastral .ods');
+    expect(container.querySelector('[data-base-vazia]').textContent).toContain(
+      'Carregue um arquivo aqui ou pelo Completar dados',
+    );
     expect(container.querySelector('[data-apagar-base]')).toBeNull();
     expect(button('Conferir o catálogo', container).disabled).toBe(true);
   });
@@ -176,41 +183,83 @@ describe('o que a base guarda', () => {
   });
 });
 
-describe('troca pela planilha', () => {
+describe('carga por arquivo', () => {
   beforeEach(() => {
     useReferenceStore.setState({ sheetStatus: SHEET_STATUS.READY, sheetReference: SHEET });
   });
 
-  it('troca a base inteira na confirmacao, sem escrever em produto, e relê a base', async () => {
+  it('atualiza a base codigo por codigo, sem escrever em produto, e relê a base', async () => {
     await render();
 
-    expect(container.querySelector('[data-resumo-base-referencia]').textContent).toContain(
-      '2 códigos da planilha substituem a base guardada neste navegador',
-    );
+    const resumo = () => container.querySelector('[data-resumo-base-referencia]').textContent;
 
-    references.getReferenceStats.mockResolvedValue({ ...LOADED, total: 2, withNcm: 2, withEan: 1 });
+    expect(resumo()).toContain('2 códigos do arquivo vão para a base');
+    expect(resumo()).toContain('1 novo · 0 atualizados · 1 igual');
 
-    await click(button('Trocar a base de referência', container));
+    references.mergeReferenceEntries.mockResolvedValue({ added: 1, updated: 0, unchanged: 1 });
+    references.getReferenceStats.mockResolvedValue({ ...LOADED, total: 18932 });
 
-    expect(references.replaceReferenceEntries).toHaveBeenCalledWith(SHEET.entries);
-    expect(container.querySelector('[data-resumo-base-referencia]').textContent).toContain(
-      'Base de referência guardada com 2 códigos.',
-    );
-    expect(stats()['Códigos na base']).toBe('2');
+    await click(button('Atualizar a base', container));
+
+    expect(references.mergeReferenceEntries).toHaveBeenCalledWith(SHEET.entries);
+    expect(references.replaceReferenceBase).not.toHaveBeenCalled();
+    expect(resumo()).toContain('Base de referência atualizada: 1 novo · 0 atualizados · 1 igual.');
+    expect(stats()['Códigos na base']).toBe('18.932');
     expect(writesToCatalog()).toBe(0);
     expect(products.listProducts).not.toHaveBeenCalled();
   });
 
+  it('troca a base inteira so depois de confirmar quantos codigos saem', async () => {
+    await render();
+    await click(button('Trocar a base', container));
+
+    const confirm = dialogs().find(
+      (dialog) => dialog.querySelector('h2').textContent === 'Trocar a base de referência',
+    );
+
+    expect(confirm.textContent).toContain('2 códigos do arquivo ficam na base.');
+    expect(confirm.textContent).toContain('18.929 códigos que não estão no arquivo saem da base.');
+    expect(references.replaceReferenceBase).not.toHaveBeenCalled();
+
+    references.replaceReferenceBase.mockResolvedValue({ entryCount: 2, removed: 18929 });
+    references.getReferenceStats.mockResolvedValue({ ...LOADED, total: 2, withNcm: 2, withEan: 1 });
+
+    await click(button('Trocar a base', confirm));
+
+    expect(references.replaceReferenceBase).toHaveBeenCalledWith(SHEET.entries);
+    expect(dialogs()).toHaveLength(1);
+    expect(container.querySelector('[data-resumo-base-referencia]').textContent).toContain(
+      'Base de referência trocada: 2 códigos guardados · 18.929 removidos.',
+    );
+    expect(stats()['Códigos na base']).toBe('2');
+    expect(writesToCatalog()).toBe(0);
+  });
+
+  it('cancelar a troca nao grava nada', async () => {
+    await render();
+    await click(button('Trocar a base', container));
+
+    const confirm = dialogs().find(
+      (dialog) => dialog.querySelector('h2').textContent === 'Trocar a base de referência',
+    );
+
+    await click(button('Cancelar', confirm));
+
+    expect(dialogs()).toHaveLength(1);
+    expect(references.replaceReferenceBase).not.toHaveBeenCalled();
+    expect(references.mergeReferenceEntries).not.toHaveBeenCalled();
+  });
+
   it('mostra o motivo quando a gravacao da base falha e deixa tentar de novo', async () => {
-    references.replaceReferenceEntries.mockRejectedValueOnce(storageFailure('QuotaExceededError'));
+    references.mergeReferenceEntries.mockRejectedValueOnce(storageFailure('QuotaExceededError'));
 
     await render();
-    await click(button('Trocar a base de referência', container));
+    await click(button('Atualizar a base', container));
 
     expect(container.querySelector('[role="alert"]').textContent).toContain(
       'O armazenamento deste dispositivo está cheio.',
     );
-    expect(button('Trocar a base de referência', container).disabled).toBe(false);
+    expect(button('Atualizar a base', container).disabled).toBe(false);
     expect(stats()['Códigos na base']).toBe('18.931');
   });
 });

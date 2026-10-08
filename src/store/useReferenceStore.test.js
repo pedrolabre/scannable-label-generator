@@ -6,7 +6,8 @@ import { HEADER_ROW, productRow, singleSheetOds } from '../domain/services/odsFi
 import { bytesOf, footer, priceHeader, priceRow } from '../domain/services/txtReportFixtures.js';
 
 /**
- * A tela da base no store: as estatisticas, a carga pela planilha e o apagar.
+ * A tela da base no store: as estatisticas, a carga por arquivo — atualizando
+ * ou trocando a base — e o apagar.
  * Os dois repositorios entram como duble; o que se prova e o que e gravado, o
  * que nunca e tocado — o catalogo — e o que fica na tela quando o armazenamento
  * falha.
@@ -28,15 +29,25 @@ const references = vi.hoisted(() => ({
   findReference: vi.fn(),
   findReferences: vi.fn(),
   getReferenceStats: vi.fn(),
+  mergeReferenceEntries: vi.fn(),
+  previewReferenceLoad: vi.fn(),
+  replaceReferenceBase: vi.fn(),
   replaceReferenceEntries: vi.fn(),
 }));
 
 vi.mock('../storage/productRepository.js', () => products);
 vi.mock('../storage/referenceRepository.js', () => references);
 
-const { SHEET_STATUS, useReferenceStore } = await import('./useReferenceStore.js');
+const { SHEET_LOAD_MODE, SHEET_STATUS, useReferenceStore } = await import('./useReferenceStore.js');
 
 const LOADED = { total: 3, withNcm: 3, withEan: 1, loadedAt: '2026-09-30T15:00:00.000Z' };
+
+const PREVIEW = { added: 1, updated: 1, unchanged: 0, removedOnReplace: 3 };
+
+const ENTRIES = [
+  { comparableCode: '1620', systemCode: '1620', ncm: '94035000', ean: '7890000000017' },
+  { comparableCode: '118114', systemCode: '118114', ncm: '73211100' },
+];
 
 const SHEET_ROWS = [
   productRow({ code: 1620, description: 'GUARDA ROUPA INVENTADO', barcode: '7890000000017', ncm: '94035000' }),
@@ -72,7 +83,12 @@ beforeEach(() => {
   useReferenceStore.getState().resetSheet();
   useReferenceStore.getState().resetCompletion();
   references.getReferenceStats.mockResolvedValue(LOADED);
-  references.replaceReferenceEntries.mockImplementation(async (entries) => entries.length);
+  references.mergeReferenceEntries.mockResolvedValue({ added: 1, updated: 1, unchanged: 0 });
+  references.replaceReferenceBase.mockImplementation(async (entries) => ({
+    entryCount: entries.length,
+    removed: 3,
+  }));
+  references.previewReferenceLoad.mockResolvedValue(PREVIEW);
   references.clearReferenceEntries.mockResolvedValue(undefined);
 });
 
@@ -95,8 +111,8 @@ describe('estatisticas', () => {
   });
 });
 
-describe('carga pela planilha', () => {
-  it('le a planilha e monta as linhas, sem gravar nada', async () => {
+describe('carga por arquivo', () => {
+  it('le a planilha e monta as linhas com a previa, sem gravar nada', async () => {
     await useReferenceStore.getState().readSheet([await sheetFile()]);
 
     const state = useReferenceStore.getState();
@@ -105,30 +121,57 @@ describe('carga pela planilha', () => {
     expect(state.sheetReference.summary).toEqual(
       expect.objectContaining({ entryCount: 2, withNcm: 2, withEan: 1, invalidNcm: 1 }),
     );
-    expect(references.replaceReferenceEntries).not.toHaveBeenCalled();
+    expect(state.sheetReference.preview).toEqual(PREVIEW);
+    expect(references.previewReferenceLoad).toHaveBeenCalledWith(ENTRIES);
+    expect(references.mergeReferenceEntries).not.toHaveBeenCalled();
+    expect(references.replaceReferenceBase).not.toHaveBeenCalled();
     expect(writesToCatalog()).toBe(0);
   });
 
-  it('troca a base inteira na confirmacao, relê as estatisticas e nao toca o catalogo', async () => {
+  it('le o mesmo cadastro salvo como .txt separado por tabulacao', async () => {
+    const rows = [
+      ['Código', 'Descrição', 'NCM', 'Cód. Barras'],
+      ['1620', 'GUARDA ROUPA INVENTADO', '94035000', '7890000000017'],
+      ['118114', 'FOGAO INVENTADO', '73211100', ''],
+    ];
+    const txt = new File([rows.map((row) => row.join('\t')).join('\r\n')], 'cadastro.txt');
+
+    await useReferenceStore.getState().readSheet([txt]);
+
+    expect(useReferenceStore.getState().sheetStatus).toBe(SHEET_STATUS.READY);
+    expect(useReferenceStore.getState().sheetReference.entries).toEqual(ENTRIES);
+  });
+
+  it('atualiza a base codigo por codigo na confirmacao, rele as estatisticas e nao toca o catalogo', async () => {
     await useReferenceStore.getState().readSheet([await sheetFile()]);
     await useReferenceStore.getState().confirmSheet();
 
     const state = useReferenceStore.getState();
 
-    expect(references.replaceReferenceEntries).toHaveBeenCalledTimes(1);
-    expect(references.replaceReferenceEntries.mock.calls[0][0]).toEqual([
-      { comparableCode: '1620', systemCode: '1620', ncm: '94035000', ean: '7890000000017' },
-      { comparableCode: '118114', systemCode: '118114', ncm: '73211100' },
-    ]);
+    expect(references.mergeReferenceEntries).toHaveBeenCalledTimes(1);
+    expect(references.mergeReferenceEntries.mock.calls[0][0]).toEqual(ENTRIES);
+    expect(references.replaceReferenceBase).not.toHaveBeenCalled();
     expect(state.sheetStatus).toBe(SHEET_STATUS.DONE);
-    expect(state.sheetResult).toEqual({ entryCount: 2 });
+    expect(state.sheetResult).toEqual({ mode: 'merge', added: 1, updated: 1, unchanged: 0 });
     expect(references.getReferenceStats).toHaveBeenCalledTimes(1);
     expect(products.listProducts).not.toHaveBeenCalled();
     expect(writesToCatalog()).toBe(0);
   });
 
+  it('troca a base inteira quando pedido, e diz quantos codigos sairam', async () => {
+    await useReferenceStore.getState().readSheet([await sheetFile()]);
+    await useReferenceStore.getState().confirmSheet(SHEET_LOAD_MODE.REPLACE);
+
+    const state = useReferenceStore.getState();
+
+    expect(references.replaceReferenceBase).toHaveBeenCalledWith(ENTRIES);
+    expect(references.mergeReferenceEntries).not.toHaveBeenCalled();
+    expect(state.sheetResult).toEqual({ mode: 'replace', entryCount: 2, removed: 3 });
+    expect(writesToCatalog()).toBe(0);
+  });
+
   it('mantem o resumo e o motivo quando a gravacao da base falha', async () => {
-    references.replaceReferenceEntries.mockRejectedValue(storageFailure('QuotaExceededError'));
+    references.mergeReferenceEntries.mockRejectedValue(storageFailure('QuotaExceededError'));
 
     await useReferenceStore.getState().readSheet([await sheetFile()]);
     await useReferenceStore.getState().confirmSheet();
@@ -141,7 +184,7 @@ describe('carga pela planilha', () => {
     expect(references.getReferenceStats).not.toHaveBeenCalled();
   });
 
-  it('recusa o arquivo que nao e planilha .ods e nao oferece carga', async () => {
+  it('nao oferece carga quando o arquivo nao tem NCM nem codigo de barras', async () => {
     const report = new File(
       [
         bytesOf([
@@ -159,9 +202,22 @@ describe('carga pela planilha', () => {
     const state = useReferenceStore.getState();
 
     expect(state.sheetStatus).toBe(SHEET_STATUS.IDLE);
-    expect(state.sheetFiles.map((file) => file.status)).toEqual(['rejected']);
+    expect(state.sheetFiles.map((file) => file.status)).toEqual(['parsed']);
     expect(state.sheetReference).toBeNull();
-    expect(references.replaceReferenceEntries).not.toHaveBeenCalled();
+    expect(state.sheetError).toBe(
+      'Nenhum arquivo escolhido traz coluna de NCM ou de código de barras; a base fica como está.',
+    );
+    expect(references.mergeReferenceEntries).not.toHaveBeenCalled();
+  });
+
+  it('recusa a nota fiscal como formato nao aceito', async () => {
+    await useReferenceStore.getState().readSheet([new File(['<nfeProc/>'], 'nota.xml')]);
+
+    const state = useReferenceStore.getState();
+
+    expect(state.sheetFiles[0].status).toBe('rejected');
+    expect(state.sheetFiles[0].error).toBe('Formato não aceito. Escolha arquivos .ods, .csv, .json, .txt.');
+    expect(state.sheetError).toBeNull();
   });
 });
 

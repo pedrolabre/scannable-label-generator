@@ -107,25 +107,25 @@ afterEach(() => {
 });
 
 describe('seletor de arquivos', () => {
-  it('aceita a planilha .ods e os formatos da importacao, com ajuda propria', () => {
+  it('aceita a planilha .ods e os formatos da importacao, com ajuda neutra', () => {
     render(<CatalogCompletionPanel onClose={vi.fn()} />);
 
     const campo = container.querySelector('#completion-files');
 
     expect(campo.getAttribute('accept')).toBe('.csv,.json,.xml,.txt,.ods');
     expect(texto()).toContain(
-      'Aceita a planilha .ods e os mesmos arquivos da importação. Só preenche campos vazios dos produtos já cadastrados; nenhum produto é criado.',
+      'Aceita planilhas .ods e .csv, listas .json, notas fiscais .xml e arquivos .txt (relatório do ERP ou separado por tabulação). Nenhum produto é criado.',
     );
   });
 
-  it('deixa a importacao de produtos sem o .ods e cita o relatorio do ERP na ajuda', () => {
+  it('deixa a importacao de produtos sem o .ods e cita os dois tipos de .txt na ajuda', () => {
     render(<ImportFilePicker isParsing={false} onFilesSelected={vi.fn()} />);
 
     const campo = container.querySelector('#import-files');
 
     expect(campo.getAttribute('accept')).toBe('.csv,.json,.xml,.txt');
     expect(texto()).toContain(
-      'Aceita planilhas .csv, listas .json, notas fiscais .xml e relatórios .txt do ERP. Vários arquivos de uma vez.',
+      'Aceita planilhas .csv, listas .json, notas fiscais .xml e arquivos .txt (relatório do ERP ou separado por tabulação). Vários arquivos de uma vez.',
     );
   });
 });

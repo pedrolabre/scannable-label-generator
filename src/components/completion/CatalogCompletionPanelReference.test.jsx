@@ -9,9 +9,9 @@ import { COMPLETION_STATUS, useCompletionStore } from '../../store/useCompletion
 import CatalogCompletionPanel from './CatalogCompletionPanel.jsx';
 
 /**
- * A base de referencia no dialogo do Completar dados: o resumo da planilha, o
- * botao que so guarda a base quando nao ha produto a completar e o resultado
- * depois da gravacao. O `Blob` do jsdom nao monta a planilha, entao o estado da
+ * A base de referencia no dialogo do Completar dados: o resumo do arquivo com a
+ * previa do que muda na base, o botao que so atualiza a base quando nao ha
+ * produto a completar e o resultado depois da gravacao. O `Blob` do jsdom nao monta a planilha, entao o estado da
  * leitura entra pronto no store; a leitura em si e coberta no teste do store.
  */
 
@@ -29,6 +29,9 @@ const references = vi.hoisted(() => ({
   findReference: vi.fn(),
   findReferences: vi.fn(),
   getReferenceStats: vi.fn(),
+  mergeReferenceEntries: vi.fn(),
+  previewReferenceLoad: vi.fn(),
+  replaceReferenceBase: vi.fn(),
   replaceReferenceEntries: vi.fn(),
 }));
 
@@ -69,6 +72,7 @@ const REFERENCE = {
     unusable: 1,
     repeated: 0,
   },
+  preview: { added: 1, updated: 1, unchanged: 0, removedOnReplace: 0 },
 };
 
 let container;
@@ -105,7 +109,7 @@ beforeEach(() => {
   useCompletionStore.getState().reset();
   products.listProducts.mockResolvedValue([]);
   products.updateProducts.mockImplementation(async (list) => list);
-  references.replaceReferenceEntries.mockImplementation(async (entries) => entries.length);
+  references.mergeReferenceEntries.mockResolvedValue({ added: 1, updated: 1, unchanged: 0 });
 
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -120,30 +124,30 @@ afterEach(() => {
 });
 
 describe('base de referencia no dialogo', () => {
-  it('diz que a planilha substitui a base e o que fica fora, antes de gravar', () => {
+  it('diz o que vai para a base, o que muda nela e o que fica fora, antes de gravar', () => {
     leituraPronta({ products: [], summary: summary() });
     render();
 
-    expect(texto()).toContain(
-      '2 códigos da planilha substituem a base guardada neste navegador: 2 com NCM e 1 com código de barras.',
-    );
+    expect(texto()).toContain('2 códigos do arquivo vão para a base: 2 com NCM e 1 com código de barras.');
+    expect(texto()).toContain('1 novo · 1 atualizado · 0 iguais');
     expect(texto()).toContain('Ficam fora: 1 NCM inválido, 1 linha sem dado aproveitável.');
-    expect(references.replaceReferenceEntries).not.toHaveBeenCalled();
+    expect(references.mergeReferenceEntries).not.toHaveBeenCalled();
   });
 
-  it('oferece so guardar a base quando nenhum produto ganha campo, e mostra o resultado', async () => {
+  it('oferece so atualizar a base quando nenhum produto ganha campo, e mostra o resultado', async () => {
     leituraPronta({ products: [], summary: summary() });
     render();
 
     expect(botao('Completar catálogo')).toBeUndefined();
 
     await act(async () => {
-      botao('Guardar base de referência').click();
+      botao('Atualizar a base de referência').click();
     });
 
-    expect(references.replaceReferenceEntries).toHaveBeenCalledWith(REFERENCE.entries);
-    expect(texto()).toContain('Base de referência guardada com 2 códigos.');
-    expect(botao('Guardar base de referência')).toBeUndefined();
+    expect(references.mergeReferenceEntries).toHaveBeenCalledWith(REFERENCE.entries);
+    expect(references.replaceReferenceEntries).not.toHaveBeenCalled();
+    expect(texto()).toContain('Base de referência atualizada: 1 novo · 1 atualizado · 0 iguais.');
+    expect(botao('Atualizar a base de referência')).toBeUndefined();
   });
 
   it('mantem o nome de completar quando ha produto a completar', () => {
@@ -151,10 +155,10 @@ describe('base de referencia no dialogo', () => {
     render();
 
     expect(botao('Completar catálogo')).toBeDefined();
-    expect(botao('Guardar base de referência')).toBeUndefined();
+    expect(botao('Atualizar a base de referência')).toBeUndefined();
   });
 
-  it('nao mostra a base nem oferece gravacao quando a planilha nao tem linha aproveitavel', () => {
+  it('nao mostra a base nem oferece gravacao quando o arquivo nao tem linha aproveitavel', () => {
     leituraPronta(
       { products: [], summary: summary() },
       { entries: [], summary: { ...REFERENCE.summary, entryCount: 0, withNcm: 0, withEan: 0, unusable: 3 } },
@@ -162,12 +166,12 @@ describe('base de referencia no dialogo', () => {
     render();
 
     expect(texto()).toContain(
-      'A planilha não tem código com NCM ou código de barras válido; a base guardada fica como está.',
+      'O arquivo não tem código com NCM ou código de barras válido; a base guardada fica como está.',
     );
-    expect(botao('Guardar base de referência')).toBeUndefined();
+    expect(botao('Atualizar a base de referência')).toBeUndefined();
   });
 
-  it('nao mostra a base quando o lote nao tem planilha', () => {
+  it('nao mostra a base quando o lote nao tem arquivo com NCM ou codigo de barras', () => {
     leituraPronta({ products: [], summary: summary() }, null);
     render();
 

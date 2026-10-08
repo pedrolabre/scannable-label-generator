@@ -6,7 +6,7 @@ import { formatCount } from '../import/importCounts.js';
  * O que a base de referencia guarda neste navegador: quantos codigos, quantos
  * com NCM, quantos com codigo de barras e quando ela foi carregada.
  *
- * Base vazia nao e erro: e o estado de quem ainda nao carregou a planilha, e a
+ * Base vazia nao e erro: e o estado de quem ainda nao carregou um arquivo, e a
  * frase diz como carregar. A falha de leitura, essa sim, aparece como aviso,
  * com a acao de tentar de novo — sem ela a tela mostraria uma base vazia,
  * indistinguivel de uma base que nunca foi carregada.
@@ -53,8 +53,8 @@ export default function ReferenceStats({ stats, isLoading, error, onRetry }) {
   if (stats.total === 0) {
     return (
       <p role="status" className="text-sm text-neutro-tintaMedia" data-base-vazia="">
-        A base de referência está vazia. Carregue a planilha cadastral .ods aqui ou pelo Completar
-        dados para que a importação complete o NCM e o código de barras.
+        A base de referência está vazia. Carregue um arquivo aqui ou pelo Completar dados para que a
+        importação complete o NCM e o código de barras.
       </p>
     );
   }

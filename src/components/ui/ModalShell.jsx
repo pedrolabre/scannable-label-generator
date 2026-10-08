@@ -116,6 +116,13 @@ export default function ModalShell({
 
   useEffect(() => {
     function handleKeyDown(event) {
+      // Com um dialogo aberto por cima de outro, so o de cima responde ao teclado.
+      const dialogs = document.querySelectorAll('[role="dialog"]');
+
+      if (dialogs.length > 0 && dialogs[dialogs.length - 1] !== panelRef.current) {
+        return;
+      }
+
       if (event.key === 'Escape') {
         onClose();
         return;

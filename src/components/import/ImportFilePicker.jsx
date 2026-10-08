@@ -21,7 +21,7 @@ import Button from '../ui/Button.jsx';
  */
 
 const IMPORT_HELP_TEXT =
-  'Aceita planilhas .csv, listas .json, notas fiscais .xml e relatórios .txt do ERP. Vários arquivos de uma vez.';
+  'Aceita planilhas .csv, listas .json, notas fiscais .xml e arquivos .txt (relatório do ERP ou separado por tabulação). Vários arquivos de uma vez.';
 
 export default function ImportFilePicker({
   isParsing,

@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 
 import { planCatalogCompletion } from '../domain/services/catalogCompletion.js';
-import { IMPORT_FORMAT_ODS } from '../domain/services/importRecord.js';
 import {
   COMPLETION_FILE_EXTENSIONS,
   parseImportFiles,
 } from '../domain/services/importService.js';
-import { buildReferenceEntries } from '../domain/services/referenceEntries.js';
+import { buildReferenceEntries, selectReferenceRecords } from '../domain/services/referenceEntries.js';
 import { listProducts, updateProducts } from '../storage/productRepository.js';
-import { replaceReferenceEntries } from '../storage/referenceRepository.js';
+import { mergeReferenceEntries, previewReferenceLoad } from '../storage/referenceRepository.js';
 import { describeStorageError, describeStorageReadError } from '../storage/storageError.js';
 
+import { DIVERGENCE_STATUS, writeDivergenceChoices } from './divergenceWrite.js';
 import { useProductStore } from './useProductStore.js';
 
 /**
@@ -36,15 +36,15 @@ import { useProductStore } from './useProductStore.js';
  *
  * ## A base de referencia
  *
- * A planilha `.ods` e a fonte do NCM e do codigo de barras. Alem de completar o
- * catalogo presente, as linhas dela viram a base de referencia, guardada entre
- * as sessoes para os produtos que chegarem depois. As linhas sao montadas na
- * leitura, junto com o resumo, e gravadas na mesma confirmacao, depois do
- * catalogo, substituindo a base inteira. Os outros formatos so completam o
- * catalogo e nao mexem na base.
+ * O arquivo em colunas que traz NCM ou codigo de barras tambem alimenta a base
+ * de referencia. As linhas sao montadas na leitura e gravadas na mesma
+ * confirmacao, depois do catalogo, atualizando a base codigo por codigo.
  *
  * Como a base vale mesmo com o catalogo vazio, a confirmacao fica disponivel
- * quando ha produto a completar ou linha da planilha a guardar.
+ * quando ha produto a completar ou linha a guardar na base.
+ *
+ * As divergencias ficam fora da confirmacao: so as escolhidas no dialogo
+ * proprio sao gravadas, por `applyDivergences`.
  */
 
 export const COMPLETION_STATUS = Object.freeze({
@@ -67,13 +67,28 @@ function initialState() {
     reference: null,
     referenceResult: null,
     error: null,
+    divergenceStatus: DIVERGENCE_STATUS.IDLE,
+    divergenceResult: null,
+    divergenceError: null,
   };
 }
 
-function planReference(records) {
-  const sheetRecords = records.filter((record) => record.source?.format === IMPORT_FORMAT_ODS);
+/** Linhas da base e a previa da carga; a previa falhando so deixa de aparecer. */
+async function planReference(records) {
+  const selected = selectReferenceRecords(records);
 
-  return sheetRecords.length > 0 ? buildReferenceEntries(sheetRecords) : null;
+  if (selected.length === 0) {
+    return null;
+  }
+
+  const reference = buildReferenceEntries(selected);
+  let preview = null;
+
+  if (reference.entries.length > 0) {
+    preview = await previewReferenceLoad(reference.entries).catch(() => null);
+  }
+
+  return { ...reference, preview };
 }
 
 export const useCompletionStore = create((set, get) => ({
@@ -114,7 +129,7 @@ export const useCompletionStore = create((set, get) => ({
         files: parsed.files,
         records: parsed.records,
         plan: planCatalogCompletion(products, parsed.records),
-        reference: planReference(parsed.records),
+        reference: await planReference(parsed.records),
       });
     } catch (error) {
       set({
@@ -144,7 +159,7 @@ export const useCompletionStore = create((set, get) => ({
 
       const referenceResult =
         reference && reference.entries.length > 0
-          ? { entryCount: await replaceReferenceEntries(reference.entries) }
+          ? await mergeReferenceEntries(reference.entries)
           : null;
 
       set({ status: COMPLETION_STATUS.DONE, plan, result: plan.summary, referenceResult });
@@ -164,5 +179,28 @@ export const useCompletionStore = create((set, get) => ({
       .getState()
       .loadProducts()
       .catch(() => {});
+  },
+
+  applyDivergences: async (chosenIds) => {
+    const { plan, records, divergenceStatus } = get();
+
+    if (!plan || divergenceStatus === DIVERGENCE_STATUS.APPLYING || chosenIds.length === 0) {
+      return;
+    }
+
+    set({ divergenceStatus: DIVERGENCE_STATUS.APPLYING, divergenceError: null, divergenceResult: null });
+
+    try {
+      const summary = await writeDivergenceChoices(plan.divergences, chosenIds);
+      const fresh = planCatalogCompletion(await listProducts(), records);
+
+      set({
+        divergenceStatus: DIVERGENCE_STATUS.IDLE,
+        divergenceResult: summary,
+        plan: { ...get().plan, divergences: fresh.divergences },
+      });
+    } catch (error) {
+      set({ divergenceStatus: DIVERGENCE_STATUS.IDLE, divergenceError: describeStorageError(error) });
+    }
   },
 }));

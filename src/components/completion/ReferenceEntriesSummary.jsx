@@ -1,14 +1,31 @@
 import { formatCount, pluralize } from '../import/importCounts.js';
 
 /**
- * O que a planilha deixa na base de referencia: quantos codigos entram, com
- * que campos, e o que fica fora — antes da gravacao e, depois dela, como
- * resultado.
+ * O que o arquivo deixa na base de referencia: quantos codigos entram, com que
+ * campos, o que muda na base guardada e o que fica fora — antes da gravacao e,
+ * depois dela, como resultado.
  *
- * Aparece so quando o lote tem planilha `.ods`, que e o unico arquivo que
- * alimenta a base. A frase diz que a base e substituida, porque a carga troca
- * a base inteira e o operador precisa saber disso antes de confirmar.
+ * Aparece so quando o lote tem arquivo em colunas com NCM ou codigo de barras.
  */
+
+export function mergeCounts({ added, updated, unchanged }) {
+  return [
+    pluralize(added, 'novo', 'novos'),
+    pluralize(updated, 'atualizado', 'atualizados'),
+    pluralize(unchanged, 'igual', 'iguais'),
+  ].join(' · ');
+}
+
+function resultSentence(result) {
+  if (result.mode === 'replace') {
+    const kept = pluralize(result.entryCount, 'código guardado', 'códigos guardados');
+    const removed = pluralize(result.removed, 'removido', 'removidos');
+
+    return `Base de referência trocada: ${kept} · ${removed}.`;
+  }
+
+  return `Base de referência atualizada: ${mergeCounts(result)}.`;
+}
 
 function leftOut(summary) {
   const parts = [];
@@ -32,7 +49,7 @@ function leftOut(summary) {
   return parts;
 }
 
-export default function ReferenceEntriesSummary({ summary, result }) {
+export default function ReferenceEntriesSummary({ summary, preview = null, result }) {
   const ignored = leftOut(summary);
 
   return (
@@ -40,16 +57,21 @@ export default function ReferenceEntriesSummary({ summary, result }) {
       <p className="font-semibold text-neutro-tintaMedia">Base de referência</p>
       {result ? (
         <p role="status" className="text-marca-verdeTexto">
-          {result.entryCount === 1
-            ? 'Base de referência guardada com 1 código.'
-            : `Base de referência guardada com ${formatCount(result.entryCount)} códigos.`}
+          {resultSentence(result)}
         </p>
       ) : (
-        <p className="text-neutro-tintaMedia">
-          {summary.entryCount === 0
-            ? 'A planilha não tem código com NCM ou código de barras válido; a base guardada fica como está.'
-            : `${pluralize(summary.entryCount, 'código da planilha substitui', 'códigos da planilha substituem')} a base guardada neste navegador: ${formatCount(summary.withNcm)} com NCM e ${formatCount(summary.withEan)} com código de barras.`}
-        </p>
+        <>
+          <p className="text-neutro-tintaMedia">
+            {summary.entryCount === 0
+              ? 'O arquivo não tem código com NCM ou código de barras válido; a base guardada fica como está.'
+              : `${pluralize(summary.entryCount, 'código do arquivo vai', 'códigos do arquivo vão')} para a base: ${formatCount(summary.withNcm)} com NCM e ${formatCount(summary.withEan)} com código de barras.`}
+          </p>
+          {preview && summary.entryCount > 0 ? (
+            <p className="tabular-nums text-neutro-tintaMedia" data-previa-base="">
+              {mergeCounts(preview)}
+            </p>
+          ) : null}
+        </>
       )}
       {ignored.length > 0 ? (
         <p className="text-neutro-tintaFraca">Ficam fora: {ignored.join(', ')}.</p>

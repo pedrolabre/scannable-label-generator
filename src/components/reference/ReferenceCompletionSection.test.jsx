@@ -6,8 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Completar o catalogo pela base, na tela: conferir mostra o resumo sem
- * gravar, completar grava so os campos vazios, e a falha fica na tela com o
- * motivo. Os dois repositorios entram como duble.
+ * gravar, completar grava so os campos vazios, o NCM diferente vira divergencia
+ * revisada a parte, e a falha fica na tela com o motivo. Os dois repositorios
+ * entram como duble.
  */
 
 const products = vi.hoisted(() => ({
@@ -178,7 +179,43 @@ describe('completar o catalogo pela base', () => {
       'Nenhum produto do catálogo está sem NCM ou sem código de barras.',
     );
     expect(button('Completar catálogo')).toBeUndefined();
-    expect(references.findReferences).not.toHaveBeenCalled();
+    expect(button('Divergências (0)')).toBeUndefined();
+    expect(references.findReferences).toHaveBeenCalledWith(['2040']);
+  });
+
+  it('aponta o NCM diferente e so o muda depois da escolha', async () => {
+    const reclassified = product({ ...SOFA, ncm: '94016900' });
+
+    products.listProducts.mockResolvedValue([reclassified]);
+    references.findReferences.mockResolvedValue(
+      new Map([['2040', { systemCode: '2040', ncm: '94016100', ean: '7890000000031' }]]),
+    );
+
+    await render();
+    await click('Conferir o catálogo');
+    await click('Divergências (1)');
+
+    const dialog = document.querySelector('[data-divergencias]');
+
+    expect(dialog.textContent).toContain('2040');
+    expect(dialog.querySelector('[data-valor-cadastrado]').textContent).toBe('94016900');
+    expect(dialog.querySelector('[data-valor-novo]').textContent).toBe('94016100');
+    expect(dialog.textContent).toContain('Na base');
+    expect(button('Aplicar escolhas').disabled).toBe(true);
+
+    await act(async () => {
+      dialog.querySelector('input[value="change"]').click();
+    });
+
+    products.listProducts.mockResolvedValue([reclassified]);
+
+    await click('Aplicar escolhas');
+
+    expect(products.updateProducts).toHaveBeenCalledTimes(1);
+    expect(products.updateProducts.mock.calls[0][0]).toEqual([
+      expect.objectContaining({ id: reclassified.id, ncm: '94016100', displayName: 'SOFA INVENTADO' }),
+    ]);
+    expect(container.textContent).toContain('1 produto atualizado.');
   });
 
   it('deixa conferir indisponivel com a base vazia', async () => {

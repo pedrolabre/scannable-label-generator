@@ -10,11 +10,12 @@ MVP funcional.
 
 ## Funcionamento
 
-- Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e relatórios `.txt` do ERP (Tabela de Preço e Saldo de Estoque por Grupo).
+- Cadastro manual de produtos e importação em lote via CSV, JSON, XML de NFC-e (SEFAZ 4.00) e `.txt`: os relatórios do ERP (Tabela de Preço e Saldo de Estoque por Grupo) ou a planilha salva como texto, com as colunas separadas por tabulação e os mesmos nomes de coluna da planilha. O tipo do `.txt` é reconhecido pelo conteúdo.
 - Na importação, o NCM e o código de barras que o arquivo não traz são completados pela base de referência guardada pelo `Completar dados`, antes da conferência. A base é consultada uma vez por lote, pelo código inteiro ou sem os zeros à esquerda; só o campo vazio é completado, e o valor que o arquivo trouxe nunca muda. Sem base, ou com a leitura dela falhando, a importação segue como antes.
 - A revisão do lote diz quantos registros ganharam NCM e código de barras pela base e quantos tinham código fora dela, prontos inclusive, e o registro que aparece na revisão leva a marca dos campos que vieram da base. Quando a leitura da base falha, um aviso diz que o lote seguiu como veio do arquivo, e a gravação continua disponível.
-- `Completar dados`, ao lado de `Importar`: lê a planilha cadastral `.ods` ou os mesmos arquivos da importação e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, a planilha `.ods` fica guardada neste navegador como base de referência de NCM e código de barras, substituída a cada planilha, mesmo com o catálogo vazio; a base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
-- `Base de referência`, ao lado de `Completar dados`: mostra quantos códigos a base guarda, quantos têm NCM e código de barras e a data da última carga; troca a base inteira pela planilha `.ods` sem tocar no catálogo; apaga a base, com confirmação; e completa o NCM e o código de barras vazios dos produtos já cadastrados a partir da base, sem arquivo e com o resumo conferido antes de gravar.
+- `Completar dados`, ao lado de `Importar`: lê planilhas `.ods` e `.csv`, listas `.json`, notas fiscais `.xml` e arquivos `.txt` e preenche só os campos vazios dos produtos já cadastrados (NCM, código de barras, descrição, categoria e observações), sem criar produto e com o resumo conferido antes de gravar. O código é comparado inteiro e, quando não existe no catálogo, também sem os zeros à esquerda. Na mesma confirmação, o arquivo em colunas que traz NCM ou código de barras (`.ods`, `.csv`, `.json` ou `.txt` com tabulação) atualiza a base de referência código por código, mesmo com o catálogo vazio; o resumo diz antes quantos códigos são novos, quantos mudam e quantos já estavam iguais. A nota fiscal não alimenta a base. A base fica fora do arquivo de backup e continua guardada quando o catálogo é zerado.
+- Divergências no `Completar dados`: descrição, preço ou NCM já preenchidos com valor diferente do arquivo não mudam na confirmação. O botão `Divergências (N)` abre um segundo diálogo com o valor cadastrado ao lado do valor do arquivo, tudo aberto em `Manter`; cada item pode ser trocado para `Mudar`, e `Mudar todos` / `Manter todos` valem para o filtro aberto (todos, descrição, preço ou NCM). Só `Aplicar escolhas` grava, e grava só o que está em `Mudar`. A descrição é comparada sem diferença de espaços, e mudá-la refaz o nome da etiqueta a partir dela. Item cujo produto mudou entre a lista e a gravação fica de fora e é contado.
+- `Base de referência`, ao lado de `Completar dados`: guarda código, NCM e código de barras; mostra quantos códigos a base tem, quantos têm NCM e código de barras e a data da última carga. Carrega `.ods`, `.csv`, `.json` ou `.txt` com tabulação sem tocar no catálogo, por dois caminhos: `Atualizar a base`, código por código (código novo entra, o que existe recebe o que o arquivo traz, campo vazio no arquivo não apaga o guardado, e código fora do arquivo continua na base), ou `Trocar a base`, que deixa só os códigos do arquivo e pede confirmação dizendo quantos saem. Apaga a base, com confirmação. E completa o NCM e o código de barras vazios dos produtos já cadastrados a partir da base, sem arquivo e com o resumo conferido antes de gravar; o NCM da base diferente do cadastrado aparece em `Divergências`, com o mesmo diálogo do `Completar dados`.
 - Listagem paginada, 50 produtos por página, com a troca de página e o trecho exibido no rodapé fixo da coluna. A busca, sem acento e sem diferença de caixa, procura no catálogo inteiro, e a página sai do resultado já em ordem de nome. O catálogo é preparado para a busca uma vez a cada mudança da lista (forma sem acento dos campos e ordem por nome), e cada termo só filtra; o campo mostra cada letra na hora e a lista acompanha logo em seguida, sem esperar a digitação parar. Trocar o termo volta à primeira página, e cadastrar, editar, remover ou importar mantém a página atual. A marcação para a folha é guardada por produto e não muda com a troca de página. A caixa do cabeçalho `Imprimir` (nos cartões, `Imprimir todos`) marca a lista inteira, em todas as páginas: sem busca, o catálogo; com busca, só o resultado. Com a lista toda marcada, ela desmarca a lista; com parte marcada, fica no meio. O que estava marcado fora do resultado da busca fica como estava, e quem já estava marcado mantém as cópias digitadas.
 - Geração de QR Code no formato posicional `LF1`, gravando os dados completos do exemplar na etiqueta.
 - Etiqueta com cabeçalho (código e logotipo ou nome da empresa), preço à vista, cartão sem juros, crediário com taxa e parcela calculada, EAN, NCM e símbolo 2D no canto inferior.
@@ -182,11 +183,14 @@ scannable-label-generator/
         useBackupExport.js
         useBackupRestore.js
       completion/
+        CatalogCompletionDivergences.test.jsx
         CatalogCompletionPanel.jsx
         CatalogCompletionPanel.test.jsx
         CatalogCompletionPanelReference.test.jsx
         CatalogCompletionSummary.jsx
         ReferenceEntriesSummary.jsx
+      divergence/
+        DivergenceDialog.jsx
       import/
         ImportConflictBulkActions.jsx
         ImportConflictNotice.jsx
@@ -331,6 +335,7 @@ scannable-label-generator/
         backupWriter.js
         catalogCompletion.js
         catalogCompletion.test.js
+        catalogCompletionDivergence.test.js
         csvParser.js
         importConflict.js
         importConflict.test.js
@@ -397,6 +402,7 @@ scannable-label-generator/
         referenceCompletion.test.js
         referenceEntries.js
         referenceEntries.test.js
+        referenceMerge.test.js
         sheetGrid.js
         sheetGrid.test.js
         sheetLayoutCatalog.js
@@ -412,6 +418,8 @@ scannable-label-generator/
         txtReportFixtures.js
         txtReportParser.js
         txtReportParser.test.js
+        txtTableParser.js
+        txtTableParser.test.js
     lib/
       app-meta.js
       barcode.js
@@ -461,8 +469,10 @@ scannable-label-generator/
       referenceBoundaries.test.js
       referenceRepository.js
       referenceRepository.test.js
+      referenceRepositoryMerge.test.js
       storageError.js
     store/
+      divergenceWrite.js
       importBatchUpdates.js
       importEnrichment.js
       importEnrichment.test.js

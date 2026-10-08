@@ -1,5 +1,6 @@
 import { ReferenceEntrySchema } from '../domain/schemas/referenceEntrySchema.js';
 import { comparableCode } from '../domain/services/catalogCompletion.js';
+import { planReferenceMerge } from '../domain/services/referenceEntries.js';
 
 import { db } from './indexed-db.js';
 
@@ -12,7 +13,7 @@ import { db } from './indexed-db.js';
  * A base e separada do catalogo. Este modulo nao toca a tabela de produtos, e o
  * repositorio de produtos nao toca esta: zerar o catalogo mantem a base, e a
  * carga da base nao muda nenhum produto. Ela tambem fica fora do arquivo de
- * backup, porque se refaz inteira a partir da planilha.
+ * backup, porque se refaz a partir dos arquivos de cadastro.
  *
  * A busca e sempre pelo codigo comparavel, o mesmo que serve de chave: o codigo
  * impresso com zeros a esquerda encontra a linha guardada sem eles.
@@ -61,6 +62,66 @@ export async function replaceReferenceEntries(entries, { loadedAt = new Date().t
   });
 
   return validated.length;
+}
+
+async function readStored(entries) {
+  const keys = entries.map((entry) => entry.comparableCode);
+  const stored = await db.referenceEntries.bulkGet(keys);
+  const existing = new Map();
+
+  keys.forEach((key, index) => {
+    if (stored[index]) {
+      existing.set(key, stored[index]);
+    }
+  });
+
+  return existing;
+}
+
+/**
+ * Atualiza a base codigo por codigo, numa transacao so, sem apagar o codigo
+ * ausente do arquivo. Devolve quantas linhas entraram, mudaram e ja estavam iguais.
+ */
+export async function mergeReferenceEntries(entries, { loadedAt = new Date().toISOString() } = {}) {
+  let summary = null;
+
+  await db.transaction('rw', db.referenceEntries, async () => {
+    const plan = planReferenceMerge(entries, await readStored(entries));
+    const validated = plan.entries.map((entry) => ReferenceEntrySchema.parse({ ...entry, loadedAt }));
+
+    if (validated.length > 0) {
+      await db.referenceEntries.bulkPut(validated);
+    }
+
+    summary = plan.summary;
+  });
+
+  return summary;
+}
+
+/** Troca a base inteira e devolve quantas linhas entraram e quantas sairam. */
+export async function replaceReferenceBase(entries, options) {
+  const keys = new Set(entries.map((entry) => entry.comparableCode));
+  let removed = 0;
+
+  await db.referenceEntries.each((entry) => {
+    if (!keys.has(entry.comparableCode)) {
+      removed += 1;
+    }
+  });
+
+  const entryCount = await replaceReferenceEntries(entries, options);
+
+  return { entryCount, removed };
+}
+
+/** O que cada carga faria com a base, sem gravar. */
+export async function previewReferenceLoad(entries) {
+  const { summary } = planReferenceMerge(entries, await readStored(entries));
+  const stored = await db.referenceEntries.count();
+  const kept = summary.updated + summary.unchanged;
+
+  return { ...summary, removedOnReplace: stored - kept };
 }
 
 /** NCM e codigo de barras de um codigo, ou `null` quando ele nao esta na base. */

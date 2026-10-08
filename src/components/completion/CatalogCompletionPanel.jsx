@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { COMPLETION_FILE_EXTENSIONS } from '../../domain/services/importService.js';
+import { DIVERGENCE_STATUS } from '../../store/divergenceWrite.js';
 import { COMPLETION_STATUS, useCompletionStore } from '../../store/useCompletionStore.js';
+import DivergenceDialog from '../divergence/DivergenceDialog.jsx';
 import ImportFilePicker from '../import/ImportFilePicker.jsx';
 import ImportFileStatusList from '../import/ImportFileStatusList.jsx';
 import Button from '../ui/Button.jsx';
@@ -17,18 +19,18 @@ import ReferenceEntriesSummary from './ReferenceEntriesSummary.jsx';
  * Ele e irmao do dialogo de importacao, e nao uma aba dele, porque o efeito e
  * o oposto: a importacao cria produtos, e este dialogo nunca cria nenhum. Ele
  * le os arquivos, compara com o que ja esta cadastrado e preenche so os campos
- * vazios. E o caminho da planilha cadastral, que traz o NCM e o codigo de
+ * vazios — e e o caminho do arquivo de cadastro, que traz o NCM e o codigo de
  * barras mas nao traz preco.
  *
  * O resumo aparece antes de qualquer gravacao, e o botao de completar e a
- * confirmacao. Com a planilha `.ods`, a mesma confirmacao guarda as linhas
- * dela na base de referencia; sem produto a completar, o botao so guarda a
- * base, e o nome dele diz isso. Como na importacao, o dialogo nao fecha no clique fora e fechar
- * nao descarta o que foi lido.
+ * confirmacao. Com arquivo em colunas que traz NCM ou codigo de barras, a mesma
+ * confirmacao atualiza a base de referencia; sem produto a completar, o botao
+ * so atualiza a base, e o nome dele diz isso. Como na importacao, o dialogo nao
+ * fecha no clique fora e fechar nao descarta o que foi lido.
  */
 
 const HELP_TEXT =
-  'Aceita a planilha .ods e os mesmos arquivos da importação. Só preenche campos vazios dos produtos já cadastrados; nenhum produto é criado.';
+  'Aceita planilhas .ods e .csv, listas .json, notas fiscais .xml e arquivos .txt (relatório do ERP ou separado por tabulação). Nenhum produto é criado.';
 
 export default function CatalogCompletionPanel({ onClose }) {
   const status = useCompletionStore((state) => state.status);
@@ -41,6 +43,11 @@ export default function CatalogCompletionPanel({ onClose }) {
   const readFiles = useCompletionStore((state) => state.readFiles);
   const confirm = useCompletionStore((state) => state.confirm);
   const reset = useCompletionStore((state) => state.reset);
+  const divergenceStatus = useCompletionStore((state) => state.divergenceStatus);
+  const divergenceResult = useCompletionStore((state) => state.divergenceResult);
+  const divergenceError = useCompletionStore((state) => state.divergenceError);
+  const applyDivergences = useCompletionStore((state) => state.applyDivergences);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const isReading = status === COMPLETION_STATUS.READING;
   const isWriting = status === COMPLETION_STATUS.WRITING;
@@ -49,7 +56,9 @@ export default function CatalogCompletionPanel({ onClose }) {
   const hasReferenceToStore = reference?.summary.entryCount > 0;
   const canConfirm =
     (status === COMPLETION_STATUS.READY || isWriting) && (hasProductsToComplete || hasReferenceToStore);
-  const confirmLabel = hasProductsToComplete ? 'Completar catálogo' : 'Guardar base de referência';
+  const confirmLabel = hasProductsToComplete ? 'Completar catálogo' : 'Atualizar a base de referência';
+  const divergences = plan?.divergences ?? [];
+  const canReview = !isReading && divergences.length > 0;
 
   const handleFilesSelected = useCallback(
     (selected) => {
@@ -65,7 +74,7 @@ export default function CatalogCompletionPanel({ onClose }) {
   return (
     <ModalShell
       title="Completar dados"
-      subtitle="Preenche só os campos vazios dos produtos já cadastrados."
+      subtitle="Preenche campos vazios e aponta divergências nos produtos já cadastrados."
       width={640}
       closeOnBackdrop={false}
       onClose={onClose}
@@ -79,6 +88,16 @@ export default function CatalogCompletionPanel({ onClose }) {
           <Button type="button" onClick={onClose} disabled={isBusy}>
             Fechar
           </Button>
+          {canReview ? (
+            <Button
+              type="button"
+              onClick={() => setIsReviewing(true)}
+              disabled={isWriting}
+              data-abrir-divergencias=""
+            >
+              {`Divergências (${divergences.length.toLocaleString('pt-BR')})`}
+            </Button>
+          ) : null}
           {canConfirm ? (
             <Button type="button" variant="primary" onClick={handleConfirm} disabled={isWriting}>
               {isWriting ? 'Gravando…' : confirmLabel}
@@ -89,9 +108,10 @@ export default function CatalogCompletionPanel({ onClose }) {
     >
       <div className="space-y-4">
         <p className="text-sm leading-relaxed text-neutro-tintaMedia">
-          Compara cada código do arquivo com o catálogo deste dispositivo. O que já está preenchido
-          fica como está, e código que não está cadastrado é ignorado. A planilha .ods também fica
-          guardada neste navegador como base de referência de NCM e código de barras.
+          Compara cada código do arquivo com os produtos cadastrados neste navegador. Campo vazio é
+          preenchido. Descrição, preço ou NCM diferentes aparecem em Divergências, para você
+          escolher entre mudar e manter. Código que não está cadastrado é ignorado. Código, NCM e
+          código de barras do arquivo também atualizam a base de referência.
         </p>
 
         <ImportFilePicker
@@ -114,9 +134,24 @@ export default function CatalogCompletionPanel({ onClose }) {
         ) : null}
 
         {reference && !isReading ? (
-          <ReferenceEntriesSummary summary={reference.summary} result={referenceResult} />
+          <ReferenceEntriesSummary
+            summary={reference.summary}
+            preview={reference.preview}
+            result={referenceResult}
+          />
         ) : null}
       </div>
+
+      {isReviewing ? (
+        <DivergenceDialog
+          divergences={divergences}
+          isApplying={divergenceStatus === DIVERGENCE_STATUS.APPLYING}
+          result={divergenceResult}
+          error={divergenceError}
+          onApply={applyDivergences}
+          onClose={() => setIsReviewing(false)}
+        />
+      ) : null}
     </ModalShell>
   );
 }

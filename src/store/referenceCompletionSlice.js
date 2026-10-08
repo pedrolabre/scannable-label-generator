@@ -1,11 +1,12 @@
 import {
   planReferenceCompletion,
-  referenceCodesToAsk,
+  referenceCodesToCheck,
 } from '../domain/services/referenceCompletion.js';
 import { listProducts, updateProducts } from '../storage/productRepository.js';
 import { findReferences } from '../storage/referenceRepository.js';
 import { describeStorageError, describeStorageReadError } from '../storage/storageError.js';
 
+import { DIVERGENCE_STATUS, writeDivergenceChoices } from './divergenceWrite.js';
 import { useProductStore } from './useProductStore.js';
 
 /**
@@ -33,7 +34,7 @@ export const COMPLETION_FROM_BASE_STATUS = Object.freeze({
 
 async function planFromStorage() {
   const products = await listProducts();
-  const codes = referenceCodesToAsk(products);
+  const codes = referenceCodesToCheck(products);
   const references = codes.length > 0 ? await findReferences(codes) : new Map();
 
   return planReferenceCompletion(products, references);
@@ -44,6 +45,9 @@ function initialCompletionState() {
     completionStatus: COMPLETION_FROM_BASE_STATUS.IDLE,
     completionPlan: null,
     completionError: null,
+    divergenceStatus: DIVERGENCE_STATUS.IDLE,
+    divergenceResult: null,
+    divergenceError: null,
   };
 }
 
@@ -111,6 +115,29 @@ export function createReferenceCompletionSlice(set, get) {
         .getState()
         .loadProducts()
         .catch(() => {});
+    },
+
+    applyCompletionDivergences: async (chosenIds) => {
+      const { completionPlan, divergenceStatus } = get();
+
+      if (!completionPlan || divergenceStatus === DIVERGENCE_STATUS.APPLYING || chosenIds.length === 0) {
+        return;
+      }
+
+      set({ divergenceStatus: DIVERGENCE_STATUS.APPLYING, divergenceError: null, divergenceResult: null });
+
+      try {
+        const summary = await writeDivergenceChoices(completionPlan.divergences, chosenIds);
+        const fresh = await planFromStorage();
+
+        set({
+          divergenceStatus: DIVERGENCE_STATUS.IDLE,
+          divergenceResult: summary,
+          completionPlan: { ...get().completionPlan, divergences: fresh.divergences },
+        });
+      } catch (error) {
+        set({ divergenceStatus: DIVERGENCE_STATUS.IDLE, divergenceError: describeStorageError(error) });
+      }
     },
   };
 }

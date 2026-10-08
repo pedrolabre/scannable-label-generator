@@ -11,7 +11,7 @@ import { parseJsonText } from './jsonParser.js';
 import { parseNfceDocument } from './nfceParser.js';
 import { parseOdsFile } from './odsParser.js';
 import { attachProductCandidate } from './productMapping.js';
-import { parseTxtReport } from './txtReportParser.js';
+import { parseTxtFile } from './txtTableParser.js';
 
 /**
  * Entrada do importador: recebe os arquivos escolhidos, encaminha cada um ao
@@ -31,7 +31,8 @@ import { parseTxtReport } from './txtReportParser.js';
  * Dois caminhos usam esta mesma entrada, cada um com a sua lista de extensoes:
  *
  * - a importacao de produtos, que cria produtos no catalogo, aceita planilha,
- *   lista, nota fiscal e relatorio em texto do ERP;
+ *   lista, nota fiscal e `.txt` — o relatorio do ERP ou a planilha salva como
+ *   texto, com as colunas separadas por tabulacao;
  * - a complementacao, que so preenche campos vazios do que ja esta cadastrado,
  *   aceita os mesmos e tambem a planilha OpenDocument. A planilha cadastral nao
  *   traz preco, e na importacao de produtos todos os registros dela seriam
@@ -89,8 +90,8 @@ async function parseSingleFile(file, fileIndex, acceptedExtensions) {
   }
 
   // O CSV vai inteiro para o leitor: e ele quem abre o arquivo dentro do
-  // worker. O relatorio em texto e a planilha OpenDocument sao lidos como
-  // bytes: o relatorio nao esta em UTF-8, e a planilha e um pacote ZIP, e a
+  // worker. O `.txt` e a planilha OpenDocument sao lidos como bytes: o
+  // relatorio do ERP nao esta em UTF-8, e a planilha e um pacote ZIP, e a
   // leitura como texto estragaria os dois antes de chegarem ao leitor. JSON e
   // XML sao lidos como texto aqui.
   if (format === IMPORT_FORMAT_CSV) {
@@ -98,7 +99,7 @@ async function parseSingleFile(file, fileIndex, acceptedExtensions) {
   }
 
   if (format === IMPORT_FORMAT_TXT) {
-    return parseTxtReport(await readBytes(file), origin);
+    return parseTxtFile(await readBytes(file), origin);
   }
 
   if (format === IMPORT_FORMAT_ODS) {

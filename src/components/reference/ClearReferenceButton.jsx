@@ -12,7 +12,8 @@ import ConfirmModal from '../ui/ConfirmModal.jsx';
  *
  * Segue o zerar catalogo: a confirmacao que falha mantem o dialogo aberto com
  * o motivo, e confirmar de novo e a nova tentativa. A perda nao e definitiva
- * como a do catalogo — a base se refaz pela planilha —, e o texto diz isso.
+ * como a do catalogo — a base se refaz carregando um arquivo —, e o texto diz
+ * isso.
  */
 export default function ClearReferenceButton({ total, onClear }) {
   const [open, setOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function ClearReferenceButton({ total, onClear }) {
             A base de referência inteira, com {codes}, sai do armazenamento deste navegador, e a
             importação deixa de completar o NCM e o código de barras.
           </p>
-          <p>O catálogo fica como está. A base volta carregando a planilha cadastral de novo.</p>
+          <p>O catálogo fica como está. A base volta carregando um arquivo de novo.</p>
         </ConfirmModal>
       ) : null}
     </>
