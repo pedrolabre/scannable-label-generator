@@ -1,6 +1,7 @@
 import { listSheetLayouts } from '../../domain/services/sheetLayoutCatalog.js';
 
 import SegmentedControl from '../ui/SegmentedControl.jsx';
+import { splitOptionLabel } from '../ui/optionLabel.js';
 
 /**
  * Escolha do modelo de folha.
@@ -10,13 +11,13 @@ import SegmentedControl from '../ui/SegmentedControl.jsx';
  * para exibir: o componente le a lista e desenha.
  *
  * O rotulo de cada opcao e o proprio nome do modelo, que ja carrega a medida
- * ("A4 retrato (210 x 297 mm)"). Repetir a medida ao lado imprimiria o mesmo
- * numero duas vezes.
+ * ("A4 retrato (210 x 297 mm)"): o nome fica na primeira linha e a medida
+ * entre parenteses desce para a segunda.
  */
 export default function SheetLayoutPicker({ value, onChange, className }) {
   const options = listSheetLayouts().map((layout) => ({
     value: layout.id,
-    label: layout.name,
+    ...splitOptionLabel(layout.name),
   }));
 
   return (

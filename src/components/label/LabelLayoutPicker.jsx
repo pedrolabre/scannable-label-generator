@@ -1,6 +1,7 @@
 import { listLabelLayouts } from '../../domain/services/labelLayoutCatalog.js';
 
 import SegmentedControl from '../ui/SegmentedControl.jsx';
+import { splitOptionLabel } from '../ui/optionLabel.js';
 
 /**
  * Escolha do modelo de etiqueta.
@@ -10,8 +11,8 @@ import SegmentedControl from '../ui/SegmentedControl.jsx';
  * leitura para exibir: o componente le a lista e desenha.
  *
  * O rotulo de cada opcao e o proprio nome do modelo, que ja carrega a medida
- * ("Tag grande (100 x 70 mm)"). Repetir a medida ao lado imprimiria o mesmo
- * numero duas vezes.
+ * ("Tag grande (100 x 70 mm)"): o nome fica na primeira linha e a medida
+ * entre parenteses desce para a segunda.
  *
  * `name` e `legend` tem padrao porque a tela da previa e a primeira chamadora e
  * nao precisa declarar nenhum dos dois. Uma segunda escolha de modelo na mesma
@@ -28,7 +29,7 @@ export default function LabelLayoutPicker({
 }) {
   const options = listLabelLayouts().map((layout) => ({
     value: layout.id,
-    label: layout.name,
+    ...splitOptionLabel(layout.name),
   }));
 
   return (

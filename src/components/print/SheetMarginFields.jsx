@@ -4,6 +4,22 @@ import { MILLIMETER_STEP, SHEET_FIELDS } from './printInputs.js';
 
 const STEP_HINT = `passo de ${String(MILLIMETER_STEP).replace('.', ',')} mm`;
 
+const TWO_LINE_LABELS = new Set(['columnGapMm', 'rowGapMm']);
+
+function renderLabel(field) {
+  if (!TWO_LINE_LABELS.has(field.key)) {
+    return field.label;
+  }
+
+  const [first, ...rest] = field.label.split(' ');
+
+  return (
+    <>
+      {first} <span className="block">{rest.join(' ')}</span>
+    </>
+  );
+}
+
 /**
  * As quatro margens e os dois espacamentos da folha, em milimetros.
  *
@@ -15,35 +31,36 @@ const STEP_HINT = `passo de ${String(MILLIMETER_STEP).replace('.', ',')} mm`;
  * O erro de cada campo chega pronto de quem montou a tela. Este componente nao
  * le numero nem valida: ele desenha o campo e devolve o texto digitado.
  *
- * Sao seis campos de rotulo longo com uma dica ao lado, e eles vivem numa
- * coluna de 240 px. A regra de largura e a da coluna, e nao a da janela: tres
- * ou dois por linha cabiam na tela larga e transbordavam a coluna, que passava
- * a rolar de lado. Um por linha e o unico arranjo em que o rotulo e a dica nao
- * brigam pela mesma linha nessa largura.
+ * A regra de largura e a da coluna, e nao a da janela, por consulta de
+ * container: um por linha na coluna de 240 px, tres por linha quando a gaveta
+ * abre (ou a coluna e a tela inteira). Os dois espacamentos quebram o rotulo
+ * em duas linhas, e a linha da grade alinha os campos pela base.
  */
 export default function SheetMarginFields({ values, errors = {}, onChange }) {
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {SHEET_FIELDS.map((field) => (
-        <Field
-          key={field.key}
-          id={`folha-${field.key}`}
-          label={field.label}
-          hint={`mm · até ${field.max}`}
-          error={errors[field.key]}
-        >
-          {(controlProps) => (
-            <TextInput
-              {...controlProps}
-              inputMode="decimal"
-              autoComplete="off"
-              title={STEP_HINT}
-              value={values[field.key] ?? ''}
-              onChange={(event) => onChange(field.key, event.target.value)}
-            />
-          )}
-        </Field>
-      ))}
+    <div className="[container-type:inline-size]">
+      <div className="grid grid-cols-1 items-end gap-4 [@container(min-width:34rem)]:grid-cols-3">
+        {SHEET_FIELDS.map((field) => (
+          <Field
+            key={field.key}
+            id={`folha-${field.key}`}
+            label={renderLabel(field)}
+            hint={`mm · até ${field.max}`}
+            error={errors[field.key]}
+          >
+            {(controlProps) => (
+              <TextInput
+                {...controlProps}
+                inputMode="decimal"
+                autoComplete="off"
+                title={STEP_HINT}
+                value={values[field.key] ?? ''}
+                onChange={(event) => onChange(field.key, event.target.value)}
+              />
+            )}
+          </Field>
+        ))}
+      </div>
     </div>
   );
 }
