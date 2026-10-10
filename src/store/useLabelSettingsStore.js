@@ -35,3 +35,7 @@ export function useLabelHeader() {
 
   return useMemo(() => resolveLabelHeader(settings), [settings]);
 }
+
+export function useCutGuide() {
+  return useLabelSettingsStore((state) => state.settings.cutGuide);
+}

@@ -14,6 +14,7 @@ import {
   INTEREST_RATE_DECIMALS_MESSAGE,
   INTEREST_RATE_RANGE_MESSAGE,
 } from '../domain/services/installmentPlan.js';
+import { CUT_GUIDES } from '../domain/services/cutGuide.js';
 import { LOGO_MESSAGES } from '../domain/services/logoImage.js';
 import { JPEG_8X4_DATA_URL, pngDataUrl } from '../lib/logoFixtures.js';
 import { useLabelSettingsStore } from '../store/useLabelSettingsStore.js';
@@ -88,6 +89,31 @@ describe('leitura e gravacao', () => {
     window.localStorage.setItem(LABEL_SETTINGS_STORAGE_KEY, JSON.stringify(OLD_VALUE));
 
     expect(readLabelSettings()).toEqual({ ...DEFAULT_LABEL_SETTINGS, ...OLD_READ });
+  });
+
+  it('le a borda de corte como clara no valor guardado antes dela existir', () => {
+    window.localStorage.setItem(LABEL_SETTINGS_STORAGE_KEY, JSON.stringify(OLD_VALUE));
+
+    expect(readLabelSettings().cutGuide).toBe(CUT_GUIDES.LIGHT);
+  });
+
+  it('grava a borda destacada e a devolve depois de recarregar o store', () => {
+    useLabelSettingsStore.getState().update({ cutGuide: CUT_GUIDES.STRONG });
+    useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS } });
+    useLabelSettingsStore.getState().reload();
+
+    expect(stored().cutGuide).toBe(CUT_GUIDES.STRONG);
+    expect(useLabelSettingsStore.getState().settings.cutGuide).toBe(CUT_GUIDES.STRONG);
+  });
+
+  it('volta a borda desconhecida para clara e mantem o resto guardado', () => {
+    window.localStorage.setItem(
+      LABEL_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...OLD_VALUE, cutGuide: 'grossa' }),
+    );
+
+    expect(readLabelSettings()).toEqual({ ...DEFAULT_LABEL_SETTINGS, ...OLD_READ });
+    expect(() => writeLabelSettings({ ...DEFAULT_LABEL_SETTINGS, cutGuide: 'grossa' })).toThrow();
   });
 
   it('grava o logotipo e o devolve igual depois de recarregar o store', () => {

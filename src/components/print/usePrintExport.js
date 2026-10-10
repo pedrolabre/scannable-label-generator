@@ -10,7 +10,7 @@ import {
   describeSymbolProgress,
   listExportSymbolTexts,
 } from '../../domain/services/printExport.js';
-import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
+import { useCutGuide, useLabelHeader } from '../../store/useLabelSettingsStore.js';
 
 /**
  * Estado da exportacao e a sequencia que a executa.
@@ -79,6 +79,7 @@ export function usePrintExport() {
   const [message, setMessage] = useState(null);
   const runningRef = useRef(false);
   const header = useLabelHeader();
+  const cutGuide = useCutGuide();
 
   const exportJob = useCallback(async ({ job, sheet, labelLayout, grid, products }) => {
     if (runningRef.current) {
@@ -101,6 +102,7 @@ export function usePrintExport() {
         products,
         symbols,
         header,
+        cutGuide,
       });
 
       const bytes = await renderPrintDocument(description, {
@@ -123,7 +125,7 @@ export function usePrintExport() {
     } finally {
       runningRef.current = false;
     }
-  }, [header]);
+  }, [header, cutGuide]);
 
   return { status, message, exportJob };
 }

@@ -47,6 +47,7 @@ A aplicação abre com a `Etiqueta 10 (84,7 x 46,6 mm)` na folha `A4 10 etiqueta
 - A grade parte do canto superior esquerdo; a sobra fica à direita e embaixo.
 - As seis medidas da folha são editáveis e voltam às do modelo quando a folha é trocada.
 - `Aproveitar a folha` (margem de 5 mm e etiquetas encostadas) só aparece quando abre uma coluna ou uma linha a mais.
+- A borda de corte de cada etiqueta é escolhida na ficha da `Prévia da folha`: `Clara` (0,1 mm, cinza claro) ou `Destacada` (0,2 mm, preta), para quem recorta à tesoura. A escolha fica guardada no navegador e vale para a prévia e para as duas exportações, a do diálogo e a da coluna.
 - Na etiqueta de 10 por folha o nome do produto ocupa duas linhas, em corpo menor que o dos outros modelos, e é cortado com reticências quando não cabe.
 - A etiqueta de 10 por folha e a tag grande levam o crediário e uma faixa vermelha na base, abaixo do símbolo. A etiqueta média leva só o cartão, e a pequena, nenhum dos dois.
 
@@ -244,6 +245,7 @@ scannable-label-generator/
         PrintJobSettings.jsx
         PrintJobSettings.test.jsx
         SheetCanvas.jsx
+        SheetCutGuidePicker.jsx
         SheetFitToggle.jsx
         SheetLayoutPicker.jsx
         SheetMarginFields.jsx
@@ -337,6 +339,7 @@ scannable-label-generator/
         catalogCompletion.test.js
         catalogCompletionDivergence.test.js
         csvParser.js
+        cutGuide.js
         importConflict.js
         importConflict.test.js
         importConflictIndex.js

@@ -10,6 +10,7 @@ import {
   INTEREST_RATE_MAX,
   INTEREST_RATE_RANGE_MESSAGE,
 } from '../services/installmentPlan.js';
+import { CUT_GUIDE_VALUES, DEFAULT_CUT_GUIDE } from '../services/cutGuide.js';
 import { inspectLogoDataUrl, resolveLogo } from '../services/logoImage.js';
 
 /**
@@ -89,6 +90,7 @@ export const LabelSettingsSchema = z
     creditInterest: z.enum(INTEREST_MODE_VALUES),
     creditInstallments: installmentCount,
     creditRoundToNinety: z.boolean(),
+    cutGuide: z.enum(CUT_GUIDE_VALUES),
   })
   .strict()
   .superRefine((settings, context) => {
@@ -114,6 +116,7 @@ export const DEFAULT_LABEL_SETTINGS = Object.freeze({
   creditInterest: INTEREST_MODES.SIMPLE,
   creditInstallments: null,
   creditRoundToNinety: false,
+  cutGuide: DEFAULT_CUT_GUIDE,
 });
 
 /** Os campos que a configuracao guarda; o que o valor guardado tiver alem disso e descartado na leitura. */

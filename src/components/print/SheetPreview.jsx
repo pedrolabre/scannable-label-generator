@@ -5,9 +5,10 @@ import {
   labelsOnSheet,
   paginateLabels,
 } from '../../domain/services/sheetPagination.js';
-import { useLabelHeader } from '../../store/useLabelSettingsStore.js';
+import { useCutGuide, useLabelHeader } from '../../store/useLabelSettingsStore.js';
 
 import SheetCanvas from './SheetCanvas.jsx';
+import SheetCutGuidePicker from './SheetCutGuidePicker.jsx';
 import SheetNavigation from './SheetNavigation.jsx';
 import { DEFAULT_SHEET_SCALE } from './SheetScalePicker.jsx';
 import {
@@ -101,6 +102,7 @@ export default function SheetPreview({
   );
   const symbols = useSheetSymbols(sheetSymbolTexts(slots));
   const header = useLabelHeader();
+  const cutGuide = useCutGuide();
 
   const hasCapacity = grid.perSheet > 0;
   const sheetCountMessage = hasCapacity ? describeSheetCount(pages, grid.perSheet) : null;
@@ -122,6 +124,7 @@ export default function SheetPreview({
               slots={slots}
               symbols={symbols}
               header={header}
+              cutGuide={cutGuide}
               scaleFactor={scaleFactor}
             />
           </div>
@@ -152,6 +155,8 @@ export default function SheetPreview({
             </FactRow>
           </dl>
         </div>
+
+        {hasCapacity ? <SheetCutGuidePicker /> : null}
 
         {hasCapacity ? (
           sheetCountMessage ? (

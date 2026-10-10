@@ -27,6 +27,7 @@ export default function SheetCanvas({
   slots,
   symbols,
   header = {},
+  cutGuide,
   scaleFactor = 1,
 }) {
   return (
@@ -88,6 +89,7 @@ export default function SheetCanvas({
                 card={header.card ?? null}
                 credit={header.credit ?? null}
                 logo={header.logo ?? null}
+                cutGuide={cutGuide}
               />
             </div>
           );

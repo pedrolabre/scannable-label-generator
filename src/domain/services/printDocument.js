@@ -19,18 +19,15 @@
 
 import { readSymbolPath, scaleSymbolPath } from '../../lib/symbolPath.js';
 
+import { DEFAULT_CUT_GUIDE, resolveCutGuideStroke } from './cutGuide.js';
 import { describeLabelBand, describeLabelContent, describeLabelLogo } from './labelContent.js';
 import { computeLabelGeometry } from './labelGeometry.js';
 import { labelsOnSheet, paginateLabels } from './sheetPagination.js';
 import { describeProductSymbolSupport } from './symbolContent.js';
 
-/** Traco do contorno da etiqueta: fino, cinza claro, so como guia de corte. */
-const OUTLINE_WIDTH_MM = 0.1;
-const OUTLINE_GRAY = 203;
-
 /** Marcador do produto cujo codigo nao produz simbolo. */
 const FAILED_SYMBOL_LABEL = 'Sem símbolo';
-const FAILED_SYMBOL_GRAY = 128;
+const FAILED_SYMBOL_STROKE = Object.freeze({ lineWidthMm: 0.1, gray: 128 });
 const FAILED_SYMBOL_DASH_MM = 1;
 const FAILED_SYMBOL_MAX_SIZE_MM = 3;
 const FAILED_SYMBOL_SIZE_DIVISOR = 8;
@@ -48,15 +45,15 @@ function whiteRect(xMm, yMm, widthMm, heightMm) {
   return Object.freeze({ type: 'rect', xMm, yMm, widthMm, heightMm, fill: 'white' });
 }
 
-function outline(xMm, yMm, widthMm, heightMm, gray, dashMm) {
+function outline(xMm, yMm, widthMm, heightMm, stroke, dashMm) {
   return Object.freeze({
     type: 'outline',
     xMm,
     yMm,
     widthMm,
     heightMm,
-    lineWidthMm: OUTLINE_WIDTH_MM,
-    gray,
+    lineWidthMm: stroke.lineWidthMm,
+    gray: stroke.gray,
     dashMm,
   });
 }
@@ -84,10 +81,10 @@ function textOp({ text, xMm, yMm, widthMm, lineHeightMm, fontSizeMm, bold, align
  * zona de silencio que o gerador ja embutiu. Quando o simbolo falta, entra o
  * mesmo marcador que a tela desenha, e o restante do conteudo sai igual.
  */
-function describeLabel({ product, geometry, origin, symbol, symbolError, header }) {
+function describeLabel({ product, geometry, origin, symbol, symbolError, header, cutStroke }) {
   const ops = [
     whiteRect(origin.xMm, origin.yMm, geometry.widthMm, geometry.heightMm),
-    outline(origin.xMm, origin.yMm, geometry.widthMm, geometry.heightMm, OUTLINE_GRAY, null),
+    outline(origin.xMm, origin.yMm, geometry.widthMm, geometry.heightMm, cutStroke, null),
   ];
 
   describeLabelContent({ product, geometry, ...header }).forEach((item) => {
@@ -167,7 +164,7 @@ function describeLabel({ product, geometry, origin, symbol, symbolError, header 
     return ops;
   }
 
-  ops.push(outline(zone.xMm, zone.yMm, zone.sizeMm, zone.sizeMm, FAILED_SYMBOL_GRAY, FAILED_SYMBOL_DASH_MM));
+  ops.push(outline(zone.xMm, zone.yMm, zone.sizeMm, zone.sizeMm, FAILED_SYMBOL_STROKE, FAILED_SYMBOL_DASH_MM));
 
   const markerSizeMm = Math.min(zone.sizeMm / FAILED_SYMBOL_SIZE_DIVISOR, FAILED_SYMBOL_MAX_SIZE_MM);
 
@@ -208,7 +205,9 @@ export function describePrintDocument({
   products,
   symbols,
   header = {},
+  cutGuide = DEFAULT_CUT_GUIDE,
 }) {
+  const cutStroke = resolveCutGuideStroke(cutGuide);
   const geometry = computeLabelGeometry(labelLayout, undefined, { withLogo: Boolean(header.logo) });
   const byId = new Map(products.map((product) => [product.id, product]));
   const { totalSheets } = paginateLabels(job.items, grid.perSheet);
@@ -241,6 +240,7 @@ export function describePrintDocument({
         symbol: resolved?.symbol ?? null,
         symbolError: content.error ?? resolved?.error ?? null,
         header: labelHeader,
+        cutStroke,
       }).forEach((op) => ops.push(op));
     });
 

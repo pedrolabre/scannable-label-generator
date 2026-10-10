@@ -4,6 +4,9 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_LABEL_SETTINGS } from '../../domain/schemas/labelSettingsSchema.js';
+import { LABEL_SETTINGS_STORAGE_KEY } from '../../storage/labelSettingsStorage.js';
+import { useLabelSettingsStore } from '../../store/useLabelSettingsStore.js';
 import { usePrintJobStore } from '../../store/usePrintJobStore.js';
 
 import SheetPreviewDialog from './SheetPreviewDialog.jsx';
@@ -52,6 +55,8 @@ function Dialogo() {
 }
 
 beforeEach(async () => {
+  window.localStorage.clear();
+  useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS } });
   usePrintJobStore.getState().resetPrintJob();
   usePrintJobStore.getState().toggleProduct(ARMARIO.id);
   onClose = vi.fn();
@@ -110,6 +115,26 @@ describe('dialogo da folha', () => {
 
     expect(surface().style.transform).toBe('scale(1)');
     expect(surface().style.width).toBe('210mm');
+  });
+
+  it('troca a borda de corte pela ficha, desenha a folha com ela e guarda a escolha', async () => {
+    const ficha = dialog().querySelector('aside[aria-label="Ficha da folha"]');
+    const surfaces = () => [...dialog().querySelectorAll('[data-label-surface]')];
+
+    expect(ficha.querySelector('legend').textContent).toBe('Borda de corte');
+    expect(ficha.querySelector('input[name="borda-corte"][value="clara"]').checked).toBe(true);
+    expect(surfaces().every((surface) => surface.dataset.cutGuide === 'clara')).toBe(true);
+
+    await act(async () => {
+      ficha.querySelector('input[name="borda-corte"][value="destacada"]').click();
+    });
+
+    expect(surfaces().length).toBeGreaterThan(0);
+    surfaces().forEach((surface) => {
+      expect(surface.dataset.cutGuide).toBe('destacada');
+      expect(surface.style.outlineWidth).toBe('0.2mm');
+    });
+    expect(JSON.parse(window.localStorage.getItem(LABEL_SETTINGS_STORAGE_KEY)).cutGuide).toBe('destacada');
   });
 
   it('fecha pelo botao da ficha e exporta pelo mesmo pe de acoes da coluna', async () => {

@@ -282,6 +282,22 @@ describe('exportacao', () => {
     });
   });
 
+  it('leva ao documento a borda de corte destacada guardada', async () => {
+    useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS, cutGuide: 'destacada' } });
+
+    await render({ items: [{ productId: ARMARIO.id, copies: 1 }] });
+    await click(button());
+
+    const [description] = renderPrintDocument.mock.calls[0];
+    const [labelOutline] = description.pages[0].ops.filter((op) => op.type === 'outline');
+
+    expect(labelOutline).toMatchObject({ lineWidthMm: 0.2, gray: 0 });
+
+    await act(async () => {
+      useLabelSettingsStore.setState({ settings: { ...DEFAULT_LABEL_SETTINGS } });
+    });
+  });
+
   it('exporta o produto sem simbolo junto com os demais', async () => {
     await render({ items: [{ productId: FOGAO.id, copies: 1 }] });
 

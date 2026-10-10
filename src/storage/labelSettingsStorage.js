@@ -3,6 +3,7 @@ import {
   LABEL_SETTINGS_FIELDS,
   LabelSettingsSchema,
 } from '../domain/schemas/labelSettingsSchema.js';
+import { CUT_GUIDE_VALUES, DEFAULT_CUT_GUIDE } from '../domain/services/cutGuide.js';
 
 /**
  * Guarda da configuracao da etiqueta no armazenamento do navegador.
@@ -56,6 +57,10 @@ export function readLabelSettings() {
     }
 
     const stored = { ...DEFAULT_LABEL_SETTINGS, ...knownFields(JSON.parse(raw)) };
+
+    if (!CUT_GUIDE_VALUES.includes(stored.cutGuide)) {
+      stored.cutGuide = DEFAULT_CUT_GUIDE;
+    }
     const parsed = LabelSettingsSchema.safeParse(stored);
 
     if (parsed.success) {

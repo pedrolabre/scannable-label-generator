@@ -6,6 +6,7 @@ import {
   describeLabelContent,
   describeLabelLogo,
 } from '../../domain/services/labelContent.js';
+import { CUT_GUIDES, DEFAULT_CUT_GUIDE, resolveCutGuideStroke } from '../../domain/services/cutGuide.js';
 import { computeLabelGeometry } from '../../domain/services/labelGeometry.js';
 
 /**
@@ -161,6 +162,7 @@ export default function LabelSurface({
   card = null,
   credit = null,
   logo = null,
+  cutGuide = DEFAULT_CUT_GUIDE,
   scaleFactor = 1,
   className,
 }) {
@@ -195,6 +197,7 @@ export default function LabelSurface({
   }
 
   const { geometry, content, logoItem, band } = rendered;
+  const strongOutline = cutGuide === CUT_GUIDES.STRONG;
 
   return (
     <div
@@ -210,15 +213,20 @@ export default function LabelSurface({
         data-label-width-mm={geometry.widthMm}
         data-label-height-mm={geometry.heightMm}
         data-label-arrangement={geometry.arrangement}
+        data-cut-guide={cutGuide}
         style={{
           width: toMm(geometry.widthMm),
           height: toMm(geometry.heightMm),
           transform: `scale(${scaleFactor})`,
           transformOrigin: 'top left',
+          ...(strongOutline ? { outlineWidth: toMm(resolveCutGuideStroke(cutGuide).lineWidthMm) } : {}),
         }}
         // O traco da borda sai por `outline` e nao por `border`: borda entraria
         // na caixa e encolheria a etiqueta em fracao de milimetro.
-        className="relative overflow-hidden bg-etiqueta-papel text-etiqueta-tinta outline outline-1 outline-neutro-bordaForte"
+        className={cx(
+          'relative overflow-hidden bg-etiqueta-papel text-etiqueta-tinta outline',
+          strongOutline ? 'outline-etiqueta-tinta' : 'outline-1 outline-neutro-bordaForte',
+        )}
       >
         {content.map((item) => (
           <TextLine key={`${item.role}-${item.yMm}`} item={item} />

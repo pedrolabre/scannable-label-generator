@@ -6,6 +6,7 @@ import { generateSymbol } from '../../lib/barcode.js';
 import { BARCODE_ERROR_CODES, BarcodeError } from '../../lib/barcodeError.js';
 import { pngDataUrl } from '../../lib/logoFixtures.js';
 
+import { CUT_GUIDES } from './cutGuide.js';
 import { computeLabelGeometry } from './labelGeometry.js';
 import { findLabelLayout } from './labelLayoutCatalog.js';
 import { resolveLogo } from './logoImage.js';
@@ -50,7 +51,7 @@ async function symbolsFor(texts) {
   return new Map(entries);
 }
 
-async function describe1({ items, sheet = RETRATO, labelLayout = GRANDE, symbols, header }) {
+async function describe1({ items, sheet = RETRATO, labelLayout = GRANDE, symbols, header, cutGuide }) {
   const grid = computeSheetGrid(sheet, labelLayout);
 
   return describePrintDocument({
@@ -61,6 +62,7 @@ async function describe1({ items, sheet = RETRATO, labelLayout = GRANDE, symbols
     products: PRODUCTS,
     symbols: symbols ?? (await symbolsFor(listExportSymbolTexts(items, PRODUCTS))),
     header,
+    cutGuide,
   });
 }
 
@@ -198,6 +200,43 @@ describe('conteudo de uma etiqueta', () => {
     expect(right - left).toBeCloseTo(bottom - top, 6);
     expect(left).toBeGreaterThanOrEqual(10 + geometry.symbol.xMm);
     expect(right).toBeLessThanOrEqual(10 + geometry.symbol.xMm + geometry.symbol.sizeMm);
+  });
+});
+
+describe('borda de corte', () => {
+  function labelOutlines(page) {
+    return opsOfType(page, 'outline').filter((op) => op.dashMm === null);
+  }
+
+  it('sai clara por padrao: 0,1 mm em cinza claro', async () => {
+    const document = await describe1({ items: [{ productId: ARMARIO.id, copies: 2 }] });
+    const outlines = labelOutlines(document.pages[0]);
+
+    expect(outlines).toHaveLength(2);
+    outlines.forEach((op) => expect(op).toMatchObject({ lineWidthMm: 0.1, gray: 203 }));
+  });
+
+  it('sai destacada em preto com 0,2 mm, em todas as etiquetas da folha', async () => {
+    const document = await describe1({
+      items: [{ productId: ARMARIO.id, copies: 2 }],
+      cutGuide: CUT_GUIDES.STRONG,
+    });
+    const outlines = labelOutlines(document.pages[0]);
+
+    expect(outlines).toHaveLength(2);
+    outlines.forEach((op) => expect(op).toMatchObject({ lineWidthMm: 0.2, gray: 0 }));
+  });
+
+  it('nao muda o tracejado do simbolo que falta', async () => {
+    const document = await describe1({
+      items: [{ productId: FOGAO.id, copies: 1 }],
+      symbols: new Map([[buildSymbolText(FOGAO, 1), FAILED_SYMBOL]]),
+      cutGuide: CUT_GUIDES.STRONG,
+    });
+    const dashed = opsOfType(document.pages[0], 'outline').filter((op) => op.dashMm !== null);
+
+    expect(dashed).toHaveLength(1);
+    expect(dashed[0]).toMatchObject({ lineWidthMm: 0.1, gray: 128 });
   });
 });
 
